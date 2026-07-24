@@ -1,14 +1,21 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  closestCorners,
   useSensor,
   useSensors,
   useDroppable,
   type DragEndEvent,
+  type DragOverEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
 import './ApplicationBoard.css'
 import type { Application, ApplicationStatus } from './types'
 import ApplicationTile from './ApplicationTile'
@@ -62,9 +69,73 @@ const INITIAL_APPLICATIONS: Application[] = [
   },
 ]
 
+function isStatus(id: string): id is ApplicationStatus {
+  return STATUSES.includes(id as ApplicationStatus)
+}
+
+function findContainer(
+  id: string,
+  applications: Application[],
+): ApplicationStatus | undefined {
+  if (isStatus(id)) return id
+  return applications.find((app) => app.id === id)?.status
+}
+
+function rebuildByStatus(
+  groups: Record<ApplicationStatus, Application[]>,
+): Application[] {
+  return STATUSES.flatMap((status) => groups[status])
+}
+
+function groupByStatus(
+  applications: Application[],
+): Record<ApplicationStatus, Application[]> {
+  const groups = Object.fromEntries(
+    STATUSES.map((status) => [status, [] as Application[]]),
+  ) as Record<ApplicationStatus, Application[]>
+
+  for (const app of applications) {
+    groups[app.status].push(app)
+  }
+
+  return groups
+}
+
+function moveToContainer(
+  applications: Application[],
+  activeItemId: string,
+  overId: string,
+  overContainer: ApplicationStatus,
+): Application[] {
+  const groups = groupByStatus(applications)
+  const activeContainer = findContainer(activeItemId, applications)
+
+  if (!activeContainer) return applications
+
+  const activeIndex = groups[activeContainer].findIndex((app) => app.id === activeItemId)
+  if (activeIndex === -1) return applications
+
+  const [moved] = groups[activeContainer].splice(activeIndex, 1)
+  const nextItem: Application = { ...moved, status: overContainer }
+
+  if (isStatus(overId)) {
+    groups[overContainer].push(nextItem)
+  } else {
+    const overIndex = groups[overContainer].findIndex((app) => app.id === overId)
+    if (overIndex === -1) {
+      groups[overContainer].push(nextItem)
+    } else {
+      groups[overContainer].splice(overIndex, 0, nextItem)
+    }
+  }
+
+  return rebuildByStatus(groups)
+}
+
 export default function ApplicationBoard() {
   const [applications, setApplications] = useState<Application[]>(INITIAL_APPLICATIONS)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const dragSnapshotRef = useRef<Application[] | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -76,33 +147,68 @@ export default function ApplicationBoard() {
 
   function handleDragStart(event: DragStartEvent) {
     setActiveId(String(event.active.id))
+    dragSnapshotRef.current = applications.map((app) => ({ ...app }))
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { active, over } = event
+    if (!over) return
+
+    const activeItemId = String(active.id)
+    const overId = String(over.id)
+
+    setApplications((prev) => {
+      const activeContainer = findContainer(activeItemId, prev)
+      const overContainer = findContainer(overId, prev)
+
+      if (!activeContainer || !overContainer) return prev
+      if (activeContainer === overContainer) return prev
+
+      return moveToContainer(prev, activeItemId, overId, overContainer)
+    })
   }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     setActiveId(null)
+    dragSnapshotRef.current = null
 
     if (!over) return
 
-    const applicationId = String(active.id)
+    const activeItemId = String(active.id)
     const overId = String(over.id)
 
-    const nextStatus = STATUSES.includes(overId as ApplicationStatus)
-      ? (overId as ApplicationStatus)
-      : applications.find((app) => app.id === overId)?.status
+    setApplications((prev) => {
+      const activeContainer = findContainer(activeItemId, prev)
+      const overContainer = findContainer(overId, prev)
 
-    if (!nextStatus) return
+      if (!activeContainer || !overContainer) return prev
+      if (activeContainer !== overContainer) return prev
+      if (isStatus(overId)) return prev
 
-    setApplications((prev) =>
-      prev.map((app) =>
-        app.id === applicationId && app.status !== nextStatus
-          ? { ...app, status: nextStatus }
-          : app,
-      ),
-    )
+      const groups = groupByStatus(prev)
+      const activeIndex = groups[activeContainer].findIndex((app) => app.id === activeItemId)
+      const overIndex = groups[overContainer].findIndex((app) => app.id === overId)
+
+      if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) {
+        return prev
+      }
+
+      groups[activeContainer] = arrayMove(
+        groups[activeContainer],
+        activeIndex,
+        overIndex,
+      )
+      console.log(rebuildByStatus(groups))
+      return rebuildByStatus(groups)
+    })
   }
 
   function handleDragCancel() {
+    if (dragSnapshotRef.current) {
+      setApplications(dragSnapshotRef.current)
+    }
+    dragSnapshotRef.current = null
     setActiveId(null)
   }
 
@@ -111,13 +217,15 @@ export default function ApplicationBoard() {
       <header className="application-board__header">
         <h1 className="application-board__title">Application Board</h1>
         <p className="application-board__subtitle">
-          Drag applications between columns to update their status.
+          Drag to reorder within a column or move applications between columns.
         </p>
       </header>
 
       <DndContext
         sensors={sensors}
+        collisionDetection={closestCorners}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
@@ -127,7 +235,6 @@ export default function ApplicationBoard() {
               key={status}
               status={status}
               applications={applications.filter((app) => app.status === status)}
-              activeId={activeId}
             />
           ))}
         </div>
@@ -143,11 +250,9 @@ export default function ApplicationBoard() {
 function BoardColumn({
   status,
   applications,
-  activeId,
 }: {
   status: ApplicationStatus
   applications: Application[]
-  activeId: string | null
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
 
@@ -160,19 +265,16 @@ function BoardColumn({
         <h2 className="board-column__title">{STATUS_LABELS[status]}</h2>
         <span className="board-column__count">{applications.length}</span>
       </header>
-      <div className="board-column__list">
-        {applications.map((application) =>
-          application.id === activeId ? (
-            <div
-              key={application.id}
-              className="application-tile application-tile--placeholder"
-              aria-hidden
-            />
-          ) : (
+      <SortableContext
+        items={applications.map((app) => app.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="board-column__list">
+          {applications.map((application) => (
             <ApplicationTile key={application.id} application={application} />
-          ),
-        )}
-      </div>
+          ))}
+        </div>
+      </SortableContext>
     </section>
   )
 }

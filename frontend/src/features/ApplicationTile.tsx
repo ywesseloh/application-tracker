@@ -1,16 +1,30 @@
-import { useDraggable } from '@dnd-kit/core'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { Application } from './types'
 
 export default function ApplicationTile({ application }: { application: Application }) {
-  const { attributes, listeners, setNodeRef } = useDraggable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: application.id,
     data: { status: application.status },
   })
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
   return (
     <article
       ref={setNodeRef}
-      className="application-tile"
+      style={style}
+      className={`application-tile${isDragging ? ' application-tile--dragging' : ''}`}
       {...listeners}
       {...attributes}
     >
