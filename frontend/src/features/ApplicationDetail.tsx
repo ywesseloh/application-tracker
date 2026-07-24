@@ -6,11 +6,13 @@ import './ApplicationDetail.css'
 type ApplicationDetailProps = {
   application: Application | null
   onClose: () => void
+  onEdit: () => void
 }
 
 export default function ApplicationDetail({
   application,
   onClose,
+  onEdit,
 }: ApplicationDetailProps) {
   useEffect(() => {
     if (!application) return
@@ -82,6 +84,16 @@ export default function ApplicationDetail({
             <p className="application-detail__empty">No job posting URL.</p>
           )}
         </section>
+
+        <div className="application-detail__actions">
+          <button
+            type="button"
+            className="application-detail__edit"
+            onClick={onEdit}
+          >
+            Edit
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -165,7 +165,9 @@ export default function ApplicationBoard() {
   const [applications, setApplications] = useState<Application[]>(INITIAL_APPLICATIONS)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
+  const [formApplication, setFormApplication] = useState<Application | null | undefined>(
+    undefined,
+  )
   const dragSnapshotRef = useRef<Application[] | null>(null)
   const suppressOpenRef = useRef(false)
 
@@ -184,23 +186,73 @@ export default function ApplicationBoard() {
     setSelectedId(id)
   }
 
-  function handleCreate(values: ApplicationFormValues) {
+  function handleEditFromDetail() {
+    if (!selectedApplication) return
+    setFormApplication(selectedApplication)
+    setSelectedId(null)
+  }
+
+  function handleSave(values: ApplicationFormValues) {
+    if (formApplication === undefined) return
+
+    if (formApplication === null) {
+      setApplications((prev) => {
+        const position = prev.filter((app) => app.status === values.status).length
+        return [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            company: values.company,
+            role: values.role,
+            status: values.status,
+            position,
+            notes: values.notes,
+            jobPostingUrl: values.jobPostingUrl,
+          },
+        ]
+      })
+      setFormApplication(undefined)
+      return
+    }
+
+    const editingId = formApplication.id
+
     setApplications((prev) => {
-      const position = prev.filter((app) => app.status === values.status).length
-      return [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          company: values.company,
-          role: values.role,
-          status: values.status,
-          position,
-          notes: values.notes,
-          jobPostingUrl: values.jobPostingUrl,
-        },
-      ]
+      const existing = prev.find((app) => app.id === editingId)
+      if (!existing) return prev
+
+      if (existing.status === values.status) {
+        return prev.map((app) =>
+          app.id === editingId
+            ? {
+                ...app,
+                company: values.company,
+                role: values.role,
+                notes: values.notes,
+                jobPostingUrl: values.jobPostingUrl,
+              }
+            : app,
+        )
+      }
+
+      const groups = groupByStatus(prev)
+      const fromIndex = groups[existing.status].findIndex((app) => app.id === editingId)
+      if (fromIndex === -1) return prev
+
+      const [removed] = groups[existing.status].splice(fromIndex, 1)
+      groups[values.status].push({
+        ...removed,
+        company: values.company,
+        role: values.role,
+        status: values.status,
+        notes: values.notes,
+        jobPostingUrl: values.jobPostingUrl,
+      })
+
+      return rebuildByStatus(groups)
     })
-    setIsCreating(false)
+
+    setFormApplication(undefined)
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -288,7 +340,7 @@ export default function ApplicationBoard() {
         <button
           type="button"
           className="application-board__add"
-          onClick={() => setIsCreating(true)}
+          onClick={() => setFormApplication(null)}
         >
           Add application
         </button>
@@ -321,12 +373,14 @@ export default function ApplicationBoard() {
       <ApplicationDetail
         application={selectedApplication}
         onClose={() => setSelectedId(null)}
+        onEdit={handleEditFromDetail}
       />
 
       <ApplicationForm
-        open={isCreating}
-        onClose={() => setIsCreating(false)}
-        onSubmit={handleCreate}
+        open={formApplication !== undefined}
+        initialApplication={formApplication ?? null}
+        onClose={() => setFormApplication(undefined)}
+        onSubmit={handleSave}
       />
     </div>
   )

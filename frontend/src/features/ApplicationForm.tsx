@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import type { ApplicationStatus } from './types'
+import type { Application, ApplicationStatus } from './types'
 import { STATUS_LABELS } from './types'
 import './ApplicationForm.css'
 
@@ -13,6 +13,7 @@ export type ApplicationFormValues = {
 
 type ApplicationFormProps = {
   open: boolean
+  initialApplication: Application | null
   onClose: () => void
   onSubmit: (values: ApplicationFormValues) => void
 }
@@ -30,18 +31,34 @@ const STATUS_OPTIONS = Object.entries(STATUS_LABELS) as [
   string,
 ][]
 
+function valuesFromApplication(application: Application): ApplicationFormValues {
+  return {
+    company: application.company,
+    role: application.role,
+    status: application.status,
+    notes: application.notes,
+    jobPostingUrl: application.jobPostingUrl,
+  }
+}
+
 export default function ApplicationForm({
   open,
+  initialApplication,
   onClose,
   onSubmit,
 }: ApplicationFormProps) {
   const [values, setValues] = useState<ApplicationFormValues>(EMPTY_VALUES)
   const [error, setError] = useState<string | null>(null)
+  const isEditing = initialApplication !== null
 
   useEffect(() => {
     if (!open) return
 
-    setValues(EMPTY_VALUES)
+    setValues(
+      initialApplication
+        ? valuesFromApplication(initialApplication)
+        : EMPTY_VALUES,
+    )
     setError(null)
 
     function handleKeyDown(event: KeyboardEvent) {
@@ -50,7 +67,7 @@ export default function ApplicationForm({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, onClose])
+  }, [open, initialApplication, onClose])
 
   if (!open) return null
 
@@ -93,7 +110,7 @@ export default function ApplicationForm({
       >
         <header className="application-form__header">
           <h2 id="application-form-title" className="application-form__title">
-            Add application
+            {isEditing ? 'Edit application' : 'Add application'}
           </h2>
           <button
             type="button"
@@ -181,7 +198,7 @@ export default function ApplicationForm({
               type="submit"
               className="application-form__button application-form__button--primary"
             >
-              Add application
+              {isEditing ? 'Save changes' : 'Add application'}
             </button>
           </div>
         </form>
