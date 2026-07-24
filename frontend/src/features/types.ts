@@ -11,4 +11,14 @@ export type Application = {
   role: string
   status: ApplicationStatus
   position: number
+  notes: string
+  jobPostingUrl: string
+}
+
+export const STATUS_LABELS: Record<ApplicationStatus, string> = {
+  WISHLIST: 'Wishlist',
+  APPLIED: 'Applied',
+  INTERVIEW: 'Interview',
+  OFFER: 'Offer',
+  REJECTED: 'Rejected',
 }

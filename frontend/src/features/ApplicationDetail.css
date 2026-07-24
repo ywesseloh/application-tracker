@@ -1,0 +1,117 @@
+.application-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(28, 26, 22, 0.45);
+}
+
+.application-detail {
+  width: min(28rem, 100%);
+  max-height: min(36rem, calc(100vh - 2.5rem));
+  overflow-y: auto;
+  padding: 1.25rem 1.35rem 1.4rem;
+  border: 1px solid var(--tile-border, #cfc6b4);
+  border-radius: 0.75rem;
+  background: var(--tile-bg, #fffdf8);
+  color: var(--board-ink, #1c1a16);
+  box-shadow: 0 16px 40px rgba(28, 26, 22, 0.2);
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+.application-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.application-detail__company {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.application-detail__role {
+  margin: 0.35rem 0 0;
+  color: var(--board-muted, #5c574e);
+  font-size: 0.95rem;
+}
+
+.application-detail__close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--tile-border, #cfc6b4);
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--board-ink, #1c1a16);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.application-detail__close:hover {
+  background: rgba(28, 26, 22, 0.06);
+}
+
+.application-detail__close:focus-visible {
+  outline: 2px solid var(--accent, #2f6f5e);
+  outline-offset: 2px;
+}
+
+.application-detail__status {
+  display: inline-block;
+  margin: 1rem 0 0;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--accent-soft, rgba(47, 111, 94, 0.14));
+  color: var(--accent, #2f6f5e);
+  font-size: 0.75rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.application-detail__section {
+  margin-top: 1.15rem;
+}
+
+.application-detail__label {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--board-muted, #5c574e);
+}
+
+.application-detail__notes {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.application-detail__link {
+  color: var(--accent, #2f6f5e);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.application-detail__link:hover {
+  text-decoration-thickness: 2px;
+}
+
+.application-detail__empty {
+  margin: 0;
+  color: var(--board-muted, #5c574e);
+  font-size: 0.9rem;
+  font-style: italic;
+}

@@ -18,6 +18,8 @@ import {
 } from '@dnd-kit/sortable'
 import './ApplicationBoard.css'
 import type { Application, ApplicationStatus } from './types'
+import { STATUS_LABELS } from './types'
+import ApplicationDetail from './ApplicationDetail'
 import ApplicationTile from './ApplicationTile'
 
 const STATUSES: ApplicationStatus[] = [
@@ -28,14 +30,6 @@ const STATUSES: ApplicationStatus[] = [
   'REJECTED',
 ]
 
-const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  WISHLIST: 'Wishlist',
-  APPLIED: 'Applied',
-  INTERVIEW: 'Interview',
-  OFFER: 'Offer',
-  REJECTED: 'Rejected',
-}
-
 const INITIAL_APPLICATIONS: Application[] = [
   {
     id: '1',
@@ -43,13 +37,8 @@ const INITIAL_APPLICATIONS: Application[] = [
     role: 'Frontend Engineer',
     status: 'WISHLIST',
     position: 0,
-  },
-  {
-    id: '3',
-    company: 'Northwind',
-    role: 'React Developer',
-    status: 'APPLIED',
-    position: 1,
+    notes: 'Strong design culture. Reach out to Maya on LinkedIn before applying.',
+    jobPostingUrl: 'https://example.com/jobs/acme-frontend',
   },
   {
     id: '2',
@@ -57,6 +46,17 @@ const INITIAL_APPLICATIONS: Application[] = [
     role: 'Full Stack Developer',
     status: 'APPLIED',
     position: 0,
+    notes: 'Submitted via company portal. Recruiter screen scheduled for next week.',
+    jobPostingUrl: 'https://example.com/jobs/bright-labs-fullstack',
+  },
+  {
+    id: '3',
+    company: 'Northwind',
+    role: 'React Developer',
+    status: 'APPLIED',
+    position: 1,
+    notes: '',
+    jobPostingUrl: 'https://example.com/jobs/northwind-react',
   },
   {
     id: '4',
@@ -64,6 +64,8 @@ const INITIAL_APPLICATIONS: Application[] = [
     role: 'Software Engineer',
     status: 'INTERVIEW',
     position: 0,
+    notes: 'Onsite loop: system design + React take-home review.',
+    jobPostingUrl: 'https://example.com/jobs/cascade-swe',
   },
   {
     id: '5',
@@ -71,6 +73,8 @@ const INITIAL_APPLICATIONS: Application[] = [
     role: 'UI Engineer',
     status: 'OFFER',
     position: 0,
+    notes: 'Verbal offer received. Waiting on written package.',
+    jobPostingUrl: '',
   },
 ]
 
@@ -159,7 +163,9 @@ function moveToContainer(
 export default function ApplicationBoard() {
   const [applications, setApplications] = useState<Application[]>(INITIAL_APPLICATIONS)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const dragSnapshotRef = useRef<Application[] | null>(null)
+  const suppressOpenRef = useRef(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -168,8 +174,16 @@ export default function ApplicationBoard() {
   )
 
   const activeApplication = applications.find((app) => app.id === activeId) ?? null
+  const selectedApplication =
+    applications.find((app) => app.id === selectedId) ?? null
+
+  function handleOpen(id: string) {
+    if (suppressOpenRef.current) return
+    setSelectedId(id)
+  }
 
   function handleDragStart(event: DragStartEvent) {
+    suppressOpenRef.current = true
     setActiveId(String(event.active.id))
     dragSnapshotRef.current = applications.map((app) => ({ ...app }))
   }
@@ -196,6 +210,9 @@ export default function ApplicationBoard() {
     const { active, over } = event
     setActiveId(null)
     dragSnapshotRef.current = null
+    requestAnimationFrame(() => {
+      suppressOpenRef.current = false
+    })
 
     if (!over) return
 
@@ -223,7 +240,6 @@ export default function ApplicationBoard() {
         activeIndex,
         overIndex,
       )
-      console.log(rebuildByStatus(groups))
       return rebuildByStatus(groups)
     })
   }
@@ -234,6 +250,9 @@ export default function ApplicationBoard() {
     }
     dragSnapshotRef.current = null
     setActiveId(null)
+    requestAnimationFrame(() => {
+      suppressOpenRef.current = false
+    })
   }
 
   return (
@@ -259,6 +278,7 @@ export default function ApplicationBoard() {
               key={status}
               status={status}
               applications={applicationsForStatus(applications, status)}
+              onOpen={handleOpen}
             />
           ))}
         </div>
@@ -267,6 +287,11 @@ export default function ApplicationBoard() {
           {activeApplication ? <TilePreview application={activeApplication} /> : null}
         </DragOverlay>
       </DndContext>
+
+      <ApplicationDetail
+        application={selectedApplication}
+        onClose={() => setSelectedId(null)}
+      />
     </div>
   )
 }
@@ -274,9 +299,11 @@ export default function ApplicationBoard() {
 function BoardColumn({
   status,
   applications,
+  onOpen,
 }: {
   status: ApplicationStatus
   applications: Application[]
+  onOpen: (id: string) => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
 
@@ -295,7 +322,11 @@ function BoardColumn({
       >
         <div className="board-column__list">
           {applications.map((application) => (
-            <ApplicationTile key={application.id} application={application} />
+            <ApplicationTile
+              key={application.id}
+              application={application}
+              onOpen={() => onOpen(application.id)}
+            />
           ))}
         </div>
       </SortableContext>
