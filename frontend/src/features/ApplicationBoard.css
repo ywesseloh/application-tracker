@@ -32,7 +32,15 @@ body {
 }
 
 .application-board__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+.application-board__heading {
+  min-width: 0;
 }
 
 .application-board__title {
@@ -46,6 +54,28 @@ body {
   margin: 0.4rem 0 0;
   color: var(--board-muted);
   font-size: 0.95rem;
+}
+
+.application-board__add {
+  flex-shrink: 0;
+  padding: 0.55rem 0.95rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.45rem;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.application-board__add:hover {
+  filter: brightness(0.95);
+}
+
+.application-board__add:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .application-board__columns {

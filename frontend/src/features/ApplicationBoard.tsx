@@ -20,6 +20,7 @@ import './ApplicationBoard.css'
 import type { Application, ApplicationStatus } from './types'
 import { STATUS_LABELS } from './types'
 import ApplicationDetail from './ApplicationDetail'
+import ApplicationForm, { type ApplicationFormValues } from './ApplicationForm'
 import ApplicationTile from './ApplicationTile'
 
 const STATUSES: ApplicationStatus[] = [
@@ -164,6 +165,7 @@ export default function ApplicationBoard() {
   const [applications, setApplications] = useState<Application[]>(INITIAL_APPLICATIONS)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
   const dragSnapshotRef = useRef<Application[] | null>(null)
   const suppressOpenRef = useRef(false)
 
@@ -180,6 +182,25 @@ export default function ApplicationBoard() {
   function handleOpen(id: string) {
     if (suppressOpenRef.current) return
     setSelectedId(id)
+  }
+
+  function handleCreate(values: ApplicationFormValues) {
+    setApplications((prev) => {
+      const position = prev.filter((app) => app.status === values.status).length
+      return [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          company: values.company,
+          role: values.role,
+          status: values.status,
+          position,
+          notes: values.notes,
+          jobPostingUrl: values.jobPostingUrl,
+        },
+      ]
+    })
+    setIsCreating(false)
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -258,10 +279,19 @@ export default function ApplicationBoard() {
   return (
     <div className="application-board">
       <header className="application-board__header">
-        <h1 className="application-board__title">Application Board</h1>
-        <p className="application-board__subtitle">
-          Drag to reorder within a column or move applications between columns.
-        </p>
+        <div className="application-board__heading">
+          <h1 className="application-board__title">Application Board</h1>
+          <p className="application-board__subtitle">
+            Drag to reorder within a column or move applications between columns.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="application-board__add"
+          onClick={() => setIsCreating(true)}
+        >
+          Add application
+        </button>
       </header>
 
       <DndContext
@@ -291,6 +321,12 @@ export default function ApplicationBoard() {
       <ApplicationDetail
         application={selectedApplication}
         onClose={() => setSelectedId(null)}
+      />
+
+      <ApplicationForm
+        open={isCreating}
+        onClose={() => setIsCreating(false)}
+        onSubmit={handleCreate}
       />
     </div>
   )
