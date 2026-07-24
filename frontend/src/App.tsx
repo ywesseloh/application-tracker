@@ -1,4 +1,4 @@
-import ApplicationBoard from './ApplicationBoard'
+import ApplicationBoard from './features/ApplicationBoard'
 
 function App() {
   return <ApplicationBoard/>
