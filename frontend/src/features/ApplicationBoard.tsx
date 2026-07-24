@@ -42,30 +42,35 @@ const INITIAL_APPLICATIONS: Application[] = [
     company: 'Acme Corp',
     role: 'Frontend Engineer',
     status: 'WISHLIST',
-  },
-  {
-    id: '2',
-    company: 'Bright Labs',
-    role: 'Full Stack Developer',
-    status: 'APPLIED',
+    position: 0,
   },
   {
     id: '3',
     company: 'Northwind',
     role: 'React Developer',
     status: 'APPLIED',
+    position: 1,
+  },
+  {
+    id: '2',
+    company: 'Bright Labs',
+    role: 'Full Stack Developer',
+    status: 'APPLIED',
+    position: 0,
   },
   {
     id: '4',
     company: 'Cascade Systems',
     role: 'Software Engineer',
     status: 'INTERVIEW',
+    position: 0,
   },
   {
     id: '5',
     company: 'Helios AI',
     role: 'UI Engineer',
     status: 'OFFER',
+    position: 0,
   },
 ]
 
@@ -81,10 +86,16 @@ function findContainer(
   return applications.find((app) => app.id === id)?.status
 }
 
+function withDensePositions(items: Application[]): Application[] {
+  return items.map((app, index) =>
+    app.position === index ? app : { ...app, position: index },
+  )
+}
+
 function rebuildByStatus(
   groups: Record<ApplicationStatus, Application[]>,
 ): Application[] {
-  return STATUSES.flatMap((status) => groups[status])
+  return STATUSES.flatMap((status) => withDensePositions(groups[status]))
 }
 
 function groupByStatus(
@@ -98,7 +109,20 @@ function groupByStatus(
     groups[app.status].push(app)
   }
 
+  for (const status of STATUSES) {
+    groups[status].sort((a, b) => a.position - b.position)
+  }
+
   return groups
+}
+
+function applicationsForStatus(
+  applications: Application[],
+  status: ApplicationStatus,
+): Application[] {
+  return applications
+    .filter((app) => app.status === status)
+    .sort((a, b) => a.position - b.position)
 }
 
 function moveToContainer(
@@ -234,7 +258,7 @@ export default function ApplicationBoard() {
             <BoardColumn
               key={status}
               status={status}
-              applications={applications.filter((app) => app.status === status)}
+              applications={applicationsForStatus(applications, status)}
             />
           ))}
         </div>

@@ -10,4 +10,5 @@ export type Application = {
   company: string
   role: string
   status: ApplicationStatus
+  position: number
 }
