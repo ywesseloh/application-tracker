@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -16,7 +16,9 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
+import { useQuery } from '@tanstack/react-query'
 import './ApplicationBoard.css'
+import { apiClient } from '../shared/apiClient'
 import type { Application, ApplicationStatus } from './types'
 import { STATUS_LABELS } from './types'
 import ApplicationDetail from './ApplicationDetail'
@@ -31,54 +33,6 @@ const STATUSES: ApplicationStatus[] = [
   'REJECTED',
 ]
 
-const INITIAL_APPLICATIONS: Application[] = [
-  {
-    id: '1',
-    company: 'Acme Corp',
-    role: 'Frontend Engineer',
-    status: 'WISHLIST',
-    position: 0,
-    notes: 'Strong design culture. Reach out to Maya on LinkedIn before applying.',
-    jobPostingUrl: 'https://example.com/jobs/acme-frontend',
-  },
-  {
-    id: '2',
-    company: 'Bright Labs',
-    role: 'Full Stack Developer',
-    status: 'APPLIED',
-    position: 0,
-    notes: 'Submitted via company portal. Recruiter screen scheduled for next week.',
-    jobPostingUrl: 'https://example.com/jobs/bright-labs-fullstack',
-  },
-  {
-    id: '3',
-    company: 'Northwind',
-    role: 'React Developer',
-    status: 'APPLIED',
-    position: 1,
-    notes: '',
-    jobPostingUrl: 'https://example.com/jobs/northwind-react',
-  },
-  {
-    id: '4',
-    company: 'Cascade Systems',
-    role: 'Software Engineer',
-    status: 'INTERVIEW',
-    position: 0,
-    notes: 'Onsite loop: system design + React take-home review.',
-    jobPostingUrl: 'https://example.com/jobs/cascade-swe',
-  },
-  {
-    id: '5',
-    company: 'Helios AI',
-    role: 'UI Engineer',
-    status: 'OFFER',
-    position: 0,
-    notes: 'Verbal offer received. Waiting on written package.',
-    jobPostingUrl: '',
-  },
-]
-
 function isStatus(id: string): id is ApplicationStatus {
   return STATUSES.includes(id as ApplicationStatus)
 }
@@ -88,12 +42,12 @@ function findContainer(
   applications: Application[],
 ): ApplicationStatus | undefined {
   if (isStatus(id)) return id
-  return applications.find((app) => app.id === id)?.status
+  return applications.find((app) => app.id.toString() === id)?.status
 }
 
 function withDensePositions(items: Application[]): Application[] {
   return items.map((app, index) =>
-    app.position === index ? app : { ...app, position: index },
+    app.columnPosition === index ? app : { ...app, columnPosition: index },
   )
 }
 
@@ -115,7 +69,7 @@ function groupByStatus(
   }
 
   for (const status of STATUSES) {
-    groups[status].sort((a, b) => a.position - b.position)
+    groups[status].sort((a, b) => a.columnPosition - b.columnPosition)
   }
 
   return groups
@@ -127,7 +81,7 @@ function applicationsForStatus(
 ): Application[] {
   return applications
     .filter((app) => app.status === status)
-    .sort((a, b) => a.position - b.position)
+    .sort((a, b) => a.columnPosition - b.columnPosition)
 }
 
 function moveToContainer(
@@ -141,7 +95,7 @@ function moveToContainer(
 
   if (!activeContainer) return applications
 
-  const activeIndex = groups[activeContainer].findIndex((app) => app.id === activeItemId)
+  const activeIndex = groups[activeContainer].findIndex((app) => app.id.toString() === activeItemId)
   if (activeIndex === -1) return applications
 
   const [moved] = groups[activeContainer].splice(activeIndex, 1)
@@ -150,7 +104,7 @@ function moveToContainer(
   if (isStatus(overId)) {
     groups[overContainer].push(nextItem)
   } else {
-    const overIndex = groups[overContainer].findIndex((app) => app.id === overId)
+    const overIndex = groups[overContainer].findIndex((app) => app.id.toString() === overId)
     if (overIndex === -1) {
       groups[overContainer].push(nextItem)
     } else {
@@ -162,7 +116,12 @@ function moveToContainer(
 }
 
 export default function ApplicationBoard() {
-  const [applications, setApplications] = useState<Application[]>(INITIAL_APPLICATIONS)
+  const { isPending, error, data } = useQuery({
+    queryKey: ['applications'],
+    queryFn: () => apiClient.get<Application[]>('/applications')
+  })
+
+  const [applications, setApplications] = useState<Application[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formApplication, setFormApplication] = useState<Application | null | undefined>(
@@ -171,15 +130,21 @@ export default function ApplicationBoard() {
   const dragSnapshotRef = useRef<Application[] | null>(null)
   const suppressOpenRef = useRef(false)
 
+  useEffect(() => {
+    if (data) {
+      setApplications(data)
+    }
+  }, [data])
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 6 },
     }),
   )
 
-  const activeApplication = applications.find((app) => app.id === activeId) ?? null
+  const activeApplication = applications.find((app) => app.id.toString() === activeId) ?? null
   const selectedApplication =
-    applications.find((app) => app.id === selectedId) ?? null
+    applications.find((app) => app.id.toString() === selectedId) ?? null
 
   function handleOpen(id: string) {
     if (suppressOpenRef.current) return
@@ -197,15 +162,15 @@ export default function ApplicationBoard() {
 
     if (formApplication === null) {
       setApplications((prev) => {
-        const position = prev.filter((app) => app.status === values.status).length
+        const columnPosition = prev.filter((app) => app.status === values.status).length
         return [
           ...prev,
           {
-            id: crypto.randomUUID(),
+            id: 0, // Temporary ID; in a real app, the backend would assign a unique ID
             company: values.company,
             role: values.role,
             status: values.status,
-            position,
+            columnPosition,
             notes: values.notes,
             jobPostingUrl: values.jobPostingUrl,
           },
@@ -301,8 +266,8 @@ export default function ApplicationBoard() {
       if (isStatus(overId)) return prev
 
       const groups = groupByStatus(prev)
-      const activeIndex = groups[activeContainer].findIndex((app) => app.id === activeItemId)
-      const overIndex = groups[overContainer].findIndex((app) => app.id === overId)
+      const activeIndex = groups[activeContainer].findIndex((app) => app.id.toString() === activeItemId)
+      const overIndex = groups[overContainer].findIndex((app) => app.id.toString() === overId)
 
       if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) {
         return prev
@@ -336,45 +301,58 @@ export default function ApplicationBoard() {
           <p className="application-board__subtitle">
             Drag to reorder within a column or move applications between columns.
           </p>
+          {isPending ? (
+            <p className="application-board__status">Loading applications…</p>
+          ) : null}
+          {error ? (
+            <p className="application-board__status application-board__status--error">
+              Failed to load applications.
+            </p>
+          ) : null}
         </div>
         <button
           type="button"
           className="application-board__add"
           onClick={() => setFormApplication(null)}
+          disabled={isPending}
         >
           Add application
         </button>
       </header>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-        onDragCancel={handleDragCancel}
-      >
-        <div className="application-board__columns">
-          {STATUSES.map((status) => (
-            <BoardColumn
-              key={status}
-              status={status}
-              applications={applicationsForStatus(applications, status)}
-              onOpen={handleOpen}
-            />
-          ))}
-        </div>
+      {!isPending && !error ? (
+        <>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            <div className="application-board__columns">
+              {STATUSES.map((status) => (
+                <BoardColumn
+                  key={status}
+                  status={status}
+                  applications={applicationsForStatus(applications, status)}
+                  onOpen={handleOpen}
+                />
+              ))}
+            </div>
 
-        <DragOverlay dropAnimation={null}>
-          {activeApplication ? <TilePreview application={activeApplication} /> : null}
-        </DragOverlay>
-      </DndContext>
+            <DragOverlay dropAnimation={null}>
+              {activeApplication ? <TilePreview application={activeApplication} /> : null}
+            </DragOverlay>
+          </DndContext>
 
-      <ApplicationDetail
-        application={selectedApplication}
-        onClose={() => setSelectedId(null)}
-        onEdit={handleEditFromDetail}
-      />
+          <ApplicationDetail
+            application={selectedApplication}
+            onClose={() => setSelectedId(null)}
+            onEdit={handleEditFromDetail}
+          />
+        </>
+      ) : null}
 
       <ApplicationForm
         open={formApplication !== undefined}
@@ -407,15 +385,15 @@ function BoardColumn({
         <span className="board-column__count">{applications.length}</span>
       </header>
       <SortableContext
-        items={applications.map((app) => app.id)}
+        items={applications.map((app) => app.id.toString())}
         strategy={verticalListSortingStrategy}
       >
         <div className="board-column__list">
           {applications.map((application) => (
             <ApplicationTile
-              key={application.id}
+              key={application.id.toString()}
               application={application}
-              onOpen={() => onOpen(application.id)}
+              onOpen={() => onOpen(application.id.toString())}
             />
           ))}
         </div>

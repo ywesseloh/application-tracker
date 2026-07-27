@@ -6,13 +6,13 @@ export type ApplicationStatus =
   | 'REJECTED'
 
 export type Application = {
-  id: string
+  id: Number
   company: string
   role: string
   status: ApplicationStatus
-  position: number
-  notes: string
-  jobPostingUrl: string
+  columnPosition: number
+  notes: string | null
+  jobPostingUrl: string | null
 }
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {

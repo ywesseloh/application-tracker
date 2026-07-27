@@ -16,7 +16,7 @@ export default function ApplicationTile({ application, onOpen }: ApplicationTile
     transition,
     isDragging,
   } = useSortable({
-    id: application.id,
+    id: application.id.toString(),
     data: { status: application.status },
   })
 

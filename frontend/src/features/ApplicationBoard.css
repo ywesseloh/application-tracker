@@ -56,6 +56,16 @@ body {
   font-size: 0.95rem;
 }
 
+.application-board__status {
+  margin: 0.5rem 0 0;
+  color: var(--board-muted);
+  font-size: 0.9rem;
+}
+
+.application-board__status--error {
+  color: #8b3a2f;
+}
+
 .application-board__add {
   flex-shrink: 0;
   padding: 0.55rem 0.95rem;
@@ -71,6 +81,11 @@ body {
 
 .application-board__add:hover {
   filter: brightness(0.95);
+}
+
+.application-board__add:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .application-board__add:focus-visible {

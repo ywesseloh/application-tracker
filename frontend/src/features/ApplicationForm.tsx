@@ -36,8 +36,8 @@ function valuesFromApplication(application: Application): ApplicationFormValues 
     company: application.company,
     role: application.role,
     status: application.status,
-    notes: application.notes,
-    jobPostingUrl: application.jobPostingUrl,
+    notes: application.notes ?? '',
+    jobPostingUrl: application.jobPostingUrl ?? '',
   }
 }
 
