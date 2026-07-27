@@ -1,9 +1,6 @@
-package com.example.application_tracker;
+package com.example.application_tracker.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -22,8 +19,9 @@ public class JobApplication {
     private String company;
     @NotBlank(message="Role is mandatory")
     private String role;
-    @NotBlank(message="Status is mandatory")
-    private String status;
+    @NotNull(message="Status is mandatory")
+    @Enumerated(EnumType.STRING)
+    private JobApplicationStatus status;
     @NotNull(message="Column position is mandatory")
     private Integer columnPosition;
     private String notes;

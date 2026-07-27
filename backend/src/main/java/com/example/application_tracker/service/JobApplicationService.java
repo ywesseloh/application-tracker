@@ -1,5 +1,8 @@
-package com.example.application_tracker;
+package com.example.application_tracker.service;
 
+import com.example.application_tracker.model.JobApplication;
+import com.example.application_tracker.dto.JobApplicationPatch;
+import com.example.application_tracker.repository.JobApplicationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -8,7 +11,8 @@ import java.util.Optional;
 
 @Service
 public class JobApplicationService {
-    @Autowired JobApplicationRepository repo;
+    @Autowired
+    JobApplicationRepository repo;
     public List<JobApplication> getJobApplications() {
         return repo.findAll();
     }

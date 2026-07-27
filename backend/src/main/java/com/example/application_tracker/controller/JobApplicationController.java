@@ -1,19 +1,18 @@
-package com.example.application_tracker;
+package com.example.application_tracker.controller;
 
+import com.example.application_tracker.model.JobApplication;
+import com.example.application_tracker.dto.JobApplicationPatch;
+import com.example.application_tracker.service.JobApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 public class JobApplicationController {
-    @Autowired JobApplicationService service;
+    @Autowired
+    JobApplicationService service;
 
     @GetMapping("/applications")
     public List<JobApplication> getJobApplications() {
