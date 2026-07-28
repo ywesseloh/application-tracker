@@ -7,8 +7,8 @@ import {
   fetchApplications,
   patchApplications,
   updateApplication,
-} from './applicationsApi'
-import type { Application } from './types'
+} from '@/features/applications/api/applicationsApi'
+import type { Application } from '@/features/applications/model/types'
 
 export function useApplications() {
   const queryClient = useQueryClient()

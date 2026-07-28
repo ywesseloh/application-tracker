@@ -1,5 +1,5 @@
-import { apiClient } from '../shared/apiClient'
-import type { Application } from './types'
+import { apiClient } from '@/shared/api/apiClient'
+import type { Application } from '@/features/applications/model/types'
 
 export const applicationsQueryKey = ['applications'] as const
 

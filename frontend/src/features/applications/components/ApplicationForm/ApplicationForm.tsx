@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import type { Application, ApplicationStatus } from './types'
-import { STATUS_LABELS } from './types'
+import type { Application, ApplicationStatus } from '@/features/applications/model/types'
+import { STATUS_LABELS } from '@/features/applications/model/types'
 import './ApplicationForm.css'
 
 export type ApplicationFormValues = {

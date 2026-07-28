@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import type { Application } from './types'
-import { STATUS_LABELS } from './types'
+import type { Application } from '@/features/applications/model/types'
+import { STATUS_LABELS } from '@/features/applications/model/types'
 import './ApplicationDetail.css'
 
 type ApplicationDetailProps = {

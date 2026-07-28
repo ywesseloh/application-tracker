@@ -6,15 +6,12 @@ import {
   closestCorners,
   useSensor,
   useSensors,
-  useDroppable,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import './ApplicationBoard.css'
-import type { Application, ApplicationStatus } from './types'
-import { STATUS_LABELS } from './types'
+import type { Application } from '@/features/applications/model/types'
 import {
   STATUSES,
   applicationsForStatus,
@@ -22,11 +19,14 @@ import {
   moveBetweenColumns,
   nextColumnPosition,
   reorderWithinColumn,
-} from './boardOrdering'
-import { useApplications } from './useApplications'
-import ApplicationDetail from './ApplicationDetail'
-import ApplicationForm, { type ApplicationFormValues } from './ApplicationForm'
-import ApplicationTile from './ApplicationTile'
+} from '@/features/applications/model/boardOrdering'
+import { useApplications } from '@/features/applications/hooks/useApplications'
+import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
+import ApplicationForm, {
+  type ApplicationFormValues,
+} from '@/features/applications/components/ApplicationForm/ApplicationForm'
+import BoardColumn from './BoardColumn'
+import TilePreview from './TilePreview'
 
 export default function ApplicationBoard() {
   const {
@@ -232,52 +232,5 @@ export default function ApplicationBoard() {
         onSubmit={handleSave}
       />
     </div>
-  )
-}
-
-function BoardColumn({
-  status,
-  applications,
-  onOpen,
-}: {
-  status: ApplicationStatus
-  applications: Application[]
-  onOpen: (id: string) => void
-}) {
-  const { setNodeRef, isOver } = useDroppable({ id: status })
-
-  return (
-    <section
-      ref={setNodeRef}
-      className={`board-column${isOver ? ' board-column--over' : ''}`}
-    >
-      <header className="board-column__header">
-        <h2 className="board-column__title">{STATUS_LABELS[status]}</h2>
-        <span className="board-column__count">{applications.length}</span>
-      </header>
-      <SortableContext
-        items={applications.map((app) => app.id.toString())}
-        strategy={verticalListSortingStrategy}
-      >
-        <div className="board-column__list">
-          {applications.map((application) => (
-            <ApplicationTile
-              key={application.id.toString()}
-              application={application}
-              onOpen={() => onOpen(application.id.toString())}
-            />
-          ))}
-        </div>
-      </SortableContext>
-    </section>
-  )
-}
-
-function TilePreview({ application }: { application: Application }) {
-  return (
-    <article className="application-tile application-tile--overlay">
-      <h3 className="application-tile__company">{application.company}</h3>
-      <p className="application-tile__role">{application.role}</p>
-    </article>
   )
 }
