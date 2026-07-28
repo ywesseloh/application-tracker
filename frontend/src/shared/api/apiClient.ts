@@ -1,4 +1,5 @@
 const API_BASE_URL = 'http://localhost:8080'
+const REQUEST_TIMEOUT_MS = 8_000
 
 type RequestOptions = Omit<RequestInit, 'body' | 'method'> & {
   body?: unknown
@@ -16,6 +17,24 @@ export class ApiError extends Error {
   }
 }
 
+export class NetworkError extends Error {
+  constructor(cause?: unknown) {
+    super('Unable to reach the server')
+    this.name = 'NetworkError'
+    this.cause = cause
+  }
+}
+
+export function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof NetworkError) {
+    return 'Can’t reach the server. Is the backend running?'
+  }
+  if (error instanceof ApiError) {
+    return `${fallback} (${error.status})`
+  }
+  return fallback
+}
+
 function resolveUrl(path: string): string {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path
@@ -26,19 +45,30 @@ function resolveUrl(path: string): string {
   return `${base}${normalizedPath}`
 }
 
+function withTimeout(signal?: AbortSignal | null): AbortSignal {
+  const timeoutSignal = AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+  return signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal
+}
+
 async function request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
-  const { body, headers, ...init } = options
+  const { body, headers, signal, ...init } = options
   const hasBody = body !== undefined
 
-  const response = await fetch(resolveUrl(path), {
-    ...init,
-    method,
-    headers: {
-      ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
-      ...headers,
-    },
-    body: hasBody ? JSON.stringify(body) : undefined,
-  })
+  let response: Response
+  try {
+    response = await fetch(resolveUrl(path), {
+      ...init,
+      method,
+      signal: withTimeout(signal),
+      headers: {
+        ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
+        ...headers,
+      },
+      body: hasBody ? JSON.stringify(body) : undefined,
+    })
+  } catch (cause) {
+    throw new NetworkError(cause)
+  }
 
   if (!response.ok) {
     const errorBody = await response.text()

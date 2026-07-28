@@ -21,6 +21,7 @@ import {
   reorderWithinColumn,
 } from '@/features/applications/model/boardOrdering'
 import { useApplications } from '@/features/applications/hooks/useApplications'
+import { getErrorMessage } from '@/shared/api/apiClient'
 import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
 import ApplicationForm, {
   type ApplicationFormValues,
@@ -33,6 +34,10 @@ export default function ApplicationBoard() {
     applications,
     isPending,
     error,
+    hasData,
+    refetch,
+    actionError,
+    clearActionError,
     applyLocalChange,
     snapshot,
     restore,
@@ -81,17 +86,20 @@ export default function ApplicationBoard() {
   function handleSave(values: ApplicationFormValues) {
     if (formApplication === undefined) return
 
-    setFormApplication(undefined)
-
     if (formApplication === null) {
-      create({
-        company: values.company,
-        role: values.role,
-        status: values.status,
-        columnPosition: nextColumnPosition(applications, values.status),
-        notes: values.notes,
-        jobPostingUrl: values.jobPostingUrl,
-      })
+      create(
+        {
+          company: values.company,
+          role: values.role,
+          status: values.status,
+          columnPosition: nextColumnPosition(applications, values.status),
+          notes: values.notes,
+          jobPostingUrl: values.jobPostingUrl,
+        },
+        {
+          onSuccess: () => setFormApplication(undefined),
+        },
+      )
       return
     }
 
@@ -100,15 +108,20 @@ export default function ApplicationBoard() {
       ? nextColumnPosition(applications, values.status)
       : formApplication.columnPosition
 
-    update({
-      ...formApplication,
-      company: values.company,
-      role: values.role,
-      status: values.status,
-      columnPosition,
-      notes: values.notes,
-      jobPostingUrl: values.jobPostingUrl,
-    })
+    update(
+      {
+        ...formApplication,
+        company: values.company,
+        role: values.role,
+        status: values.status,
+        columnPosition,
+        notes: values.notes,
+        jobPostingUrl: values.jobPostingUrl,
+      },
+      {
+        onSuccess: () => setFormApplication(undefined),
+      },
+    )
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -147,7 +160,9 @@ export default function ApplicationBoard() {
 
     const changed = changedPositions(before, next)
     if (changed.length > 0) {
-      persistPositions(changed)
+      persistPositions(changed, {
+        onError: () => restore(before),
+      })
     }
   }
 
@@ -163,6 +178,9 @@ export default function ApplicationBoard() {
     })
   }
 
+  const showLoading = isPending && !hasData
+  const showLoadError = !!error && !hasData
+
   return (
     <div className="application-board">
       <header className="application-board__header">
@@ -171,26 +189,49 @@ export default function ApplicationBoard() {
           <p className="application-board__subtitle">
             Drag to reorder within a column or move applications between columns.
           </p>
-          {isPending ? (
+          {showLoading ? (
             <p className="application-board__status">Loading applications…</p>
           ) : null}
-          {error ? (
-            <p className="application-board__status application-board__status--error">
-              Failed to load applications.
-            </p>
+          {showLoadError ? (
+            <div className="application-board__load-error">
+              <p className="application-board__status application-board__status--error">
+                {getErrorMessage(error, 'Failed to load applications.')}
+              </p>
+              <button
+                type="button"
+                className="application-board__retry"
+                onClick={() => void refetch()}
+              >
+                Retry
+              </button>
+            </div>
           ) : null}
         </div>
         <button
           type="button"
           className="application-board__add"
           onClick={() => setFormApplication(null)}
-          disabled={isPending}
+          disabled={!hasData}
         >
           Add application
         </button>
       </header>
 
-      {!isPending && !error ? (
+      {actionError ? (
+        <div className="application-board__banner" role="alert">
+          <p className="application-board__banner-text">{actionError}</p>
+          <button
+            type="button"
+            className="application-board__banner-dismiss"
+            onClick={clearActionError}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      ) : null}
+
+      {hasData ? (
         <>
           <DndContext
             sensors={sensors}
