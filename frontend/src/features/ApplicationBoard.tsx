@@ -11,144 +11,37 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import {
-  SortableContext,
-  arrayMove,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import './ApplicationBoard.css'
 import type { Application, ApplicationStatus } from './types'
 import { STATUS_LABELS } from './types'
 import {
-  applicationsQueryKey,
-  createApplication,
-  deleteApplication,
-  fetchApplications,
-  patchApplications,
-  updateApplication,
-  type ApplicationInput,
-  type ApplicationPositionPatch,
-} from './applicationsApi'
+  STATUSES,
+  applicationsForStatus,
+  changedPositions,
+  moveBetweenColumns,
+  nextColumnPosition,
+  reorderWithinColumn,
+} from './boardOrdering'
+import { useApplications } from './useApplications'
 import ApplicationDetail from './ApplicationDetail'
 import ApplicationForm, { type ApplicationFormValues } from './ApplicationForm'
 import ApplicationTile from './ApplicationTile'
 
-const STATUSES: ApplicationStatus[] = [
-  'WISHLIST',
-  'APPLIED',
-  'INTERVIEW',
-  'OFFER',
-  'REJECTED',
-]
-
-function isStatus(id: string): id is ApplicationStatus {
-  return STATUSES.includes(id as ApplicationStatus)
-}
-
-function findContainer(
-  id: string,
-  applications: Application[],
-): ApplicationStatus | undefined {
-  if (isStatus(id)) return id
-  return applications.find((app) => app.id.toString() === id)?.status
-}
-
-function withDensePositions(items: Application[]): Application[] {
-  return items.map((app, index) =>
-    app.columnPosition === index ? app : { ...app, columnPosition: index },
-  )
-}
-
-function rebuildByStatus(
-  groups: Record<ApplicationStatus, Application[]>,
-): Application[] {
-  return STATUSES.flatMap((status) => withDensePositions(groups[status]))
-}
-
-function groupByStatus(
-  applications: Application[],
-): Record<ApplicationStatus, Application[]> {
-  const groups = Object.fromEntries(
-    STATUSES.map((status) => [status, [] as Application[]]),
-  ) as Record<ApplicationStatus, Application[]>
-
-  for (const app of applications) {
-    groups[app.status].push(app)
-  }
-
-  for (const status of STATUSES) {
-    groups[status].sort((a, b) => a.columnPosition - b.columnPosition)
-  }
-
-  return groups
-}
-
-function applicationsForStatus(
-  applications: Application[],
-  status: ApplicationStatus,
-): Application[] {
-  return applications
-    .filter((app) => app.status === status)
-    .sort((a, b) => a.columnPosition - b.columnPosition)
-}
-
-function moveToContainer(
-  applications: Application[],
-  activeItemId: string,
-  overId: string,
-  overContainer: ApplicationStatus,
-): Application[] {
-  const groups = groupByStatus(applications)
-  const activeContainer = findContainer(activeItemId, applications)
-
-  if (!activeContainer) return applications
-
-  const activeIndex = groups[activeContainer].findIndex((app) => app.id.toString() === activeItemId)
-  if (activeIndex === -1) return applications
-
-  const [moved] = groups[activeContainer].splice(activeIndex, 1)
-  const nextItem: Application = { ...moved, status: overContainer }
-
-  if (isStatus(overId)) {
-    groups[overContainer].push(nextItem)
-  } else {
-    const overIndex = groups[overContainer].findIndex((app) => app.id.toString() === overId)
-    if (overIndex === -1) {
-      groups[overContainer].push(nextItem)
-    } else {
-      groups[overContainer].splice(overIndex, 0, nextItem)
-    }
-  }
-
-  return rebuildByStatus(groups)
-}
-
-function changedPositions(
-  before: Application[],
-  after: Application[],
-): ApplicationPositionPatch[] {
-  const beforeById = new Map(before.map((app) => [app.id, app]))
-
-  return after.filter((app) => {
-    const previous = beforeById.get(app.id)
-    if (!previous) return false
-    return (
-      previous.status !== app.status ||
-      previous.columnPosition !== app.columnPosition
-    )
-  })
-}
-
 export default function ApplicationBoard() {
-  const queryClient = useQueryClient()
-
-  const { isPending, error, data } = useQuery({
-    queryKey: applicationsQueryKey,
-    queryFn: fetchApplications,
-  })
-
-  const applications = data ?? []
+  const {
+    applications,
+    isPending,
+    error,
+    applyLocalChange,
+    snapshot,
+    restore,
+    pauseRefetch,
+    persistPositions,
+    create,
+    update,
+    remove,
+  } = useApplications()
 
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -157,40 +50,6 @@ export default function ApplicationBoard() {
   )
   const dragSnapshotRef = useRef<Application[] | null>(null)
   const suppressOpenRef = useRef(false)
-
-  function invalidateApplications() {
-    return queryClient.invalidateQueries({ queryKey: applicationsQueryKey })
-  }
-
-  function updateCache(
-    updater: (applications: Application[]) => Application[],
-  ): Application[] {
-    return (
-      queryClient.setQueryData<Application[]>(applicationsQueryKey, (prev) =>
-        updater(prev ?? []),
-      ) ?? []
-    )
-  }
-
-  const patchMutation = useMutation({
-    mutationFn: patchApplications,
-    onSettled: invalidateApplications,
-  })
-
-  const createMutation = useMutation({
-    mutationFn: createApplication,
-    onSettled: invalidateApplications,
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: updateApplication,
-    onSettled: invalidateApplications,
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteApplication,
-    onSettled: invalidateApplications,
-  })
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -215,7 +74,7 @@ export default function ApplicationBoard() {
 
   function handleDelete() {
     if (!selectedApplication) return
-    deleteMutation.mutate(selectedApplication.id)
+    remove(selectedApplication.id)
     setSelectedId(null)
   }
 
@@ -225,25 +84,23 @@ export default function ApplicationBoard() {
     setFormApplication(undefined)
 
     if (formApplication === null) {
-      const application: ApplicationInput = {
+      create({
         company: values.company,
         role: values.role,
         status: values.status,
-        columnPosition: applications.filter((app) => app.status === values.status)
-          .length,
+        columnPosition: nextColumnPosition(applications, values.status),
         notes: values.notes,
         jobPostingUrl: values.jobPostingUrl,
-      }
-      createMutation.mutate(application)
+      })
       return
     }
 
     const statusChanged = formApplication.status !== values.status
     const columnPosition = statusChanged
-      ? applications.filter((app) => app.status === values.status).length
+      ? nextColumnPosition(applications, values.status)
       : formApplication.columnPosition
 
-    updateMutation.mutate({
+    update({
       ...formApplication,
       company: values.company,
       role: values.role,
@@ -257,26 +114,17 @@ export default function ApplicationBoard() {
   function handleDragStart(event: DragStartEvent) {
     suppressOpenRef.current = true
     setActiveId(String(event.active.id))
-    queryClient.cancelQueries({ queryKey: applicationsQueryKey })
-    dragSnapshotRef.current = applications.map((app) => ({ ...app }))
+    pauseRefetch()
+    dragSnapshotRef.current = snapshot()
   }
 
   function handleDragOver(event: DragOverEvent) {
     const { active, over } = event
     if (!over) return
 
-    const activeItemId = String(active.id)
-    const overId = String(over.id)
-
-    updateCache((prev) => {
-      const activeContainer = findContainer(activeItemId, prev)
-      const overContainer = findContainer(overId, prev)
-
-      if (!activeContainer || !overContainer) return prev
-      if (activeContainer === overContainer) return prev
-
-      return moveToContainer(prev, activeItemId, overId, overContainer)
-    })
+    applyLocalChange((prev) =>
+      moveBetweenColumns(prev, String(active.id), String(over.id)),
+    )
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -286,50 +134,27 @@ export default function ApplicationBoard() {
       suppressOpenRef.current = false
     })
 
-    const snapshot = dragSnapshotRef.current
+    const before = dragSnapshotRef.current
     dragSnapshotRef.current = null
 
     if (!over) return
 
-    const activeItemId = String(active.id)
-    const overId = String(over.id)
+    const next = applyLocalChange((prev) =>
+      reorderWithinColumn(prev, String(active.id), String(over.id)),
+    )
 
-    const next = updateCache((prev) => {
-      const activeContainer = findContainer(activeItemId, prev)
-      const overContainer = findContainer(overId, prev)
+    if (!before) return
 
-      if (!activeContainer || !overContainer) return prev
-      if (activeContainer !== overContainer) return prev
-      if (isStatus(overId)) return prev
-
-      const groups = groupByStatus(prev)
-      const activeIndex = groups[activeContainer].findIndex((app) => app.id.toString() === activeItemId)
-      const overIndex = groups[overContainer].findIndex((app) => app.id.toString() === overId)
-
-      if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) {
-        return prev
-      }
-
-      groups[activeContainer] = arrayMove(
-        groups[activeContainer],
-        activeIndex,
-        overIndex,
-      )
-      return rebuildByStatus(groups)
-    })
-
-    if (!snapshot) return
-
-    const changed = changedPositions(snapshot, next)
+    const changed = changedPositions(before, next)
     if (changed.length > 0) {
-      patchMutation.mutate(changed)
+      persistPositions(changed)
     }
   }
 
   function handleDragCancel() {
-    const snapshot = dragSnapshotRef.current
-    if (snapshot) {
-      updateCache(() => snapshot)
+    const before = dragSnapshotRef.current
+    if (before) {
+      restore(before)
     }
     dragSnapshotRef.current = null
     setActiveId(null)
