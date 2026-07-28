@@ -29,6 +29,11 @@ import ApplicationForm, {
 import BoardColumn from './BoardColumn'
 import TilePreview from './TilePreview'
 
+type FormMode =
+  | { type: 'closed' }
+  | { type: 'create' }
+  | { type: 'edit'; id: number }
+
 export default function ApplicationBoard() {
   const {
     applications,
@@ -50,9 +55,7 @@ export default function ApplicationBoard() {
 
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [formApplication, setFormApplication] = useState<Application | null | undefined>(
-    undefined,
-  )
+  const [formMode, setFormMode] = useState<FormMode>({ type: 'closed' })
   const dragSnapshotRef = useRef<Application[] | null>(null)
   const suppressOpenRef = useRef(false)
 
@@ -65,6 +68,13 @@ export default function ApplicationBoard() {
   const activeApplication = applications.find((app) => app.id.toString() === activeId) ?? null
   const selectedApplication =
     applications.find((app) => app.id.toString() === selectedId) ?? null
+  const editingApplication =
+    formMode.type === 'edit'
+      ? applications.find((app) => app.id === formMode.id) ?? null
+      : null
+  const isFormOpen =
+    formMode.type === 'create' ||
+    (formMode.type === 'edit' && editingApplication !== null)
 
   function handleOpen(id: string) {
     if (suppressOpenRef.current) return
@@ -73,7 +83,7 @@ export default function ApplicationBoard() {
 
   function handleEditFromDetail() {
     if (!selectedApplication) return
-    setFormApplication(selectedApplication)
+    setFormMode({ type: 'edit', id: selectedApplication.id })
     setSelectedId(null)
   }
 
@@ -84,9 +94,11 @@ export default function ApplicationBoard() {
   }
 
   function handleSave(values: ApplicationFormValues) {
-    if (formApplication === undefined) return
+    if (formMode.type === 'closed') return
 
-    if (formApplication === null) {
+    const closeForm = () => setFormMode({ type: 'closed' })
+
+    if (formMode.type === 'create') {
       create(
         {
           company: values.company,
@@ -96,21 +108,21 @@ export default function ApplicationBoard() {
           notes: values.notes,
           jobPostingUrl: values.jobPostingUrl,
         },
-        {
-          onSuccess: () => setFormApplication(undefined),
-        },
+        { onSuccess: closeForm },
       )
       return
     }
 
-    const statusChanged = formApplication.status !== values.status
+    if (!editingApplication) return
+
+    const statusChanged = editingApplication.status !== values.status
     const columnPosition = statusChanged
       ? nextColumnPosition(applications, values.status)
-      : formApplication.columnPosition
+      : editingApplication.columnPosition
 
     update(
       {
-        ...formApplication,
+        ...editingApplication,
         company: values.company,
         role: values.role,
         status: values.status,
@@ -118,9 +130,7 @@ export default function ApplicationBoard() {
         notes: values.notes,
         jobPostingUrl: values.jobPostingUrl,
       },
-      {
-        onSuccess: () => setFormApplication(undefined),
-      },
+      { onSuccess: closeForm },
     )
   }
 
@@ -210,7 +220,7 @@ export default function ApplicationBoard() {
         <button
           type="button"
           className="application-board__add"
-          onClick={() => setFormApplication(null)}
+          onClick={() => setFormMode({ type: 'create' })}
           disabled={!hasData}
         >
           Add application
@@ -267,9 +277,9 @@ export default function ApplicationBoard() {
       ) : null}
 
       <ApplicationForm
-        open={formApplication !== undefined}
-        initialApplication={formApplication ?? null}
-        onClose={() => setFormApplication(undefined)}
+        open={isFormOpen}
+        initialApplication={formMode.type === 'edit' ? editingApplication : null}
+        onClose={() => setFormMode({ type: 'closed' })}
         onSubmit={handleSave}
       />
     </div>
