@@ -13,12 +13,12 @@ export function isStatus(id: string): id is ApplicationStatus {
   return STATUSES.includes(id as ApplicationStatus)
 }
 
-function findContainer(
-  id: string,
+function findColumn(
+  applicationId: string,
   applications: Application[],
 ): ApplicationStatus | undefined {
-  if (isStatus(id)) return id
-  return applications.find((app) => app.id.toString() === id)?.status
+  if (isStatus(applicationId)) return applicationId
+  return applications.find((app) => app.id.toString() === applicationId)?.status
 }
 
 function withDensePositions(items: Application[]): Application[] {
@@ -72,29 +72,29 @@ export function moveBetweenColumns(
   activeItemId: string,
   overId: string,
 ): Application[] {
-  const activeContainer = findContainer(activeItemId, applications)
-  const overContainer = findContainer(overId, applications)
+  const activeColumn = findColumn(activeItemId, applications)
+  const overColumn = findColumn(overId, applications)
 
-  if (!activeContainer || !overContainer) return applications
-  if (activeContainer === overContainer) return applications
+  if (!activeColumn || !overColumn) return applications
+  if (activeColumn === overColumn) return applications
 
   const groups = groupByStatus(applications)
-  const activeIndex = groups[activeContainer].findIndex(
+  const activeIndex = groups[activeColumn].findIndex(
     (app) => app.id.toString() === activeItemId,
   )
   if (activeIndex === -1) return applications
 
-  const [moved] = groups[activeContainer].splice(activeIndex, 1)
-  const nextItem: Application = { ...moved, status: overContainer }
+  const [moved] = groups[activeColumn].splice(activeIndex, 1)
+  const nextItem: Application = { ...moved, status: overColumn }
 
   const overIndex = isStatus(overId)
     ? -1
-    : groups[overContainer].findIndex((app) => app.id.toString() === overId)
+    : groups[overColumn].findIndex((app) => app.id.toString() === overId)
 
   if (overIndex === -1) {
-    groups[overContainer].push(nextItem)
+    groups[overColumn].push(nextItem)
   } else {
-    groups[overContainer].splice(overIndex, 0, nextItem)
+    groups[overColumn].splice(overIndex, 0, nextItem)
   }
 
   return rebuildByStatus(groups)
@@ -105,18 +105,18 @@ export function reorderWithinColumn(
   activeItemId: string,
   overId: string,
 ): Application[] {
-  const activeContainer = findContainer(activeItemId, applications)
-  const overContainer = findContainer(overId, applications)
+  const activeColumn = findColumn(activeItemId, applications)
+  const overColumn = findColumn(overId, applications)
 
-  if (!activeContainer || !overContainer) return applications
-  if (activeContainer !== overContainer) return applications
+  if (!activeColumn || !overColumn) return applications
+  if (activeColumn !== overColumn) return applications
   if (isStatus(overId)) return applications
 
   const groups = groupByStatus(applications)
-  const activeIndex = groups[activeContainer].findIndex(
+  const activeIndex = groups[activeColumn].findIndex(
     (app) => app.id.toString() === activeItemId,
   )
-  const overIndex = groups[overContainer].findIndex(
+  const overIndex = groups[overColumn].findIndex(
     (app) => app.id.toString() === overId,
   )
 
@@ -124,8 +124,8 @@ export function reorderWithinColumn(
     return applications
   }
 
-  groups[activeContainer] = arrayMove(
-    groups[activeContainer],
+  groups[activeColumn] = arrayMove(
+    groups[activeColumn],
     activeIndex,
     overIndex,
   )
