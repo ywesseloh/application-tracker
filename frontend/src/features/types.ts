@@ -6,7 +6,7 @@ export type ApplicationStatus =
   | 'REJECTED'
 
 export type Application = {
-  id: Number
+  id: number
   company: string
   role: string
   status: ApplicationStatus

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -16,11 +16,20 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import './ApplicationBoard.css'
-import { apiClient } from '../shared/apiClient'
 import type { Application, ApplicationStatus } from './types'
 import { STATUS_LABELS } from './types'
+import {
+  applicationsQueryKey,
+  createApplication,
+  deleteApplication,
+  fetchApplications,
+  patchApplications,
+  updateApplication,
+  type ApplicationInput,
+  type ApplicationPositionPatch,
+} from './applicationsApi'
 import ApplicationDetail from './ApplicationDetail'
 import ApplicationForm, { type ApplicationFormValues } from './ApplicationForm'
 import ApplicationTile from './ApplicationTile'
@@ -115,13 +124,32 @@ function moveToContainer(
   return rebuildByStatus(groups)
 }
 
+function changedPositions(
+  before: Application[],
+  after: Application[],
+): ApplicationPositionPatch[] {
+  const beforeById = new Map(before.map((app) => [app.id, app]))
+
+  return after.filter((app) => {
+    const previous = beforeById.get(app.id)
+    if (!previous) return false
+    return (
+      previous.status !== app.status ||
+      previous.columnPosition !== app.columnPosition
+    )
+  })
+}
+
 export default function ApplicationBoard() {
+  const queryClient = useQueryClient()
+
   const { isPending, error, data } = useQuery({
-    queryKey: ['applications'],
-    queryFn: () => apiClient.get<Application[]>('/applications')
+    queryKey: applicationsQueryKey,
+    queryFn: fetchApplications,
   })
 
-  const [applications, setApplications] = useState<Application[]>([])
+  const applications = data ?? []
+
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formApplication, setFormApplication] = useState<Application | null | undefined>(
@@ -130,11 +158,39 @@ export default function ApplicationBoard() {
   const dragSnapshotRef = useRef<Application[] | null>(null)
   const suppressOpenRef = useRef(false)
 
-  useEffect(() => {
-    if (data) {
-      setApplications(data)
-    }
-  }, [data])
+  function invalidateApplications() {
+    return queryClient.invalidateQueries({ queryKey: applicationsQueryKey })
+  }
+
+  function updateCache(
+    updater: (applications: Application[]) => Application[],
+  ): Application[] {
+    return (
+      queryClient.setQueryData<Application[]>(applicationsQueryKey, (prev) =>
+        updater(prev ?? []),
+      ) ?? []
+    )
+  }
+
+  const patchMutation = useMutation({
+    mutationFn: patchApplications,
+    onSettled: invalidateApplications,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: createApplication,
+    onSettled: invalidateApplications,
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: updateApplication,
+    onSettled: invalidateApplications,
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteApplication,
+    onSettled: invalidateApplications,
+  })
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -157,72 +213,51 @@ export default function ApplicationBoard() {
     setSelectedId(null)
   }
 
+  function handleDelete() {
+    if (!selectedApplication) return
+    deleteMutation.mutate(selectedApplication.id)
+    setSelectedId(null)
+  }
+
   function handleSave(values: ApplicationFormValues) {
     if (formApplication === undefined) return
 
+    setFormApplication(undefined)
+
     if (formApplication === null) {
-      setApplications((prev) => {
-        const columnPosition = prev.filter((app) => app.status === values.status).length
-        return [
-          ...prev,
-          {
-            id: 0, // Temporary ID; in a real app, the backend would assign a unique ID
-            company: values.company,
-            role: values.role,
-            status: values.status,
-            columnPosition,
-            notes: values.notes,
-            jobPostingUrl: values.jobPostingUrl,
-          },
-        ]
-      })
-      setFormApplication(undefined)
-      return
-    }
-
-    const editingId = formApplication.id
-
-    setApplications((prev) => {
-      const existing = prev.find((app) => app.id === editingId)
-      if (!existing) return prev
-
-      if (existing.status === values.status) {
-        return prev.map((app) =>
-          app.id === editingId
-            ? {
-                ...app,
-                company: values.company,
-                role: values.role,
-                notes: values.notes,
-                jobPostingUrl: values.jobPostingUrl,
-              }
-            : app,
-        )
-      }
-
-      const groups = groupByStatus(prev)
-      const fromIndex = groups[existing.status].findIndex((app) => app.id === editingId)
-      if (fromIndex === -1) return prev
-
-      const [removed] = groups[existing.status].splice(fromIndex, 1)
-      groups[values.status].push({
-        ...removed,
+      const application: ApplicationInput = {
         company: values.company,
         role: values.role,
         status: values.status,
+        columnPosition: applications.filter((app) => app.status === values.status)
+          .length,
         notes: values.notes,
         jobPostingUrl: values.jobPostingUrl,
-      })
+      }
+      createMutation.mutate(application)
+      return
+    }
 
-      return rebuildByStatus(groups)
+    const statusChanged = formApplication.status !== values.status
+    const columnPosition = statusChanged
+      ? applications.filter((app) => app.status === values.status).length
+      : formApplication.columnPosition
+
+    updateMutation.mutate({
+      ...formApplication,
+      company: values.company,
+      role: values.role,
+      status: values.status,
+      columnPosition,
+      notes: values.notes,
+      jobPostingUrl: values.jobPostingUrl,
     })
-
-    setFormApplication(undefined)
   }
 
   function handleDragStart(event: DragStartEvent) {
     suppressOpenRef.current = true
     setActiveId(String(event.active.id))
+    queryClient.cancelQueries({ queryKey: applicationsQueryKey })
     dragSnapshotRef.current = applications.map((app) => ({ ...app }))
   }
 
@@ -233,7 +268,7 @@ export default function ApplicationBoard() {
     const activeItemId = String(active.id)
     const overId = String(over.id)
 
-    setApplications((prev) => {
+    updateCache((prev) => {
       const activeContainer = findContainer(activeItemId, prev)
       const overContainer = findContainer(overId, prev)
 
@@ -247,17 +282,19 @@ export default function ApplicationBoard() {
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     setActiveId(null)
-    dragSnapshotRef.current = null
     requestAnimationFrame(() => {
       suppressOpenRef.current = false
     })
+
+    const snapshot = dragSnapshotRef.current
+    dragSnapshotRef.current = null
 
     if (!over) return
 
     const activeItemId = String(active.id)
     const overId = String(over.id)
 
-    setApplications((prev) => {
+    const next = updateCache((prev) => {
       const activeContainer = findContainer(activeItemId, prev)
       const overContainer = findContainer(overId, prev)
 
@@ -280,11 +317,19 @@ export default function ApplicationBoard() {
       )
       return rebuildByStatus(groups)
     })
+
+    if (!snapshot) return
+
+    const changed = changedPositions(snapshot, next)
+    if (changed.length > 0) {
+      patchMutation.mutate(changed)
+    }
   }
 
   function handleDragCancel() {
-    if (dragSnapshotRef.current) {
-      setApplications(dragSnapshotRef.current)
+    const snapshot = dragSnapshotRef.current
+    if (snapshot) {
+      updateCache(() => snapshot)
     }
     dragSnapshotRef.current = null
     setActiveId(null)
@@ -350,6 +395,7 @@ export default function ApplicationBoard() {
             application={selectedApplication}
             onClose={() => setSelectedId(null)}
             onEdit={handleEditFromDetail}
+            onDelete={handleDelete}
           />
         </>
       ) : null}

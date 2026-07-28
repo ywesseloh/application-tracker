@@ -119,7 +119,29 @@
 .application-detail__actions {
   display: flex;
   justify-content: flex-end;
+  gap: 0.6rem;
   margin-top: 1.35rem;
+}
+
+.application-detail__delete {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid #b0705f;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: #8b3a2f;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.application-detail__delete:hover {
+  background: rgba(139, 58, 47, 0.08);
+}
+
+.application-detail__delete:focus-visible {
+  outline: 2px solid #8b3a2f;
+  outline-offset: 2px;
 }
 
 .application-detail__edit {

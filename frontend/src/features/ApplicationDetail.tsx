@@ -7,12 +7,14 @@ type ApplicationDetailProps = {
   application: Application | null
   onClose: () => void
   onEdit: () => void
+  onDelete: () => void
 }
 
 export default function ApplicationDetail({
   application,
   onClose,
   onEdit,
+  onDelete,
 }: ApplicationDetailProps) {
   useEffect(() => {
     if (!application) return
@@ -27,8 +29,10 @@ export default function ApplicationDetail({
 
   if (!application) return null
 
-  const hasNotes = application.notes.trim().length > 0
-  const hasUrl = application.jobPostingUrl.trim().length > 0
+  const notes = application.notes ?? ''
+  const jobPostingUrl = application.jobPostingUrl ?? ''
+  const hasNotes = notes.trim().length > 0
+  const hasUrl = jobPostingUrl.trim().length > 0
 
   return (
     <div className="application-detail-backdrop" onClick={onClose}>
@@ -63,7 +67,7 @@ export default function ApplicationDetail({
         <section className="application-detail__section">
           <h3 className="application-detail__label">Notes</h3>
           {hasNotes ? (
-            <p className="application-detail__notes">{application.notes}</p>
+            <p className="application-detail__notes">{notes}</p>
           ) : (
             <p className="application-detail__empty">No notes yet.</p>
           )}
@@ -74,11 +78,11 @@ export default function ApplicationDetail({
           {hasUrl ? (
             <a
               className="application-detail__link"
-              href={application.jobPostingUrl}
+              href={jobPostingUrl}
               target="_blank"
               rel="noreferrer"
             >
-              {application.jobPostingUrl}
+              {jobPostingUrl}
             </a>
           ) : (
             <p className="application-detail__empty">No job posting URL.</p>
@@ -86,6 +90,13 @@ export default function ApplicationDetail({
         </section>
 
         <div className="application-detail__actions">
+          <button
+            type="button"
+            className="application-detail__delete"
+            onClick={onDelete}
+          >
+            Delete
+          </button>
           <button
             type="button"
             className="application-detail__edit"
