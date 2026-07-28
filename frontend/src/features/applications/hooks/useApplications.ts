@@ -7,7 +7,7 @@ import {
   fetchApplications,
   patchApplications,
   updateApplication,
-} from '@/features/applications/api/applicationsApi'
+} from '@/shared/api/applicationsApi'
 import type { Application } from '@/features/applications/model/types'
 
 export function useApplications() {
