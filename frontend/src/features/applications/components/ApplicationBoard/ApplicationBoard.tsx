@@ -11,28 +11,20 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import './ApplicationBoard.css'
-import type { Application } from '@/features/applications/model/types'
+import type { Application, FormMode } from '@/features/applications/model/types'
 import {
   STATUSES,
   applicationsForStatus,
   changedPositions,
   moveBetweenColumns,
-  nextColumnPosition,
   reorderWithinColumn,
 } from '@/features/applications/model/boardOrdering'
 import { useApplications } from '@/features/applications/hooks/useApplications'
 import { getErrorMessage } from '@/shared/api/apiClient'
 import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
-import ApplicationForm, {
-  type ApplicationFormValues,
-} from '@/features/applications/components/ApplicationForm/ApplicationForm'
+import ApplicationForm from '@/features/applications/components/ApplicationForm/ApplicationForm'
 import BoardColumn from './BoardColumn'
 import TilePreview from './TilePreview'
-
-type FormMode =
-  | { type: 'closed' }
-  | { type: 'create' }
-  | { type: 'edit'; id: number }
 
 export default function ApplicationBoard() {
   const {
@@ -41,21 +33,18 @@ export default function ApplicationBoard() {
     error,
     hasData,
     refetch,
-    actionError,
-    clearActionError,
     applyLocalChange,
     snapshot,
     restore,
     pauseRefetch,
     persistPositions,
-    create,
-    update,
     remove,
   } = useApplications()
 
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formMode, setFormMode] = useState<FormMode>({ type: 'closed' })
+  const [actionError, setActionError] = useState<string | null>(null)
   const dragSnapshotRef = useRef<Application[] | null>(null)
   const suppressOpenRef = useRef(false)
 
@@ -89,49 +78,11 @@ export default function ApplicationBoard() {
 
   function handleDelete() {
     if (!selectedApplication) return
-    remove(selectedApplication.id)
+    remove(selectedApplication.id, { 
+      onError: (err) => setActionError(getErrorMessage(err, 'Couldn’t delete the application.')),
+      onSuccess: () => setActionError(null)
+    })
     setSelectedId(null)
-  }
-
-  function handleSave(values: ApplicationFormValues) {
-    if (formMode.type === 'closed') return
-
-    const closeForm = () => setFormMode({ type: 'closed' })
-
-    if (formMode.type === 'create') {
-      create(
-        {
-          company: values.company,
-          role: values.role,
-          status: values.status,
-          columnPosition: nextColumnPosition(applications, values.status),
-          notes: values.notes,
-          jobPostingUrl: values.jobPostingUrl,
-        },
-        { onSuccess: closeForm },
-      )
-      return
-    }
-
-    if (!editingApplication) return
-
-    const statusChanged = editingApplication.status !== values.status
-    const columnPosition = statusChanged
-      ? nextColumnPosition(applications, values.status)
-      : editingApplication.columnPosition
-
-    update(
-      {
-        ...editingApplication,
-        company: values.company,
-        role: values.role,
-        status: values.status,
-        columnPosition,
-        notes: values.notes,
-        jobPostingUrl: values.jobPostingUrl,
-      },
-      { onSuccess: closeForm },
-    )
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -171,7 +122,11 @@ export default function ApplicationBoard() {
     const changed = changedPositions(before, next)
     if (changed.length > 0) {
       persistPositions(changed, {
-        onError: () => restore(before),
+        onError: (err) => {
+          setActionError(getErrorMessage(err, 'Couldn’t save the new order.'))
+          restore(before)
+        },
+        onSuccess: () => setActionError(null)
       })
     }
   }
@@ -233,7 +188,7 @@ export default function ApplicationBoard() {
           <button
             type="button"
             className="application-board__banner-dismiss"
-            onClick={clearActionError}
+            onClick={() => setActionError(null)}
             aria-label="Dismiss"
           >
             ×
@@ -278,9 +233,8 @@ export default function ApplicationBoard() {
 
       <ApplicationForm
         open={isFormOpen}
-        initialApplication={formMode.type === 'edit' ? editingApplication : null}
+        mode={formMode}
         onClose={() => setFormMode({ type: 'closed' })}
-        onSubmit={handleSave}
       />
     </div>
   )

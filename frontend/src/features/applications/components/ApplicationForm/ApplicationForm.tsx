@@ -1,7 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import type { Application, ApplicationStatus } from '@/features/applications/model/types'
+import { useEffect, useState, type SubmitEvent } from 'react'
+import type { Application, ApplicationStatus, FormMode } from '@/features/applications/model/types'
 import { STATUS_LABELS } from '@/features/applications/model/types'
 import './ApplicationForm.css'
+import { useApplications } from '../../hooks/useApplications'
+import { nextColumnPosition } from '../../model/boardOrdering'
 
 export type ApplicationFormValues = {
   company: string
@@ -13,9 +15,8 @@ export type ApplicationFormValues = {
 
 type ApplicationFormProps = {
   open: boolean
-  initialApplication: Application | null
+  mode: FormMode
   onClose: () => void
-  onSubmit: (values: ApplicationFormValues) => void
 }
 
 const EMPTY_VALUES: ApplicationFormValues = {
@@ -43,13 +44,16 @@ function valuesFromApplication(application: Application): ApplicationFormValues 
 
 export default function ApplicationForm({
   open,
-  initialApplication,
+  mode,
   onClose,
-  onSubmit,
 }: ApplicationFormProps) {
+  const { applications, create, update } = useApplications()
   const [values, setValues] = useState<ApplicationFormValues>(EMPTY_VALUES)
   const [error, setError] = useState<string | null>(null)
-  const isEditing = initialApplication !== null
+  const initialApplication =
+    mode.type === 'edit'
+      ? applications.find((app) => app.id === mode.id) ?? null
+      : null
 
   useEffect(() => {
     if (!open) return
@@ -59,7 +63,6 @@ export default function ApplicationForm({
         ? valuesFromApplication(initialApplication)
         : EMPTY_VALUES,
     )
-    setError(null)
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') onClose()
@@ -71,24 +74,44 @@ export default function ApplicationForm({
 
   if (!open) return null
 
-  function handleSubmit(event: FormEvent) {
+  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (mode.type === 'closed') return
 
-    const company = values.company.trim()
-    const role = values.role.trim()
-
-    if (!company || !role) {
-      setError('Company and role are required.')
+    if (mode.type === 'create') {
+      create(
+        {
+          company: values.company,
+          role: values.role,
+          status: values.status,
+          columnPosition: nextColumnPosition(applications, values.status),
+          notes: values.notes,
+          jobPostingUrl: values.jobPostingUrl,
+        },
+        { onSuccess: onClose },
+      )
       return
     }
 
-    onSubmit({
-      company,
-      role,
-      status: values.status,
-      notes: values.notes.trim(),
-      jobPostingUrl: values.jobPostingUrl.trim(),
-    })
+    if (!initialApplication) return
+
+    const statusChanged = initialApplication.status !== values.status
+    const columnPosition = statusChanged
+      ? nextColumnPosition(applications, values.status)
+      : initialApplication.columnPosition
+
+    update(
+      {
+        ...initialApplication,
+        company: values.company,
+        role: values.role,
+        status: values.status,
+        columnPosition,
+        notes: values.notes,
+        jobPostingUrl: values.jobPostingUrl,
+      },
+      { onSuccess: onClose },
+    )
   }
 
   function updateField<K extends keyof ApplicationFormValues>(
@@ -110,7 +133,7 @@ export default function ApplicationForm({
       >
         <header className="application-form__header">
           <h2 id="application-form-title" className="application-form__title">
-            {isEditing ? 'Edit application' : 'Add application'}
+            {mode.type === 'edit' ? 'Edit application' : 'Add application'}
           </h2>
           <button
             type="button"
@@ -198,7 +221,7 @@ export default function ApplicationForm({
               type="submit"
               className="application-form__button application-form__button--primary"
             >
-              {isEditing ? 'Save changes' : 'Add application'}
+              {mode.type === 'edit' ? 'Save changes' : 'Add application'}
             </button>
           </div>
         </form>

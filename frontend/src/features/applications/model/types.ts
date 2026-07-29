@@ -22,3 +22,8 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   OFFER: 'Offer',
   REJECTED: 'Rejected',
 }
+
+export type FormMode =
+  | { type: 'closed' }
+  | { type: 'create' }
+  | { type: 'edit'; id: number }
