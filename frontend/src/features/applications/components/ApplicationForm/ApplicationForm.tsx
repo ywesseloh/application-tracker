@@ -74,12 +74,32 @@ export default function ApplicationForm({
 
   if (!open) return null
 
+  function handleClose() {
+    onClose()
+    setError(null)
+  }
+
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (mode.type === 'closed') return
 
-    if (mode.type === 'create') {
-      create(
+    const company = values.company.trim()
+    const role = values.role.trim()
+
+    if (!company || !role)
+      setError('Company and role are required.')
+
+    switch (mode.type) {
+      case 'create':
+        createApplication()
+        break
+      case 'edit':
+        updateApplication()
+        break
+    }
+  }
+
+  function createApplication() {
+    create(
         {
           company: values.company,
           role: values.role,
@@ -88,11 +108,15 @@ export default function ApplicationForm({
           notes: values.notes,
           jobPostingUrl: values.jobPostingUrl,
         },
-        { onSuccess: onClose },
+        { 
+          onError: (err) => setError(err.message),
+          onSuccess: handleClose 
+        },
       )
       return
-    }
+  }
 
+  function updateApplication() {
     if (!initialApplication) return
 
     const statusChanged = initialApplication.status !== values.status
@@ -110,8 +134,12 @@ export default function ApplicationForm({
         notes: values.notes,
         jobPostingUrl: values.jobPostingUrl,
       },
-      { onSuccess: onClose },
+      { 
+        onError: (err) => setError(err.message),
+        onSuccess: handleClose 
+      },
     )
+      return
   }
 
   function updateField<K extends keyof ApplicationFormValues>(
@@ -123,7 +151,7 @@ export default function ApplicationForm({
   }
 
   return (
-    <div className="application-form-backdrop" onClick={onClose}>
+    <div className="application-form-backdrop" onClick={handleClose}>
       <div
         className="application-form"
         role="dialog"
@@ -138,7 +166,7 @@ export default function ApplicationForm({
           <button
             type="button"
             className="application-form__close"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close"
           >
             ×
@@ -207,13 +235,13 @@ export default function ApplicationForm({
             />
           </label>
 
-          {error ? <p className="application-form__error">{error}</p> : null}
+          {error ? <p className="application-form__error"  role="alert">{error}</p> : null}
 
           <div className="application-form__actions">
             <button
               type="button"
               className="application-form__button application-form__button--secondary"
-              onClick={onClose}
+              onClick={handleClose}
             >
               Cancel
             </button>
