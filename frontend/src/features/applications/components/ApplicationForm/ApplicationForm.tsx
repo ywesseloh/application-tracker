@@ -47,13 +47,14 @@ export default function ApplicationForm({
   mode,
   onClose,
 }: ApplicationFormProps) {
-  const { applications, create, update } = useApplications()
+  const { applications, createMutation, updateMutation } = useApplications()
   const [values, setValues] = useState<ApplicationFormValues>(EMPTY_VALUES)
   const [error, setError] = useState<string | null>(null)
   const initialApplication =
     mode.type === 'edit'
       ? applications.find((app) => app.id === mode.id) ?? null
       : null
+  const isSubmitting = createMutation.isPending || updateMutation.isPending
 
   useEffect(() => {
     if (!open) return
@@ -81,12 +82,15 @@ export default function ApplicationForm({
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (isSubmitting) return
 
     const company = values.company.trim()
     const role = values.role.trim()
 
-    if (!company || !role)
+    if (!company || !role) {
       setError('Company and role are required.')
+      return
+    }
 
     switch (mode.type) {
       case 'create':
@@ -99,7 +103,7 @@ export default function ApplicationForm({
   }
 
   function createApplication() {
-    create(
+    createMutation.mutate(
         {
           company: values.company,
           role: values.role,
@@ -124,7 +128,7 @@ export default function ApplicationForm({
       ? nextColumnPosition(applications, values.status)
       : initialApplication.columnPosition
 
-    update(
+    updateMutation.mutate(
       {
         ...initialApplication,
         company: values.company,
@@ -249,7 +253,16 @@ export default function ApplicationForm({
               type="submit"
               className="application-form__button application-form__button--primary"
             >
-              {mode.type === 'edit' ? 'Save changes' : 'Add application'}
+              {isSubmitting ? (
+                <>
+                  <span className="application-form__spinner" aria-hidden="true" />
+                  Saving…
+                </>
+              ) : mode.type === 'edit' ? (
+                'Save changes'
+              ) : (
+                'Add application'
+              )}
             </button>
           </div>
         </form>

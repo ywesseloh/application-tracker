@@ -81,9 +81,9 @@ export function useApplications() {
     snapshot,
     restore,
     pauseRefetch,
-    persistPositions: patchMutation.mutate,
-    create: createMutation.mutate,
-    update: updateMutation.mutate,
-    remove: deleteMutation.mutate,
-  }
+    persistPositionsMutation: patchMutation,
+    createMutation,
+    updateMutation,
+    deleteMutation 
+   }
 }

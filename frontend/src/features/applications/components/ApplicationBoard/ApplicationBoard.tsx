@@ -36,8 +36,8 @@ export default function ApplicationBoard() {
     snapshot,
     restore,
     pauseRefetch,
-    persistPositions,
-    remove,
+    persistPositionsMutation,
+    deleteMutation,
   } = useApplications()
 
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -77,7 +77,7 @@ export default function ApplicationBoard() {
 
   function handleDelete() {
     if (!selectedApplication) return
-    remove(selectedApplication.id, { 
+    deleteMutation.mutate(selectedApplication.id, { 
       onError: setActionError,
       onSuccess: () => setActionError(null)
     })
@@ -120,7 +120,7 @@ export default function ApplicationBoard() {
 
     const changed = changedPositions(before, next)
     if (changed.length > 0) {
-      persistPositions(changed, {
+      persistPositionsMutation.mutate(changed, {
         onError: (err) => {
           setActionError(err)
           restore(before)

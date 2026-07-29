@@ -123,12 +123,31 @@
 }
 
 .application-form__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
   padding: 0.5rem 0.9rem;
   border-radius: 0.45rem;
   font: inherit;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+.application-form__spinner {
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: application-form-spin 0.7s linear infinite;
+}
+
+@keyframes application-form-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .application-form__button--secondary {
