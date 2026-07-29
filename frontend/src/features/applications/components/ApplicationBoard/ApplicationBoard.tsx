@@ -20,7 +20,6 @@ import {
   reorderWithinColumn,
 } from '@/features/applications/model/boardOrdering'
 import { useApplications } from '@/features/applications/hooks/useApplications'
-import { getErrorMessage } from '@/shared/api/apiClient'
 import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
 import ApplicationForm from '@/features/applications/components/ApplicationForm/ApplicationForm'
 import BoardColumn from './BoardColumn'
@@ -44,7 +43,7 @@ export default function ApplicationBoard() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formMode, setFormMode] = useState<FormMode>({ type: 'closed' })
-  const [actionError, setActionError] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<Error | null>(null)
   const dragSnapshotRef = useRef<Application[] | null>(null)
   const suppressOpenRef = useRef(false)
 
@@ -79,7 +78,7 @@ export default function ApplicationBoard() {
   function handleDelete() {
     if (!selectedApplication) return
     remove(selectedApplication.id, { 
-      onError: (err) => setActionError(getErrorMessage(err, 'Couldn’t delete the application.')),
+      onError: setActionError,
       onSuccess: () => setActionError(null)
     })
     setSelectedId(null)
@@ -123,7 +122,7 @@ export default function ApplicationBoard() {
     if (changed.length > 0) {
       persistPositions(changed, {
         onError: (err) => {
-          setActionError(getErrorMessage(err, 'Couldn’t save the new order.'))
+          setActionError(err)
           restore(before)
         },
         onSuccess: () => setActionError(null)
@@ -160,7 +159,7 @@ export default function ApplicationBoard() {
           {showLoadError ? (
             <div className="application-board__load-error">
               <p className="application-board__status application-board__status--error">
-                {getErrorMessage(error, 'Failed to load applications.')}
+                {error.message}
               </p>
               <button
                 type="button"
@@ -184,7 +183,7 @@ export default function ApplicationBoard() {
 
       {actionError ? (
         <div className="application-board__banner" role="alert">
-          <p className="application-board__banner-text">{actionError}</p>
+          <p className="application-board__banner-text">{actionError.message}</p>
           <button
             type="button"
             className="application-board__banner-dismiss"

@@ -25,16 +25,6 @@ export class NetworkError extends Error {
   }
 }
 
-export function getErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof NetworkError) {
-    return 'Can’t reach the server. Is the backend running?'
-  }
-  if (error instanceof ApiError) {
-    return `${fallback} (${error.status})`
-  }
-  return fallback
-}
-
 function resolveUrl(path: string): string {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path

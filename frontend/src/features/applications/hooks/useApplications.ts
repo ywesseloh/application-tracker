@@ -8,12 +8,10 @@ import {
   patchApplications,
   updateApplication,
 } from '@/shared/api/applicationsApi'
-import { getErrorMessage } from '@/shared/api/apiClient'
 import type { Application } from '@/features/applications/model/types'
 
 export function useApplications() {
   const queryClient = useQueryClient()
-  const [actionError, setActionError] = useState<string | null>(null)
 
   const { isPending, error, data, refetch } = useQuery({
     queryKey: applicationsQueryKey,
@@ -26,38 +24,23 @@ export function useApplications() {
     () => queryClient.invalidateQueries({ queryKey: applicationsQueryKey }),
     [queryClient],
   )
-
-  const clearActionError = useCallback(() => setActionError(null), [])
-
   const patchMutation = useMutation({
     mutationFn: patchApplications,
-    onSuccess: clearActionError,
-    onError: (err) =>
-      setActionError(getErrorMessage(err, 'Couldn’t save board changes.')),
     onSettled: invalidate,
   })
 
   const createMutation = useMutation({
     mutationFn: createApplication,
-    onSuccess: clearActionError,
-    onError: (err) =>
-      setActionError(getErrorMessage(err, 'Couldn’t create the application.')),
     onSettled: invalidate,
   })
 
   const updateMutation = useMutation({
     mutationFn: updateApplication,
-    onSuccess: clearActionError,
-    onError: (err) =>
-      setActionError(getErrorMessage(err, 'Couldn’t save the application.')),
     onSettled: invalidate,
   })
 
   const deleteMutation = useMutation({
     mutationFn: deleteApplication,
-    onSuccess: clearActionError,
-    onError: (err) =>
-      setActionError(getErrorMessage(err, 'Couldn’t delete the application.')),
     onSettled: invalidate,
   })
 
@@ -94,8 +77,6 @@ export function useApplications() {
     error,
     hasData,
     refetch,
-    actionError,
-    clearActionError,
     applyLocalChange,
     snapshot,
     restore,
