@@ -37,7 +37,6 @@ export default function ApplicationBoard() {
     restore,
     pauseRefetch,
     persistPositionsMutation,
-    deleteMutation,
   } = useApplications()
 
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -72,15 +71,6 @@ export default function ApplicationBoard() {
   function handleEditFromDetail() {
     if (!selectedApplication) return
     setFormMode({ type: 'edit', id: selectedApplication.id })
-    setSelectedId(null)
-  }
-
-  function handleDelete() {
-    if (!selectedApplication) return
-    deleteMutation.mutate(selectedApplication.id, { 
-      onError: setActionError,
-      onSuccess: () => setActionError(null)
-    })
     setSelectedId(null)
   }
 
@@ -220,14 +210,12 @@ export default function ApplicationBoard() {
               {activeApplication ? <TilePreview application={activeApplication} /> : null}
             </DragOverlay>
           </DndContext>
-
           <ApplicationDetail
             application={selectedApplication}
             onClose={() => setSelectedId(null)}
             onEdit={handleEditFromDetail}
-            onDelete={handleDelete}
           />
-        </>
+           </>
       ) : null}
 
       <ApplicationForm

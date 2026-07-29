@@ -1,21 +1,27 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { Application } from '@/features/applications/model/types'
 import { STATUS_LABELS } from '@/features/applications/model/types'
+import { useApplications } from '@/features/applications/hooks/useApplications'
 import './ApplicationDetail.css'
 
 type ApplicationDetailProps = {
   application: Application | null
   onClose: () => void
   onEdit: () => void
-  onDelete: () => void
 }
 
 export default function ApplicationDetail({
   application,
   onClose,
   onEdit,
-  onDelete,
 }: ApplicationDetailProps) {
+  const { deleteMutation } = useApplications()
+  const [error, setError] = useState<string | null>(null)
+  const isDeleting =
+    deleteMutation.isPending &&
+    application !== null &&
+    deleteMutation.variables === application.id
+
   useEffect(() => {
     if (!application) return
 
@@ -27,6 +33,10 @@ export default function ApplicationDetail({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [application, onClose])
 
+  useEffect(() => {
+    setError(null)
+  }, [application?.id])
+
   if (!application) return null
 
   const notes = application.notes ?? ''
@@ -34,8 +44,25 @@ export default function ApplicationDetail({
   const hasNotes = notes.trim().length > 0
   const hasUrl = jobPostingUrl.trim().length > 0
 
+  function handleClose() {
+    setError(null)
+    onClose()
+  }
+
+  function handleDelete() {
+    if (isDeleting || !application) return
+
+    deleteMutation.mutate(application.id, {
+      onError: (err) => setError(err.message),
+      onSuccess: () => {
+        setError(null)
+        onClose()
+      },
+    })
+  }
+
   return (
-    <div className="application-detail-backdrop" onClick={onClose}>
+    <div className="application-detail-backdrop" onClick={handleClose}>
       <div
         className="application-detail"
         role="dialog"
@@ -53,7 +80,7 @@ export default function ApplicationDetail({
           <button
             type="button"
             className="application-detail__close"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close"
           >
             ×
@@ -89,18 +116,34 @@ export default function ApplicationDetail({
           )}
         </section>
 
+        {error ? (
+          <p className="application-detail__error" role="alert">
+            {error}
+          </p>
+        ) : null}
+
         <div className="application-detail__actions">
           <button
             type="button"
             className="application-detail__delete"
-            onClick={onDelete}
+            onClick={handleDelete}
+            disabled={isDeleting}
+            aria-busy={isDeleting}
           >
-            Delete
+            {isDeleting ? (
+              <>
+                <span className="application-detail__spinner" aria-hidden="true" />
+                Deleting…
+              </>
+            ) : (
+              'Delete'
+            )}
           </button>
           <button
             type="button"
             className="application-detail__edit"
             onClick={onEdit}
+            disabled={isDeleting}
           >
             Edit
           </button>

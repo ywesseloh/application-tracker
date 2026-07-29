@@ -116,6 +116,17 @@
   font-style: italic;
 }
 
+.application-detail__error {
+  margin: 1.15rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #d9b3ac;
+  border-radius: 0.45rem;
+  background: #f8ece9;
+  color: #8b3a2f;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 .application-detail__actions {
   display: flex;
   justify-content: flex-end;
@@ -124,6 +135,10 @@
 }
 
 .application-detail__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
   padding: 0.5rem 0.9rem;
   border: 1px solid #b0705f;
   border-radius: 0.45rem;
@@ -135,13 +150,33 @@
   cursor: pointer;
 }
 
-.application-detail__delete:hover {
+.application-detail__delete:hover:not(:disabled) {
   background: rgba(139, 58, 47, 0.08);
+}
+
+.application-detail__delete:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .application-detail__delete:focus-visible {
   outline: 2px solid #8b3a2f;
   outline-offset: 2px;
+}
+
+.application-detail__spinner {
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid rgba(139, 58, 47, 0.25);
+  border-top-color: #8b3a2f;
+  border-radius: 50%;
+  animation: application-detail-spin 0.7s linear infinite;
+}
+
+@keyframes application-detail-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .application-detail__edit {
@@ -156,8 +191,13 @@
   cursor: pointer;
 }
 
-.application-detail__edit:hover {
+.application-detail__edit:hover:not(:disabled) {
   filter: brightness(0.95);
+}
+
+.application-detail__edit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .application-detail__edit:focus-visible {
