@@ -2,6 +2,9 @@ import { useEffect } from 'react'
 import type { Application } from '@/features/applications/model/types'
 import { STATUS_LABELS } from '@/features/applications/model/types'
 import { useDeleteApplication } from '@/features/applications/hooks/useApplicationMutations'
+import { useApplicationsCache } from '@/features/applications/hooks/useApplicationsCache'
+import { applicationMutationKeys } from '@/features/applications/model/mutationKeys'
+import ActionErrorBanner from '@/shared/components/ActionErrorBanner/ActionErrorBanner'
 import './ApplicationDetail.css'
 
 type ApplicationDetailProps = {
@@ -16,11 +19,10 @@ export default function ApplicationDetail({
   onEdit,
 }: ApplicationDetailProps) {
   const { deleteMutation, deleteMutationState } = useDeleteApplication(application.id)
+  const { clearSettledMutations } = useApplicationsCache()
   const { isPending: isDeleting, error } = deleteMutationState
 
   useEffect(() => {
-    if (!application) return
-
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') onClose()
     }
@@ -28,8 +30,6 @@ export default function ApplicationDetail({
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [application, onClose])
-
-  if (!application) return null
 
   const notes = application.notes ?? ''
   const jobPostingUrl = application.jobPostingUrl ?? ''
@@ -97,9 +97,12 @@ export default function ApplicationDetail({
         </section>
 
         {error ? (
-          <p className="application-detail__error" role="alert">
-            {error.message}
-          </p>
+          <ActionErrorBanner
+            message={error.message}
+            onDismiss={() =>
+              clearSettledMutations(applicationMutationKeys.remove(application.id))
+            }
+          />
         ) : null}
 
         <div className="application-detail__actions">

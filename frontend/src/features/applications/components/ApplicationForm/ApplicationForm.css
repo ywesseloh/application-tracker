@@ -104,15 +104,8 @@
   outline-offset: 1px;
 }
 
-.application-form__error {
+.application-form__body > .action-error-banner {
   margin: 0;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid #d9b3ac;
-  border-radius: 0.45rem;
-  background: #f8ece9;
-  color: #8b3a2f;
-  font-size: 0.85rem;
-  line-height: 1.4;
 }
 
 .application-form__actions {

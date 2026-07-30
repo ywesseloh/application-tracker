@@ -116,15 +116,8 @@
   font-style: italic;
 }
 
-.application-detail__error {
-  margin: 1.15rem 0 0;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid #d9b3ac;
-  border-radius: 0.45rem;
-  background: #f8ece9;
-  color: #8b3a2f;
-  font-size: 0.85rem;
-  line-height: 1.4;
+.application-detail > .action-error-banner {
+  margin-top: 1.15rem;
 }
 
 .application-detail__actions {

@@ -10,6 +10,7 @@ import {
 import { useApplicationsCache } from '../../hooks/useApplicationsCache'
 import { applicationMutationKeys } from '../../model/mutationKeys'
 import { nextColumnPosition } from '../../model/boardOrdering'
+import ActionErrorBanner from '@/shared/components/ActionErrorBanner/ActionErrorBanner'
 
 type ApplicationFormValues = {
   company: string
@@ -55,9 +56,8 @@ export default function ApplicationForm({
 }: ApplicationFormProps) {
   const { applications } = useApplicationsQuery()
   const editingId = mode.type === 'edit' ? mode.id : null
-  const {createMutation, createMutationState} = useCreateApplication()
-  const {updateMutation, updateMutationState} = editingId ? useUpdateApplication(editingId) 
-      : { updateMutation: null, updateMutationState: null }
+  const { createMutation, createMutationState } = useCreateApplication()
+  const { updateMutation, updateMutationState } = useUpdateApplication(editingId)
   const { clearSettledMutations } = useApplicationsCache()
 
   const [values, setValues] = useState<ApplicationFormValues>(EMPTY_VALUES)
@@ -67,9 +67,9 @@ export default function ApplicationForm({
     editingId === null
       ? null
       : applications.find((app) => app.id === editingId) ?? null
-  const isSubmitting = createMutationState.isPending || (updateMutationState?.isPending)
-  const submitError = createMutationState.error ?? (updateMutationState?.error)
-  const error = validationError ?? submitError?.message ?? null
+  const isSubmitting =
+    createMutationState.isPending || updateMutationState.isPending
+  const submitError = createMutationState.error ?? updateMutationState.error
 
   // A refetch replaces the application object, so read it through a ref: the
   // form must reset when the edit target changes, not when its identity does.
@@ -101,6 +101,14 @@ export default function ApplicationForm({
   function handleClose() {
     onClose()
     setValidationError(null)
+  }
+
+  function dismissSubmitError() {
+    if (editingId !== null) {
+      clearSettledMutations(applicationMutationKeys.update(editingId))
+    } else {
+      clearSettledMutations(applicationMutationKeys.create)
+    }
   }
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -140,14 +148,14 @@ export default function ApplicationForm({
   }
 
   function updateApplication() {
-    if (!initialApplication) return
+    if (!initialApplication || editingId === null) return
 
     const statusChanged = initialApplication.status !== values.status
     const columnPosition = statusChanged
       ? nextColumnPosition(applications, values.status)
       : initialApplication.columnPosition
 
-    updateMutation?.mutate(
+    updateMutation.mutate(
       {
         ...initialApplication,
         company: values.company,
@@ -254,7 +262,15 @@ export default function ApplicationForm({
             />
           </label>
 
-          {error ? <p className="application-form__error"  role="alert">{error}</p> : null}
+          {validationError ? (
+            <ActionErrorBanner message={validationError} />
+          ) : null}
+          {submitError ? (
+            <ActionErrorBanner
+              message={submitError.message}
+              onDismiss={dismissSubmitError}
+            />
+          ) : null}
 
           <div className="application-form__actions">
             <button

@@ -23,6 +23,7 @@ import { useApplicationsQuery } from '@/features/applications/hooks/useApplicati
 import { useApplicationsCache } from '@/features/applications/hooks/useApplicationsCache'
 import { useMoveApplications } from '@/features/applications/hooks/useApplicationMutations'
 import { useApplicationActionError } from '@/features/applications/hooks/useApplicationActionError'
+import ActionErrorBanner from '@/shared/components/ActionErrorBanner/ActionErrorBanner'
 import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
 import ApplicationForm from '@/features/applications/components/ApplicationForm/ApplicationForm'
 import BoardColumn from './BoardColumn'
@@ -162,17 +163,7 @@ export default function ApplicationBoard() {
       </header>
 
       {actionError ? (
-        <div className="application-board__banner" role="alert">
-          <p className="application-board__banner-text">{actionError}</p>
-          <button
-            type="button"
-            className="application-board__banner-dismiss"
-            onClick={dismissActionError}
-            aria-label="Dismiss"
-          >
-            ×
-          </button>
-        </div>
+        <ActionErrorBanner message={actionError} onDismiss={dismissActionError} />
       ) : null}
 
       {hasData ? (

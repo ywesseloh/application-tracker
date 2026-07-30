@@ -12,6 +12,12 @@ import {
 } from '@/features/applications/model/mutationKeys'
 import { invalidateApplications } from '@/features/applications/model/applicationsCache'
 
+/**
+ * Stands in for a real id so that hooks can be called unconditionally while no
+ * application is selected. Mutations bound to it never fire in practice.
+ */
+const NO_ID = -1
+
 export function useCreateApplication() {
   const queryClient = useQueryClient()
 
@@ -20,7 +26,7 @@ export function useCreateApplication() {
     mutationFn: createApplication,
     onSettled: () => invalidateApplications(queryClient),
   })
-  const createMutationState = latestMutationState(applicationMutationKeys.create)
+  const createMutationState = useLatestMutationState(applicationMutationKeys.create)
 
   return {
     createMutation,
@@ -28,16 +34,19 @@ export function useCreateApplication() {
   }
 }
 
-export function useUpdateApplication(id: number) {
+export function useUpdateApplication(id: number | null) {
   const queryClient = useQueryClient()
+  const resolvedId = id ?? NO_ID
 
   const updateMutation = useMutation({
-    mutationKey: applicationMutationKeys.update(id),
-    scope: applicationScope(id),
+    mutationKey: applicationMutationKeys.update(resolvedId),
+    scope: applicationScope(resolvedId),
     mutationFn: updateApplication,
     onSettled: () => invalidateApplications(queryClient),
   })
-  const updateMutationState = latestMutationState(applicationMutationKeys.update(id))
+  const updateMutationState = useLatestMutationState(
+    applicationMutationKeys.update(resolvedId),
+  )
 
   return {
     updateMutation,
@@ -54,7 +63,7 @@ export function useDeleteApplication(id: number) {
     mutationFn: () => deleteApplication(id),
     onSettled: () => invalidateApplications(queryClient),
   })
-  const deleteMutationState = latestMutationState(applicationMutationKeys.remove(id))
+  const deleteMutationState = useLatestMutationState(applicationMutationKeys.remove(id))
 
   return {
     deleteMutation,
@@ -71,7 +80,7 @@ export function useMoveApplications() {
     mutationFn: patchApplications,
     onSettled: () => invalidateApplications(queryClient),
   })
-  const moveMutationState = latestMutationState(applicationMutationKeys.reposition)
+  const moveMutationState = useLatestMutationState(applicationMutationKeys.reposition)
 
   return {
     moveMutation,
@@ -84,7 +93,7 @@ export function useMoveApplications() {
  * status survives the component that started the mutation being unmounted and
  * clears again once the mutation is dropped from the cache.
  */
-function latestMutationState(key: readonly unknown[]) {
+function useLatestMutationState(key: readonly unknown[]) {
   const states = useMutationState({
     filters: { mutationKey: key, exact: true },
     select: (mutation) => ({

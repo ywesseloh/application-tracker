@@ -15,9 +15,7 @@ function latestTimestamp(timestamps: number[]) {
 }
 
 /**
- * Surfaces the most recent failure across every application mutation. Reading
- * from the mutation cache keeps the board out of the error-reporting path of
- * the dialogs, which own their own inline messages.
+ * Surfaces the most recent failure across every application mutation.
  */
 export function useApplicationActionError() {
   const { clearSettledMutations } = useApplicationsCache()
