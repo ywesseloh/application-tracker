@@ -12,12 +12,6 @@ import {
 } from '@/features/applications/model/mutationKeys'
 import { invalidateApplications } from '@/features/applications/model/applicationsCache'
 
-/**
- * Stands in for a real id so that hooks can be called unconditionally while no
- * application is selected. Mutations bound to it never fire in practice.
- */
-const NO_ID = -1
-
 export function useCreateApplication() {
   const queryClient = useQueryClient()
 
@@ -34,18 +28,17 @@ export function useCreateApplication() {
   }
 }
 
-export function useUpdateApplication(id: number | null) {
+export function useUpdateApplication(id: number) {
   const queryClient = useQueryClient()
-  const resolvedId = id ?? NO_ID
 
   const updateMutation = useMutation({
-    mutationKey: applicationMutationKeys.update(resolvedId),
-    scope: applicationScope(resolvedId),
+    mutationKey: applicationMutationKeys.update(id),
+    scope: applicationScope(id),
     mutationFn: updateApplication,
     onSettled: () => invalidateApplications(queryClient),
   })
   const updateMutationState = useLatestMutationState(
-    applicationMutationKeys.update(resolvedId),
+    applicationMutationKeys.update(id),
   )
 
   return {

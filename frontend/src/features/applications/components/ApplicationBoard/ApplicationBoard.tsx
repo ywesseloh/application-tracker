@@ -25,9 +25,10 @@ import { useMoveApplications } from '@/features/applications/hooks/useApplicatio
 import { useApplicationActionError } from '@/features/applications/hooks/useApplicationActionError'
 import ActionErrorBanner from '@/shared/components/ActionErrorBanner/ActionErrorBanner'
 import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
-import ApplicationForm from '@/features/applications/components/ApplicationForm/ApplicationForm'
 import BoardColumn from './BoardColumn'
 import TilePreview from './TilePreview'
+import { EditApplicationForm } from '../ApplicationForm/EditApplicationForm'
+import { CreateApplicationForm } from '../ApplicationForm/CreateApplicationForm'
 
 export default function ApplicationBoard() {
   const { applications, isPending, error, hasData, refetch } = useApplicationsQuery()
@@ -200,11 +201,18 @@ export default function ApplicationBoard() {
            </>
       ) : null}
 
-      <ApplicationForm
-        open={isFormOpen}
-        mode={formMode}
-        onClose={() => setFormMode({ type: 'closed' })}
-      />
+      {formMode.type === 'create' ? (
+        <CreateApplicationForm
+          onClose={() => setFormMode({ type: 'closed' })}
+        />
+      ) : null}
+
+      {formMode.type === 'edit' ? (
+        <EditApplicationForm
+          id={formMode.id}
+          onClose={() => setFormMode({ type: 'closed' })}
+        />
+      ) : null}
     </div>
   )
 }

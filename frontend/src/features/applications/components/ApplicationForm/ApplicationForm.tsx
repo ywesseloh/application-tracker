@@ -1,37 +1,18 @@
-import { useEffect, useRef, useState, type SubmitEvent } from 'react'
-import type { Application, ApplicationStatus, FormMode } from '@/features/applications/model/types'
+import { useEffect, useState, type SubmitEvent } from 'react'
+import type { ApplicationStatus, FormMode } from '@/features/applications/model/types'
+import type { ApplicationFormValues } from './formValues'
 import { STATUS_LABELS } from '@/features/applications/model/types'
 import './ApplicationForm.css'
-import { useApplicationsQuery } from '../../hooks/useApplicationsQuery'
-import {
-  useCreateApplication,
-  useUpdateApplication,
-} from '../../hooks/useApplicationMutations'
-import { useApplicationsCache } from '../../hooks/useApplicationsCache'
-import { applicationMutationKeys } from '../../model/mutationKeys'
-import { nextColumnPosition } from '../../model/boardOrdering'
 import ActionErrorBanner from '@/shared/components/ActionErrorBanner/ActionErrorBanner'
 
-type ApplicationFormValues = {
-  company: string
-  role: string
-  status: ApplicationStatus
-  notes: string
-  jobPostingUrl: string
-}
-
 type ApplicationFormProps = {
-  open: boolean
   mode: FormMode
+  initialValues: ApplicationFormValues
+  isSubmitting: boolean
+  submitError: Error | null
+  onDismissSubmitError: () => void
+  onSubmit: (values: ApplicationFormValues, success: () => void) => void
   onClose: () => void
-}
-
-const EMPTY_VALUES: ApplicationFormValues = {
-  company: '',
-  role: '',
-  status: 'WISHLIST',
-  notes: '',
-  jobPostingUrl: '',
 }
 
 const STATUS_OPTIONS = Object.entries(STATUS_LABELS) as [
@@ -39,76 +20,31 @@ const STATUS_OPTIONS = Object.entries(STATUS_LABELS) as [
   string,
 ][]
 
-function valuesFromApplication(application: Application): ApplicationFormValues {
-  return {
-    company: application.company,
-    role: application.role,
-    status: application.status,
-    notes: application.notes ?? '',
-    jobPostingUrl: application.jobPostingUrl ?? '',
-  }
-}
-
 export default function ApplicationForm({
-  open,
   mode,
+  initialValues,
+  isSubmitting,
+  submitError,
+  onDismissSubmitError,
+  onSubmit,
   onClose,
 }: ApplicationFormProps) {
-  const { applications } = useApplicationsQuery()
-  const editingId = mode.type === 'edit' ? mode.id : null
-  const { createMutation, createMutationState } = useCreateApplication()
-  const { updateMutation, updateMutationState } = useUpdateApplication(editingId)
-  const { clearSettledMutations } = useApplicationsCache()
 
-  const [values, setValues] = useState<ApplicationFormValues>(EMPTY_VALUES)
+  const [values, setValues] = useState<ApplicationFormValues>(initialValues)
   const [validationError, setValidationError] = useState<string | null>(null)
 
-  const initialApplication =
-    editingId === null
-      ? null
-      : applications.find((app) => app.id === editingId) ?? null
-  const isSubmitting =
-    createMutationState.isPending || updateMutationState.isPending
-  const submitError = createMutationState.error ?? updateMutationState.error
-
-  // A refetch replaces the application object, so read it through a ref: the
-  // form must reset when the edit target changes, not when its identity does.
-  const initialApplicationRef = useRef(initialApplication)
-  initialApplicationRef.current = initialApplication
-
   useEffect(() => {
-    if (!open) return
-
-    const current = initialApplicationRef.current
-    setValues(current ? valuesFromApplication(current) : EMPTY_VALUES)
-    setValidationError(null)
-    clearSettledMutations(applicationMutationKeys.create)
-  }, [open, editingId, clearSettledMutations])
-
-  useEffect(() => {
-    if (!open) return
-
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') onClose()
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, onClose])
-
-  if (!open) return null
+  }, [onClose])
 
   function handleClose() {
     onClose()
     setValidationError(null)
-  }
-
-  function dismissSubmitError() {
-    if (editingId !== null) {
-      clearSettledMutations(applicationMutationKeys.update(editingId))
-    } else {
-      clearSettledMutations(applicationMutationKeys.create)
-    }
   }
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -123,50 +59,9 @@ export default function ApplicationForm({
       return
     }
 
-    switch (mode.type) {
-      case 'create':
-        createApplication()
-        break
-      case 'edit':
-        updateApplication()
-        break
-    }
-  }
-
-  function createApplication() {
-    createMutation.mutate(
-      {
-        company: values.company,
-        role: values.role,
-        status: values.status,
-        columnPosition: nextColumnPosition(applications, values.status),
-        notes: values.notes,
-        jobPostingUrl: values.jobPostingUrl,
-      },
-      { onSuccess: handleClose },
-    )
-  }
-
-  function updateApplication() {
-    if (!initialApplication || editingId === null) return
-
-    const statusChanged = initialApplication.status !== values.status
-    const columnPosition = statusChanged
-      ? nextColumnPosition(applications, values.status)
-      : initialApplication.columnPosition
-
-    updateMutation.mutate(
-      {
-        ...initialApplication,
-        company: values.company,
-        role: values.role,
-        status: values.status,
-        columnPosition,
-        notes: values.notes,
-        jobPostingUrl: values.jobPostingUrl,
-      },
-      { onSuccess: handleClose },
-    )
+    onSubmit(values, () => {
+      handleClose()
+    })
   }
 
   function updateField<K extends keyof ApplicationFormValues>(
@@ -268,7 +163,7 @@ export default function ApplicationForm({
           {submitError ? (
             <ActionErrorBanner
               message={submitError.message}
-              onDismiss={dismissSubmitError}
+              onDismiss={onDismissSubmitError}
             />
           ) : null}
 
