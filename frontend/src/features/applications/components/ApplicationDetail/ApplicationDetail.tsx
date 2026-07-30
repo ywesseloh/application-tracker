@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import type { Application } from '@/features/applications/model/types'
 import { STATUS_LABELS } from '@/features/applications/model/types'
-import { useApplications } from '@/features/applications/hooks/useApplications'
+import { useDeleteApplication } from '@/features/applications/hooks/useApplicationMutations'
+import { useApplicationMutationState } from '@/features/applications/hooks/useApplicationBusy'
 import './ApplicationDetail.css'
 
 type ApplicationDetailProps = {
@@ -15,12 +16,12 @@ export default function ApplicationDetail({
   onClose,
   onEdit,
 }: ApplicationDetailProps) {
-  const { deleteMutation } = useApplications()
-  const [error, setError] = useState<string | null>(null)
-  const isDeleting =
-    deleteMutation.isPending &&
-    application !== null &&
-    deleteMutation.variables === application.id
+  const applicationId = application?.id ?? null
+  const deleteMutation = useDeleteApplication(applicationId)
+  const { isPending: isDeleting, error } = useApplicationMutationState(
+    applicationId,
+    'delete',
+  )
 
   useEffect(() => {
     if (!application) return
@@ -33,10 +34,6 @@ export default function ApplicationDetail({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [application, onClose])
 
-  useEffect(() => {
-    setError(null)
-  }, [application?.id])
-
   if (!application) return null
 
   const notes = application.notes ?? ''
@@ -44,25 +41,13 @@ export default function ApplicationDetail({
   const hasNotes = notes.trim().length > 0
   const hasUrl = jobPostingUrl.trim().length > 0
 
-  function handleClose() {
-    setError(null)
-    onClose()
-  }
-
   function handleDelete() {
-    if (isDeleting || !application) return
-
-    deleteMutation.mutate(application.id, {
-      onError: (err) => setError(err.message),
-      onSuccess: () => {
-        setError(null)
-        onClose()
-      },
-    })
+    if (isDeleting) return
+    deleteMutation.mutate(undefined, { onSuccess: onClose })
   }
 
   return (
-    <div className="application-detail-backdrop" onClick={handleClose}>
+    <div className="application-detail-backdrop" onClick={onClose}>
       <div
         className="application-detail"
         role="dialog"
@@ -80,7 +65,7 @@ export default function ApplicationDetail({
           <button
             type="button"
             className="application-detail__close"
-            onClick={handleClose}
+            onClick={onClose}
             aria-label="Close"
           >
             ×
@@ -118,7 +103,7 @@ export default function ApplicationDetail({
 
         {error ? (
           <p className="application-detail__error" role="alert">
-            {error}
+            {error.message}
           </p>
         ) : null}
 

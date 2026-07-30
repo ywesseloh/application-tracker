@@ -238,6 +238,7 @@ body {
 }
 
 .application-tile {
+  position: relative;
   margin: 0;
   padding: 0.85rem 0.9rem;
   border: 1px solid var(--tile-border);
@@ -261,6 +262,29 @@ body {
 
 .application-tile--dragging {
   opacity: 0.35;
+}
+
+.application-tile--syncing {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.application-tile__spinner {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 2px solid var(--tile-border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: application-tile-spin 0.7s linear infinite;
+}
+
+@keyframes application-tile-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .application-tile--overlay {

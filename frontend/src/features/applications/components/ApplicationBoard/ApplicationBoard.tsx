@@ -19,25 +19,18 @@ import {
   moveBetweenColumns,
   reorderWithinColumn,
 } from '@/features/applications/model/boardOrdering'
-import { useApplications } from '@/features/applications/hooks/useApplications'
+import { useApplicationsQuery } from '@/features/applications/hooks/useApplicationsQuery'
+import { useApplicationsCache } from '@/features/applications/hooks/useApplicationsCache'
+import { useBoardPositions } from '@/features/applications/hooks/useBoardPositions'
 import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
 import ApplicationForm from '@/features/applications/components/ApplicationForm/ApplicationForm'
 import BoardColumn from './BoardColumn'
 import TilePreview from './TilePreview'
 
 export default function ApplicationBoard() {
-  const {
-    applications,
-    isPending,
-    error,
-    hasData,
-    refetch,
-    applyLocalChange,
-    snapshot,
-    restore,
-    pauseRefetch,
-    persistPositionsMutation,
-  } = useApplications()
+  const { applications, isPending, error, hasData, refetch } = useApplicationsQuery()
+  const { applyLocalChange, snapshot, restore, pauseRefetch } = useApplicationsCache()
+  const persistPositionsMutation = useBoardPositions()
 
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)

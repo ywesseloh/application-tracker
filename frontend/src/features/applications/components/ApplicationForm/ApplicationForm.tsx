@@ -1,11 +1,16 @@
-import { useEffect, useState, type SubmitEvent } from 'react'
+import { useEffect, useRef, useState, type SubmitEvent } from 'react'
 import type { Application, ApplicationStatus, FormMode } from '@/features/applications/model/types'
 import { STATUS_LABELS } from '@/features/applications/model/types'
 import './ApplicationForm.css'
-import { useApplications } from '../../hooks/useApplications'
+import { useApplicationsQuery } from '../../hooks/useApplicationsQuery'
+import {
+  useCreateApplication,
+  useUpdateApplication,
+} from '../../hooks/useApplicationMutations'
+import { useApplicationMutationState } from '../../hooks/useApplicationBusy'
 import { nextColumnPosition } from '../../model/boardOrdering'
 
-export type ApplicationFormValues = {
+type ApplicationFormValues = {
   company: string
   role: string
   status: ApplicationStatus
@@ -47,23 +52,39 @@ export default function ApplicationForm({
   mode,
   onClose,
 }: ApplicationFormProps) {
-  const { applications, createMutation, updateMutation } = useApplications()
+  const { applications } = useApplicationsQuery()
+  const editingId = mode.type === 'edit' ? mode.id : null
+  const createMutation = useCreateApplication()
+  const updateMutation = useUpdateApplication(editingId)
+  const updateState = useApplicationMutationState(editingId, 'update')
+
   const [values, setValues] = useState<ApplicationFormValues>(EMPTY_VALUES)
-  const [error, setError] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
+
   const initialApplication =
-    mode.type === 'edit'
-      ? applications.find((app) => app.id === mode.id) ?? null
-      : null
-  const isSubmitting = createMutation.isPending || updateMutation.isPending
+    editingId === null
+      ? null
+      : applications.find((app) => app.id === editingId) ?? null
+  const isSubmitting = createMutation.isPending || updateState.isPending
+  const submitError = createMutation.error ?? updateState.error
+  const error = validationError ?? submitError?.message ?? null
+
+  // A refetch replaces the application object, so read it through a ref: the
+  // form must reset when the edit target changes, not when its identity does.
+  const initialApplicationRef = useRef(initialApplication)
+  initialApplicationRef.current = initialApplication
 
   useEffect(() => {
     if (!open) return
 
-    setValues(
-      initialApplication
-        ? valuesFromApplication(initialApplication)
-        : EMPTY_VALUES,
-    )
+    const current = initialApplicationRef.current
+    setValues(current ? valuesFromApplication(current) : EMPTY_VALUES)
+    setValidationError(null)
+    createMutation.reset()
+  }, [open, editingId, createMutation.reset])
+
+  useEffect(() => {
+    if (!open) return
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') onClose()
@@ -71,13 +92,13 @@ export default function ApplicationForm({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, initialApplication, onClose])
+  }, [open, onClose])
 
   if (!open) return null
 
   function handleClose() {
     onClose()
-    setError(null)
+    setValidationError(null)
   }
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -88,7 +109,7 @@ export default function ApplicationForm({
     const role = values.role.trim()
 
     if (!company || !role) {
-      setError('Company and role are required.')
+      setValidationError('Company and role are required.')
       return
     }
 
@@ -104,20 +125,16 @@ export default function ApplicationForm({
 
   function createApplication() {
     createMutation.mutate(
-        {
-          company: values.company,
-          role: values.role,
-          status: values.status,
-          columnPosition: nextColumnPosition(applications, values.status),
-          notes: values.notes,
-          jobPostingUrl: values.jobPostingUrl,
-        },
-        { 
-          onError: (err) => setError(err.message),
-          onSuccess: handleClose 
-        },
-      )
-      return
+      {
+        company: values.company,
+        role: values.role,
+        status: values.status,
+        columnPosition: nextColumnPosition(applications, values.status),
+        notes: values.notes,
+        jobPostingUrl: values.jobPostingUrl,
+      },
+      { onSuccess: handleClose },
+    )
   }
 
   function updateApplication() {
@@ -138,12 +155,8 @@ export default function ApplicationForm({
         notes: values.notes,
         jobPostingUrl: values.jobPostingUrl,
       },
-      { 
-        onError: (err) => setError(err.message),
-        onSuccess: handleClose 
-      },
+      { onSuccess: handleClose },
     )
-      return
   }
 
   function updateField<K extends keyof ApplicationFormValues>(
@@ -151,7 +164,7 @@ export default function ApplicationForm({
     value: ApplicationFormValues[K],
   ) {
     setValues((prev) => ({ ...prev, [key]: value }))
-    if (error) setError(null)
+    if (validationError) setValidationError(null)
   }
 
   return (
