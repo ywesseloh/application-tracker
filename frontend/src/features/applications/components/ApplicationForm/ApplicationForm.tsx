@@ -6,8 +6,8 @@ import { useApplicationsQuery } from '../../hooks/useApplicationsQuery'
 import {
   useCreateApplication,
   useUpdateApplication,
+  useApplicationMutationState
 } from '../../hooks/useApplicationMutations'
-import { useApplicationMutationState } from '../../hooks/useApplicationBusy'
 import { nextColumnPosition } from '../../model/boardOrdering'
 
 type ApplicationFormValues = {

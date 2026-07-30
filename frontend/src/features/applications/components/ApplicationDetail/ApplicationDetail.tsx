@@ -1,8 +1,7 @@
 import { useEffect } from 'react'
 import type { Application } from '@/features/applications/model/types'
 import { STATUS_LABELS } from '@/features/applications/model/types'
-import { useDeleteApplication } from '@/features/applications/hooks/useApplicationMutations'
-import { useApplicationMutationState } from '@/features/applications/hooks/useApplicationBusy'
+import { useDeleteApplication, useApplicationMutationState } from '@/features/applications/hooks/useApplicationMutations'
 import './ApplicationDetail.css'
 
 type ApplicationDetailProps = {

@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useMutationState, useQueryClient } from '@tanstack/react-query'
 import {
   createApplication,
   deleteApplication,
@@ -56,4 +56,35 @@ export function useDeleteApplication(id: number | null) {
     mutationFn: () => deleteApplication(requireId(id)),
     onSettled: () => invalidateApplications(queryClient),
   })
+}
+
+type ApplicationAction = 'update' | 'delete'
+
+/**
+ * Reads mutation state straight from the cache instead of a local observer, so
+ * status survives the component that started the mutation being unmounted.
+ */
+export function useApplicationMutationState(
+  id: number | null,
+  action: ApplicationAction,
+) {
+  const key =
+    action === 'update'
+      ? applicationMutationKeys.update(id ?? -1)
+      : applicationMutationKeys.remove(id ?? -1)
+
+  const states = useMutationState({
+    filters: { mutationKey: key, exact: true },
+    select: (mutation) => ({
+      status: mutation.state.status,
+      error: mutation.state.error,
+    }),
+  })
+
+  const latest = id === null ? undefined : states.at(-1)
+
+  return {
+    isPending: latest?.status === 'pending',
+    error: latest?.status === 'error' ? latest.error : null,
+  }
 }
