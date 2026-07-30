@@ -21,7 +21,7 @@ import {
 } from '@/features/applications/model/boardOrdering'
 import { useApplicationsQuery } from '@/features/applications/hooks/useApplicationsQuery'
 import { useApplicationsCache } from '@/features/applications/hooks/useApplicationsCache'
-import { useBoardPositions } from '@/features/applications/hooks/useBoardPositions'
+import { useMoveApplications } from '@/features/applications/hooks/useApplicationMutations'
 import { useApplicationActionError } from '@/features/applications/hooks/useApplicationActionError'
 import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
 import ApplicationForm from '@/features/applications/components/ApplicationForm/ApplicationForm'
@@ -31,7 +31,7 @@ import TilePreview from './TilePreview'
 export default function ApplicationBoard() {
   const { applications, isPending, error, hasData, refetch } = useApplicationsQuery()
   const { applyLocalChange, snapshot, restore, pauseRefetch } = useApplicationsCache()
-  const persistPositionsMutation = useBoardPositions()
+  const { moveMutation } = useMoveApplications()
   const { error: actionError, dismiss: dismissActionError } = useApplicationActionError()
 
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -104,7 +104,7 @@ export default function ApplicationBoard() {
 
     const changed = changedPositions(before, next)
     if (changed.length > 0) {
-      persistPositionsMutation.mutate(changed, {
+      moveMutation.mutate(changed, {
         onError: () => restore(before),
       })
     }
@@ -200,11 +200,12 @@ export default function ApplicationBoard() {
               {activeApplication ? <TilePreview application={activeApplication} /> : null}
             </DragOverlay>
           </DndContext>
+          {selectedApplication ? ( 
           <ApplicationDetail
             application={selectedApplication}
             onClose={() => setSelectedId(null)}
             onEdit={handleEditFromDetail}
-          />
+          />) : null}
            </>
       ) : null}
 

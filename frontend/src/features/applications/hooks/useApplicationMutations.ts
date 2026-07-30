@@ -2,98 +2,96 @@ import { useMutation, useMutationState, useQueryClient } from '@tanstack/react-q
 import {
   createApplication,
   deleteApplication,
+  patchApplications,
   updateApplication,
 } from '@/shared/api/applicationsApi'
-import type { ApplicationInput } from '@/shared/api/applicationsApi'
 import {
   applicationMutationKeys,
   applicationScope,
+  boardPositionsScope,
 } from '@/features/applications/model/mutationKeys'
 import { invalidateApplications } from '@/features/applications/model/applicationsCache'
-import type { Application } from '@/features/applications/model/types'
-
-/**
- * Stands in for a real id so that hooks can be called unconditionally while no
- * application is selected. Mutations bound to it reject instead of firing.
- */
-const NO_ID = -1
-
-function requireId(id: number | null): number {
-  if (id === null) throw new Error('No application selected.')
-  return id
-}
 
 export function useCreateApplication() {
   const queryClient = useQueryClient()
 
-  return useMutation({
+  const createMutation = useMutation({
     mutationKey: applicationMutationKeys.create,
-    mutationFn: (application: ApplicationInput) => createApplication(application),
+    mutationFn: createApplication,
     onSettled: () => invalidateApplications(queryClient),
   })
+  const createMutationState = latestMutationState(applicationMutationKeys.create)
+
+  return {
+    createMutation,
+    createMutationState
+  }
 }
 
-export function useUpdateApplication(id: number | null) {
+export function useUpdateApplication(id: number) {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationKey: applicationMutationKeys.update(id ?? NO_ID),
-    scope: applicationScope(id ?? NO_ID),
-    mutationFn: (application: Application) => {
-      requireId(id)
-      return updateApplication(application)
-    },
+  const updateMutation = useMutation({
+    mutationKey: applicationMutationKeys.update(id),
+    scope: applicationScope(id),
+    mutationFn: updateApplication,
     onSettled: () => invalidateApplications(queryClient),
   })
+  const updateMutationState = latestMutationState(applicationMutationKeys.update(id))
+
+  return {
+    updateMutation,
+    updateMutationState
+  }
 }
 
-export function useDeleteApplication(id: number | null) {
+export function useDeleteApplication(id: number) {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationKey: applicationMutationKeys.remove(id ?? NO_ID),
-    scope: applicationScope(id ?? NO_ID),
-    mutationFn: () => deleteApplication(requireId(id)),
+  const deleteMutation = useMutation({
+    mutationKey: applicationMutationKeys.remove(id),
+    scope: applicationScope(id),
+    mutationFn: () => deleteApplication(id),
     onSettled: () => invalidateApplications(queryClient),
   })
+  const deleteMutationState = latestMutationState(applicationMutationKeys.remove(id))
+
+  return {
+    deleteMutation,
+    deleteMutationState
+  }
 }
 
-type ApplicationAction = 'update' | 'delete'
+export function useMoveApplications() {
+  const queryClient = useQueryClient()
+  
+  const moveMutation = useMutation({
+    mutationKey: applicationMutationKeys.reposition,
+    scope: boardPositionsScope,
+    mutationFn: patchApplications,
+    onSettled: () => invalidateApplications(queryClient),
+  })
+  const moveMutationState = latestMutationState(applicationMutationKeys.reposition)
+
+  return {
+    moveMutation,
+    moveMutationState
+  }
+}
 
 /**
  * Reads mutation state straight from the cache instead of a local observer, so
  * status survives the component that started the mutation being unmounted and
  * clears again once the mutation is dropped from the cache.
  */
-function useLatestMutationState(key: readonly unknown[], enabled: boolean) {
+function latestMutationState(key: readonly unknown[]) {
   const states = useMutationState({
     filters: { mutationKey: key, exact: true },
     select: (mutation) => ({
-      status: mutation.state.status,
+      isPending: mutation.state.status === 'pending',
       error: mutation.state.error,
     }),
   })
 
-  const latest = enabled ? states.at(-1) : undefined
-
-  return {
-    isPending: latest?.status === 'pending',
-    error: latest?.status === 'error' ? latest.error : null,
-  }
-}
-
-export function useCreateApplicationState() {
-  return useLatestMutationState(applicationMutationKeys.create, true)
-}
-
-export function useApplicationMutationState(
-  id: number | null,
-  action: ApplicationAction,
-) {
-  const key =
-    action === 'update'
-      ? applicationMutationKeys.update(id ?? NO_ID)
-      : applicationMutationKeys.remove(id ?? NO_ID)
-
-  return useLatestMutationState(key, id !== null)
+  return states.at(-1) ?? { isPending: false, error: null }
 }

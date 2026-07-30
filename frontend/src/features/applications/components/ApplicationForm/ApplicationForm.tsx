@@ -6,8 +6,6 @@ import { useApplicationsQuery } from '../../hooks/useApplicationsQuery'
 import {
   useCreateApplication,
   useUpdateApplication,
-  useApplicationMutationState,
-  useCreateApplicationState,
 } from '../../hooks/useApplicationMutations'
 import { useApplicationsCache } from '../../hooks/useApplicationsCache'
 import { applicationMutationKeys } from '../../model/mutationKeys'
@@ -57,10 +55,9 @@ export default function ApplicationForm({
 }: ApplicationFormProps) {
   const { applications } = useApplicationsQuery()
   const editingId = mode.type === 'edit' ? mode.id : null
-  const createMutation = useCreateApplication()
-  const createState = useCreateApplicationState()
-  const updateMutation = useUpdateApplication(editingId)
-  const updateState = useApplicationMutationState(editingId, 'update')
+  const {createMutation, createMutationState} = useCreateApplication()
+  const {updateMutation, updateMutationState} = editingId ? useUpdateApplication(editingId) 
+      : { updateMutation: null, updateMutationState: null }
   const { clearSettledMutations } = useApplicationsCache()
 
   const [values, setValues] = useState<ApplicationFormValues>(EMPTY_VALUES)
@@ -70,8 +67,8 @@ export default function ApplicationForm({
     editingId === null
       ? null
       : applications.find((app) => app.id === editingId) ?? null
-  const isSubmitting = createState.isPending || updateState.isPending
-  const submitError = createState.error ?? updateState.error
+  const isSubmitting = createMutationState.isPending || (updateMutationState?.isPending)
+  const submitError = createMutationState.error ?? (updateMutationState?.error)
   const error = validationError ?? submitError?.message ?? null
 
   // A refetch replaces the application object, so read it through a ref: the
@@ -150,7 +147,7 @@ export default function ApplicationForm({
       ? nextColumnPosition(applications, values.status)
       : initialApplication.columnPosition
 
-    updateMutation.mutate(
+    updateMutation?.mutate(
       {
         ...initialApplication,
         company: values.company,

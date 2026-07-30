@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
 import type { Application } from '@/features/applications/model/types'
 import { STATUS_LABELS } from '@/features/applications/model/types'
-import { useDeleteApplication, useApplicationMutationState } from '@/features/applications/hooks/useApplicationMutations'
+import { useDeleteApplication } from '@/features/applications/hooks/useApplicationMutations'
 import './ApplicationDetail.css'
 
 type ApplicationDetailProps = {
-  application: Application | null
+  application: Application
   onClose: () => void
   onEdit: () => void
 }
@@ -15,12 +15,8 @@ export default function ApplicationDetail({
   onClose,
   onEdit,
 }: ApplicationDetailProps) {
-  const applicationId = application?.id ?? null
-  const deleteMutation = useDeleteApplication(applicationId)
-  const { isPending: isDeleting, error } = useApplicationMutationState(
-    applicationId,
-    'delete',
-  )
+  const { deleteMutation, deleteMutationState } = useDeleteApplication(application.id)
+  const { isPending: isDeleting, error } = deleteMutationState
 
   useEffect(() => {
     if (!application) return
