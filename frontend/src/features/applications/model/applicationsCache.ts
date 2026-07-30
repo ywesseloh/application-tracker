@@ -33,3 +33,19 @@ export function restoreApplications(
 ) {
   queryClient.setQueryData<Application[]>(applicationsQueryKey, applications)
 }
+
+/**
+ * Drops finished mutations so anything deriving state from them falls back to
+ * a clean slate. In-flight mutations are left alone: removing one would strand
+ * its spinner and its rollback.
+ */
+export function clearSettledMutations(
+  queryClient: QueryClient,
+  mutationKey: readonly unknown[],
+) {
+  const mutationCache = queryClient.getMutationCache()
+
+  for (const mutation of mutationCache.findAll({ mutationKey })) {
+    if (mutation.state.status !== 'pending') mutationCache.remove(mutation)
+  }
+}

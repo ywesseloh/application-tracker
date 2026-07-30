@@ -6,8 +6,11 @@ import { useApplicationsQuery } from '../../hooks/useApplicationsQuery'
 import {
   useCreateApplication,
   useUpdateApplication,
-  useApplicationMutationState
+  useApplicationMutationState,
+  useCreateApplicationState,
 } from '../../hooks/useApplicationMutations'
+import { useApplicationsCache } from '../../hooks/useApplicationsCache'
+import { applicationMutationKeys } from '../../model/mutationKeys'
 import { nextColumnPosition } from '../../model/boardOrdering'
 
 type ApplicationFormValues = {
@@ -55,8 +58,10 @@ export default function ApplicationForm({
   const { applications } = useApplicationsQuery()
   const editingId = mode.type === 'edit' ? mode.id : null
   const createMutation = useCreateApplication()
+  const createState = useCreateApplicationState()
   const updateMutation = useUpdateApplication(editingId)
   const updateState = useApplicationMutationState(editingId, 'update')
+  const { clearSettledMutations } = useApplicationsCache()
 
   const [values, setValues] = useState<ApplicationFormValues>(EMPTY_VALUES)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -65,8 +70,8 @@ export default function ApplicationForm({
     editingId === null
       ? null
       : applications.find((app) => app.id === editingId) ?? null
-  const isSubmitting = createMutation.isPending || updateState.isPending
-  const submitError = createMutation.error ?? updateState.error
+  const isSubmitting = createState.isPending || updateState.isPending
+  const submitError = createState.error ?? updateState.error
   const error = validationError ?? submitError?.message ?? null
 
   // A refetch replaces the application object, so read it through a ref: the
@@ -80,8 +85,8 @@ export default function ApplicationForm({
     const current = initialApplicationRef.current
     setValues(current ? valuesFromApplication(current) : EMPTY_VALUES)
     setValidationError(null)
-    createMutation.reset()
-  }, [open, editingId, createMutation.reset])
+    clearSettledMutations(applicationMutationKeys.create)
+  }, [open, editingId, clearSettledMutations])
 
   useEffect(() => {
     if (!open) return

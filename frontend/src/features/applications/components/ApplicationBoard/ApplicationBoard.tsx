@@ -22,6 +22,7 @@ import {
 import { useApplicationsQuery } from '@/features/applications/hooks/useApplicationsQuery'
 import { useApplicationsCache } from '@/features/applications/hooks/useApplicationsCache'
 import { useBoardPositions } from '@/features/applications/hooks/useBoardPositions'
+import { useApplicationActionError } from '@/features/applications/hooks/useApplicationActionError'
 import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
 import ApplicationForm from '@/features/applications/components/ApplicationForm/ApplicationForm'
 import BoardColumn from './BoardColumn'
@@ -31,11 +32,11 @@ export default function ApplicationBoard() {
   const { applications, isPending, error, hasData, refetch } = useApplicationsQuery()
   const { applyLocalChange, snapshot, restore, pauseRefetch } = useApplicationsCache()
   const persistPositionsMutation = useBoardPositions()
+  const { error: actionError, dismiss: dismissActionError } = useApplicationActionError()
 
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formMode, setFormMode] = useState<FormMode>({ type: 'closed' })
-  const [actionError, setActionError] = useState<Error | null>(null)
   const dragSnapshotRef = useRef<Application[] | null>(null)
   const suppressOpenRef = useRef(false)
 
@@ -104,11 +105,7 @@ export default function ApplicationBoard() {
     const changed = changedPositions(before, next)
     if (changed.length > 0) {
       persistPositionsMutation.mutate(changed, {
-        onError: (err) => {
-          setActionError(err)
-          restore(before)
-        },
-        onSuccess: () => setActionError(null)
+        onError: () => restore(before),
       })
     }
   }
@@ -166,11 +163,11 @@ export default function ApplicationBoard() {
 
       {actionError ? (
         <div className="application-board__banner" role="alert">
-          <p className="application-board__banner-text">{actionError.message}</p>
+          <p className="application-board__banner-text">{actionError}</p>
           <button
             type="button"
             className="application-board__banner-dismiss"
-            onClick={() => setActionError(null)}
+            onClick={dismissActionError}
             aria-label="Dismiss"
           >
             ×

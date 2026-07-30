@@ -62,17 +62,10 @@ type ApplicationAction = 'update' | 'delete'
 
 /**
  * Reads mutation state straight from the cache instead of a local observer, so
- * status survives the component that started the mutation being unmounted.
+ * status survives the component that started the mutation being unmounted and
+ * clears again once the mutation is dropped from the cache.
  */
-export function useApplicationMutationState(
-  id: number | null,
-  action: ApplicationAction,
-) {
-  const key =
-    action === 'update'
-      ? applicationMutationKeys.update(id ?? -1)
-      : applicationMutationKeys.remove(id ?? -1)
-
+function useLatestMutationState(key: readonly unknown[], enabled: boolean) {
   const states = useMutationState({
     filters: { mutationKey: key, exact: true },
     select: (mutation) => ({
@@ -81,10 +74,26 @@ export function useApplicationMutationState(
     }),
   })
 
-  const latest = id === null ? undefined : states.at(-1)
+  const latest = enabled ? states.at(-1) : undefined
 
   return {
     isPending: latest?.status === 'pending',
     error: latest?.status === 'error' ? latest.error : null,
   }
+}
+
+export function useCreateApplicationState() {
+  return useLatestMutationState(applicationMutationKeys.create, true)
+}
+
+export function useApplicationMutationState(
+  id: number | null,
+  action: ApplicationAction,
+) {
+  const key =
+    action === 'update'
+      ? applicationMutationKeys.update(id ?? NO_ID)
+      : applicationMutationKeys.remove(id ?? NO_ID)
+
+  return useLatestMutationState(key, id !== null)
 }

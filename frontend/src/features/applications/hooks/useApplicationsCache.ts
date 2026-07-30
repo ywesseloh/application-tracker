@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   applyLocalChange,
+  clearSettledMutations,
   invalidateApplications,
   pauseApplicationsRefetch,
   restoreApplications,
@@ -33,6 +34,11 @@ export function useApplicationsCache() {
     ),
     invalidate: useCallback(
       () => invalidateApplications(queryClient),
+      [queryClient],
+    ),
+    clearSettledMutations: useCallback(
+      (mutationKey: readonly unknown[]) =>
+        clearSettledMutations(queryClient, mutationKey),
       [queryClient],
     ),
   }
