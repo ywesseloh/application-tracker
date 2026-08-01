@@ -1,5 +1,6 @@
 package com.example.application_tracker.service;
 
+import com.example.application_tracker.dto.JobApplicationDTO;
 import com.example.application_tracker.model.JobApplication;
 import com.example.application_tracker.dto.JobApplicationPatch;
 import com.example.application_tracker.repository.JobApplicationRepository;
@@ -21,19 +22,48 @@ public class JobApplicationService {
         return repo.findById(id);
     }
 
-    public void addJobApplication(JobApplication jobApplication) {
-        repo.save(jobApplication);
+    public void addJobApplication(JobApplicationDTO jobApplication) {
+        int columnCount = repo.countByStatus(jobApplication.getStatus());
+        JobApplication jobApplicationEntity = JobApplication.fromJobApplicationDTO(
+            jobApplication,
+            null,
+            columnCount
+        );
+        repo.save(jobApplicationEntity);
     }
 
-    public void updateJobApplication(int id, JobApplication jobApplication) {
-        repo.save(jobApplication);
+    public boolean updateJobApplication(int id, JobApplicationDTO application) {
+        JobApplication currentApplication = repo.findById(id).orElse(null);
+        if (currentApplication == null) { return false; }
+
+        int columnCount;
+        if (currentApplication.getStatus() != application.getStatus()) {
+            // Application moved to different board column, update positions
+            repo.updateColumnPositionsOnRemove(currentApplication.getStatus(), currentApplication.getColumnPosition());
+            columnCount = repo.countByStatus(application.getStatus());
+        } else {
+            columnCount = currentApplication.getColumnPosition();
+        }
+
+        JobApplication jobApplicationEntity = JobApplication.fromJobApplicationDTO(
+            application,
+            id,
+            columnCount
+        );
+        repo.save(jobApplicationEntity);
+        return true;
     }
 
     public void patchJobApplication(int id, JobApplicationPatch patch) {
         repo.patch(id, patch.getStatus(),  patch.getColumnPosition());
     }
 
-    public void deleteJobApplication(int id) {
+    public boolean deleteJobApplication(int id) {
+        JobApplication jobApplication = repo.findById(id).orElse(null);
+        if (jobApplication == null) { return false; }
+
         repo.deleteById(id);
+        repo.updateColumnPositionsOnRemove(jobApplication.getStatus(), jobApplication.getColumnPosition());
+        return true;
     }
 }

@@ -1,5 +1,6 @@
 package com.example.application_tracker.controller;
 
+import com.example.application_tracker.dto.JobApplicationDTO;
 import com.example.application_tracker.model.JobApplication;
 import com.example.application_tracker.dto.JobApplicationPatch;
 import com.example.application_tracker.service.JobApplicationService;
@@ -28,13 +29,15 @@ public class JobApplicationController {
     }
 
     @PostMapping("/application")
-    public void addJobApplication(@RequestBody JobApplication application) {
+    public void addJobApplication(@RequestBody JobApplicationDTO application) {
         service.addJobApplication(application);
     }
 
     @PutMapping("/application/{id}")
-    public void updateJobApplication(@PathVariable int id, @RequestBody JobApplication application) {
-        service.updateJobApplication(id, application);
+    public ResponseEntity<Void> updateJobApplication(@PathVariable int id, @RequestBody JobApplicationDTO application) {
+        return service.updateJobApplication(id, application)
+                ? ResponseEntity.ok().build()
+                : ResponseEntity.notFound().build();
     }
 
     @PatchMapping("application/{id}")
@@ -43,7 +46,9 @@ public class JobApplicationController {
     }
 
     @DeleteMapping("application/{id}")
-    public void deleteJobApplication(@PathVariable int id) {
-        service.deleteJobApplication(id);
+    public ResponseEntity<Void> deleteJobApplication(@PathVariable int id) {
+        return service.deleteJobApplication(id)
+                ? ResponseEntity.ok().build()
+                : ResponseEntity.notFound().build();
     }
 }

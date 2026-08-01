@@ -3,7 +3,7 @@ import type { Application } from '@/features/applications/model/types'
 
 export const applicationsQueryKey = ['applications'] as const
 
-export type ApplicationInput = Omit<Application, 'id'>
+export type ApplicationInput = Omit<Application, 'id' | 'columnPosition'>
 export type ApplicationPositionPatch = Pick<
   Application,
   'id' | 'status' | 'columnPosition'
@@ -17,7 +17,7 @@ export function createApplication(application: ApplicationInput) {
   return apiClient.post<void>('/application', application)
 }
 
-export function updateApplication(application: Application) {
+export function updateApplication(application: ApplicationInput) {
   return apiClient.put<void>(`/application/${application.id}`, application)
 }
 

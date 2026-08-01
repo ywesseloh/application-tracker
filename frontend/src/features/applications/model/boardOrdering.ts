@@ -60,13 +60,6 @@ export function applicationsForStatus(
     .sort((a, b) => a.columnPosition - b.columnPosition)
 }
 
-export function nextColumnPosition(
-  applications: Application[],
-  status: ApplicationStatus,
-): number {
-  return applications.filter((app) => app.status === status).length
-}
-
 export function moveBetweenColumns(
   applications: Application[],
   activeItemId: string,

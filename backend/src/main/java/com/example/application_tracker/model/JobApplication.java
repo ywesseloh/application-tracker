@@ -1,5 +1,6 @@
 package com.example.application_tracker.model;
 
+import com.example.application_tracker.dto.JobApplicationDTO;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,4 +27,16 @@ public class JobApplication {
     private Integer columnPosition;
     private String notes;
     private String jobPostingUrl;
+
+    public static JobApplication fromJobApplicationDTO(JobApplicationDTO jobApplicationDTO, Integer id, int columnCount) {
+        return new JobApplication(
+            id,
+            jobApplicationDTO.getCompany(),
+            jobApplicationDTO.getRole(),
+            jobApplicationDTO.getStatus(),
+            columnCount,
+            jobApplicationDTO.getNotes(),
+            jobApplicationDTO.getJobPostingUrl()
+        );
+    }
 }
