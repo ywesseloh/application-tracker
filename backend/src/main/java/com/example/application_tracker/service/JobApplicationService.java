@@ -4,6 +4,7 @@ import com.example.application_tracker.dto.JobApplicationDTO;
 import com.example.application_tracker.model.JobApplication;
 import com.example.application_tracker.dto.JobApplicationPatch;
 import com.example.application_tracker.repository.JobApplicationRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -54,8 +55,10 @@ public class JobApplicationService {
         return true;
     }
 
-    public void patchJobApplication(int id, JobApplicationPatch patch) {
-        repo.patch(id, patch.getStatus(),  patch.getColumnPosition());
+    @Transactional public void patchJobApplications(List<JobApplicationPatch> patches) {
+        for (JobApplicationPatch patch : patches) {
+            repo.patch(patch.getId(), patch.getStatus(),  patch.getColumnPosition());
+        }
     }
 
     public boolean deleteJobApplication(int id) {

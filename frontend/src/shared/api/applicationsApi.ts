@@ -17,19 +17,12 @@ export function createApplication(application: ApplicationInput) {
   return apiClient.post<void>('/application', application)
 }
 
-export function updateApplication(application: ApplicationInput) {
-  return apiClient.put<void>(`/application/${application.id}`, application)
-}
-
-export function patchApplication(application: ApplicationPositionPatch) {
-  return apiClient.patch<void>(`/application/${application.id}`, {
-    status: application.status,
-    columnPosition: application.columnPosition,
-  })
+export function updateApplication(application: ApplicationInput, id: number) {
+  return apiClient.put<void>(`/application/${application}`, application)
 }
 
 export function patchApplications(applications: ApplicationPositionPatch[]) {
-  return Promise.all(applications.map(patchApplication))
+  return apiClient.patch<void>('/applications', applications)
 }
 
 export function deleteApplication(id: number) {

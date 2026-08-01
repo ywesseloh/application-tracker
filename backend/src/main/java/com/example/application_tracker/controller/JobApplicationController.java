@@ -40,12 +40,12 @@ public class JobApplicationController {
                 : ResponseEntity.notFound().build();
     }
 
-    @PatchMapping("application/{id}")
-    public void patchJobApplication(@PathVariable int id, @RequestBody JobApplicationPatch patch) {
-        service.patchJobApplication(id, patch);
+    @PatchMapping("/applications")
+    public void patchJobApplications(@RequestBody List<JobApplicationPatch> patches) {
+        service.patchJobApplications(patches);
     }
 
-    @DeleteMapping("application/{id}")
+    @DeleteMapping("/application/{id}")
     public ResponseEntity<Void> deleteJobApplication(@PathVariable int id) {
         return service.deleteJobApplication(id)
                 ? ResponseEntity.ok().build()

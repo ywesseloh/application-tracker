@@ -4,6 +4,7 @@ import {
   deleteApplication,
   patchApplications,
   updateApplication,
+  type ApplicationInput,
 } from '@/shared/api/applicationsApi'
 import {
   applicationMutationKeys,
@@ -34,7 +35,7 @@ export function useUpdateApplication(id: number) {
   const updateMutation = useMutation({
     mutationKey: applicationMutationKeys.update(id),
     scope: applicationScope(id),
-    mutationFn: updateApplication,
+    mutationFn: (application: ApplicationInput) => updateApplication(application, id),
     onSettled: () => invalidateApplications(queryClient),
   })
   const updateMutationState = useLatestMutationState(
