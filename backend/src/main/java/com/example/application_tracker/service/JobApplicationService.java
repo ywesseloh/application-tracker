@@ -19,9 +19,7 @@ public class JobApplicationService {
     @Autowired private JobApplicationRepository repo;
 
     public List<JobApplicationItem> getJobApplications() {
-        return repo.findAll().stream()
-                .map(JobApplicationItem::from)
-                .toList();
+        return repo.findAllItems();
     }
 
     public Optional<JobApplicationItem> getJobApplicationById(int id) {

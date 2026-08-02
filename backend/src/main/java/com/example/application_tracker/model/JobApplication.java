@@ -24,7 +24,7 @@ public class JobApplication {
     private String notes;
     private String jobPostingUrl;
 
-    @OneToOne(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
     private BoardPlacement placement;
 
     public JobApplication(
