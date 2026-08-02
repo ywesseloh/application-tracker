@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class JobApplicationDTO {
+public class JobApplicationMutation {
     private String company;
     private String role;
     private JobApplicationStatus status;

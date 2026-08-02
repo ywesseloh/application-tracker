@@ -11,16 +11,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface JobApplicationRepository extends JpaRepository<JobApplication, Integer> {
     @Modifying
-    @Query("UPDATE JobApplication " +
-            "SET status = :status, columnPosition = :columnPosition " +
-            "WHERE id = :id")
-    @Transactional int patch(int id, JobApplicationStatus status, int columnPosition);
-
-    int countByStatus(JobApplicationStatus status);
-
-    @Modifying
-    @Query("UPDATE JobApplication " +
-            "SET columnPosition = columnPosition - 1 " +
-            "WHERE status = :status AND columnPosition > :removePosition")
-    @Transactional int updateColumnPositionsOnRemove(JobApplicationStatus status, int removePosition);
+    @Transactional
+    @Query("""
+            UPDATE JobApplication p
+            SET p.status = :status
+            WHERE p.id = :applicationId
+            """)
+    int patchStatus(int applicationId, JobApplicationStatus status);
 }

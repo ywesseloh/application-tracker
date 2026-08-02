@@ -1,42 +1,59 @@
 package com.example.application_tracker.model;
 
-import com.example.application_tracker.dto.JobApplicationDTO;
+import com.example.application_tracker.dto.JobApplicationMutation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class JobApplication {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @NotBlank(message="Company is mandatory")
+    @NotBlank(message = "Company is mandatory")
     private String company;
-    @NotBlank(message="Role is mandatory")
+    @NotBlank(message = "Role is mandatory")
     private String role;
-    @NotNull(message="Status is mandatory")
+    @NotNull(message = "Status is mandatory")
     @Enumerated(EnumType.STRING)
     private JobApplicationStatus status;
-    @NotNull(message="Column position is mandatory")
-    private Integer columnPosition;
     private String notes;
     private String jobPostingUrl;
 
-    public static JobApplication fromJobApplicationDTO(JobApplicationDTO jobApplicationDTO, Integer id, int columnCount) {
+    @OneToOne(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private BoardPlacement placement;
+
+    public JobApplication(
+            Integer id,
+            String company,
+            String role,
+            JobApplicationStatus status,
+            String notes,
+            String jobPostingUrl
+    ) {
+        this.id = id;
+        this.company = company;
+        this.role = role;
+        this.status = status;
+        this.notes = notes;
+        this.jobPostingUrl = jobPostingUrl;
+    }
+
+    public static JobApplication fromJobApplicationMutation(
+            JobApplicationMutation jobApplicationMutation,
+            Integer id
+    ) {
         return new JobApplication(
-            id,
-            jobApplicationDTO.getCompany(),
-            jobApplicationDTO.getRole(),
-            jobApplicationDTO.getStatus(),
-            columnCount,
-            jobApplicationDTO.getNotes(),
-            jobApplicationDTO.getJobPostingUrl()
+                id,
+                jobApplicationMutation.getCompany(),
+                jobApplicationMutation.getRole(),
+                jobApplicationMutation.getStatus(),
+                jobApplicationMutation.getNotes(),
+                jobApplicationMutation.getJobPostingUrl()
         );
     }
 }

@@ -1,8 +1,10 @@
 package com.example.application_tracker.service;
 
-import com.example.application_tracker.dto.JobApplicationDTO;
+import com.example.application_tracker.dto.JobApplicationItem;
+import com.example.application_tracker.dto.JobApplicationMutation;
+import com.example.application_tracker.model.BoardPlacement;
 import com.example.application_tracker.model.JobApplication;
-import com.example.application_tracker.dto.JobApplicationPatch;
+import com.example.application_tracker.model.JobApplicationStatus;
 import com.example.application_tracker.repository.JobApplicationRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,60 +15,83 @@ import java.util.Optional;
 
 @Service
 public class JobApplicationService {
-    @Autowired
-    JobApplicationRepository repo;
-    public List<JobApplication> getJobApplications() {
-        return repo.findAll();
+    @Autowired private BoardService boardService;
+    @Autowired private JobApplicationRepository repo;
+
+    public List<JobApplicationItem> getJobApplications() {
+        return repo.findAll().stream()
+                .map(JobApplicationItem::from)
+                .toList();
     }
 
-    public Optional<JobApplication> getJobApplicationById(int id) {
-        return repo.findById(id);
+    public Optional<JobApplicationItem> getJobApplicationById(int id) {
+        return repo.findById(id).map(JobApplicationItem::from);
     }
 
-    public void addJobApplication(JobApplicationDTO jobApplication) {
-        int columnCount = repo.countByStatus(jobApplication.getStatus());
-        JobApplication jobApplicationEntity = JobApplication.fromJobApplicationDTO(
-            jobApplication,
-            null,
-            columnCount
+    @Transactional
+    public void addJobApplication(JobApplicationMutation jobApplication) {
+        JobApplication entity = JobApplication.fromJobApplicationMutation(jobApplication, null);
+        repo.saveAndFlush(entity);
+
+        int position = boardService.getStatusCount(entity.getStatus());
+        BoardPlacement placement = new BoardPlacement(
+                entity,
+                entity.getStatus(),
+                position
         );
-        repo.save(jobApplicationEntity);
+        entity.setPlacement(placement);
+        repo.save(entity);
     }
 
-    public boolean updateJobApplication(int id, JobApplicationDTO application) {
-        JobApplication currentApplication = repo.findById(id).orElse(null);
-        if (currentApplication == null) { return false; }
-
-        int columnCount;
-        if (currentApplication.getStatus() != application.getStatus()) {
-            // Application moved to different board column, update positions
-            repo.updateColumnPositionsOnRemove(currentApplication.getStatus(), currentApplication.getColumnPosition());
-            columnCount = repo.countByStatus(application.getStatus());
-        } else {
-            columnCount = currentApplication.getColumnPosition();
+    @Transactional
+    public boolean updateJobApplication(int id, JobApplicationMutation application) {
+        JobApplication current = repo.findById(id).orElse(null);
+        if (current == null) {
+            return false;
         }
 
-        JobApplication jobApplicationEntity = JobApplication.fromJobApplicationDTO(
-            application,
-            id,
-            columnCount
-        );
-        repo.save(jobApplicationEntity);
+        BoardPlacement placement = current.getPlacement();
+        if (placement != null && current.getStatus() != application.getStatus()) {
+            boardService.moveToStatus(
+                    placement,
+                    application.getStatus()
+            );
+        }
+
+        current.setCompany(application.getCompany());
+        current.setRole(application.getRole());
+        current.setStatus(application.getStatus());
+        current.setNotes(application.getNotes());
+        current.setJobPostingUrl(application.getJobPostingUrl());
+        repo.save(current);
         return true;
     }
 
-    @Transactional public void patchJobApplications(List<JobApplicationPatch> patches) {
-        for (JobApplicationPatch patch : patches) {
-            repo.patch(patch.getId(), patch.getStatus(),  patch.getColumnPosition());
-        }
-    }
-
+    @Transactional
     public boolean deleteJobApplication(int id) {
-        JobApplication jobApplication = repo.findById(id).orElse(null);
-        if (jobApplication == null) { return false; }
+        JobApplication application = repo.findById(id).orElse(null);
+        if (application == null) {
+            return false;
+        }
 
-        repo.deleteById(id);
-        repo.updateColumnPositionsOnRemove(jobApplication.getStatus(), jobApplication.getColumnPosition());
+        BoardPlacement placement = application.getPlacement();
+        JobApplicationStatus status = null;
+        Integer position = null;
+        if (placement != null) {
+            status = placement.getStatus();
+            position = placement.getPosition();
+        }
+
+        repo.delete(application);
+
+        if (status != null && position != null) {
+            boardService.densifyColumn(status, position);
+        }
         return true;
+    }
+
+    @Transactional
+    public void patchStatus(int applicationId, JobApplicationStatus status) {
+        repo.patchStatus(applicationId, status);
     }
 }

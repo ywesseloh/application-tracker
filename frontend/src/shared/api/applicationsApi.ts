@@ -10,7 +10,7 @@ export type ApplicationPositionPatch = Pick<
 >
 
 export function fetchApplications() {
-  return apiClient.get<Application[]>('/applications')
+  return apiClient.get<Application[]>('/board')
 }
 
 export function createApplication(application: ApplicationInput) {
@@ -18,11 +18,11 @@ export function createApplication(application: ApplicationInput) {
 }
 
 export function updateApplication(application: ApplicationInput, id: number) {
-  return apiClient.put<void>(`/application/${application}`, application)
+  return apiClient.put<void>(`/application/${id}`, application)
 }
 
 export function patchApplications(applications: ApplicationPositionPatch[]) {
-  return apiClient.patch<void>('/applications', applications)
+  return apiClient.patch<void>('/board', applications)
 }
 
 export function deleteApplication(id: number) {

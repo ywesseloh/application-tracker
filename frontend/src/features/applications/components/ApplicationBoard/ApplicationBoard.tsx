@@ -51,13 +51,6 @@ export default function ApplicationBoard() {
   const activeApplication = applications.find((app) => app.id.toString() === activeId) ?? null
   const selectedApplication =
     applications.find((app) => app.id.toString() === selectedId) ?? null
-  const editingApplication =
-    formMode.type === 'edit'
-      ? applications.find((app) => app.id === formMode.id) ?? null
-      : null
-  const isFormOpen =
-    formMode.type === 'create' ||
-    (formMode.type === 'edit' && editingApplication !== null)
 
   function handleOpen(id: string) {
     if (suppressOpenRef.current) return
