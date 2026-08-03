@@ -76,7 +76,7 @@ public class JobApplicationService {
 
         BoardPlacement placement = application.getPlacement();
         if (placement != null) {
-            boardService.densifyColumn(
+            boardService.compactColumnOnRemove(
                     placement.getApplicationId(),
                     placement.getStatus(),
                     placement.getPosition()

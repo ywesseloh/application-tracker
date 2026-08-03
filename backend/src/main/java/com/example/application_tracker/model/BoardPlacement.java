@@ -4,13 +4,15 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 @Entity
 @Data
 @NoArgsConstructor
+@Table(uniqueConstraints = { @UniqueConstraint(
+        name = "uc_status_position",
+        columnNames = { "status", "position" })
+})
 public class BoardPlacement {
     @Id
     private Integer applicationId;

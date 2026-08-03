@@ -32,6 +32,15 @@ public interface BoardPlacementRepository extends JpaRepository<BoardPlacement, 
             """)
     void incrementColumnOnAdd(int id, JobApplicationStatus status, int position);
 
+    @Modifying
+    @Transactional
+    @Query("""
+            UPDATE BoardPlacement p
+            SET p.position = :offset + p.applicationId
+            WHERE p.applicationId = :id
+            """)
+    void parkPlacement(int id, int offset);
+
     @Query("""
             SELECT p FROM BoardPlacement p
             JOIN FETCH p.application

@@ -20,6 +20,7 @@ import java.util.Set;
 
 @Service
 public class BoardService {
+    private static final int PARK_OFFSET = 1_000_000;
     @Autowired private BoardPlacementRepository repo;
     public List<JobApplicationBoardItem> getBoard() {
         return repo.findAllWithApplicationOrdered().stream()
@@ -40,7 +41,8 @@ public class BoardService {
         return repo.countByStatus(status);
     }
 
-    public void densifyColumn(int id, JobApplicationStatus status, int position) {
+    public void compactColumnOnRemove(int id, JobApplicationStatus status, int position) {
+        repo.parkPlacement(id, PARK_OFFSET);
         repo.compactColumnOnRemove(id, status, position);
     }
 
@@ -61,7 +63,7 @@ public class BoardService {
             throw new IllegalPositionException("Maximum position is " + endPosition);
         }
 
-        densifyColumn(id, fromStatus, fromPosition);
+        compactColumnOnRemove(id, fromStatus, fromPosition);
         repo.incrementColumnOnAdd(id, toStatus, position);
 
         placement.setStatus(toStatus);
