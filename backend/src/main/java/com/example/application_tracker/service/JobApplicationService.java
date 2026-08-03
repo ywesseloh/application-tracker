@@ -1,5 +1,6 @@
 package com.example.application_tracker.service;
 
+import com.example.application_tracker.common.ResourceNotFoundException;
 import com.example.application_tracker.dto.JobApplicationItem;
 import com.example.application_tracker.dto.JobApplicationMutation;
 import com.example.application_tracker.model.BoardPlacement;
@@ -22,8 +23,11 @@ public class JobApplicationService {
         return repo.findAllItems();
     }
 
-    public Optional<JobApplicationItem> getJobApplicationById(int id) {
-        return repo.findById(id).map(JobApplicationItem::from);
+    public JobApplicationItem getJobApplicationById(int id) {
+        JobApplication entity = repo.findById(id).orElseThrow(() ->
+            new ResourceNotFoundException("Job application with id " + id + " not found")
+        );
+        return JobApplicationItem.from(entity);
     }
 
     @Transactional
@@ -42,11 +46,10 @@ public class JobApplicationService {
     }
 
     @Transactional
-    public boolean updateJobApplication(int id, JobApplicationMutation application) {
-        JobApplication current = repo.findById(id).orElse(null);
-        if (current == null) {
-            return false;
-        }
+    public void updateJobApplication(int id, JobApplicationMutation application) {
+        JobApplication current = repo.findById(id).orElseThrow(() ->
+            new ResourceNotFoundException("Job application with id " + id + " not found")
+        );
 
         BoardPlacement placement = current.getPlacement();
         if (placement != null && current.getStatus() != application.getStatus()) {
@@ -63,30 +66,24 @@ public class JobApplicationService {
         current.setNotes(application.getNotes());
         current.setJobPostingUrl(application.getJobPostingUrl());
         repo.save(current);
-        return true;
     }
 
     @Transactional
-    public boolean deleteJobApplication(int id) {
-        JobApplication application = repo.findById(id).orElse(null);
-        if (application == null) {
-            return false;
-        }
+    public void deleteJobApplication(int id) {
+        JobApplication application = repo.findById(id).orElseThrow(() ->
+            new ResourceNotFoundException("Job application with id " + id + " not found")
+        );
 
         BoardPlacement placement = application.getPlacement();
-        JobApplicationStatus status = null;
-        Integer position = null;
         if (placement != null) {
-            status = placement.getStatus();
-            position = placement.getPosition();
+            boardService.densifyColumn(
+                    placement.getApplicationId(),
+                    placement.getStatus(),
+                    placement.getPosition()
+            );
         }
 
         repo.delete(application);
-
-        if (status != null && position != null) {
-            boardService.densifyColumn(status, position);
-        }
-        return true;
     }
 
     @Transactional

@@ -1,15 +1,21 @@
 package com.example.application_tracker.service;
 
+import com.example.application_tracker.common.ResourceNotFoundException;
 import com.example.application_tracker.dto.JobApplicationBoardItem;
 import com.example.application_tracker.dto.JobApplicationPatch;
 import com.example.application_tracker.model.BoardPlacement;
 import com.example.application_tracker.model.JobApplicationStatus;
 import com.example.application_tracker.repository.BoardPlacementRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Path;
+import jakarta.validation.metadata.ConstraintDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class BoardService {
@@ -21,33 +27,37 @@ public class BoardService {
     }
 
     @Transactional
-    public boolean moveJobApplication(int id, JobApplicationPatch patch) {
-        BoardPlacement currentPlacement = repo.findById(id).orElse(null);
-        if (currentPlacement == null) { return false; }
+    public void moveJobApplication(int id, JobApplicationPatch patch) {
+        BoardPlacement currentPlacement = repo.findById(id).orElseThrow(() ->
+            new ResourceNotFoundException("Job application with id " + id + " not found")
+        );
 
         move(currentPlacement, patch.getStatus(), patch.getColumnPosition());
-        return true;
     }
 
     public int getStatusCount(JobApplicationStatus status) {
         return repo.countByStatus(status);
     }
 
-    public void densifyColumn(JobApplicationStatus status, int position) {
-        repo.compactColumnOnRemove(status, position);
+    public void densifyColumn(int id, JobApplicationStatus status, int position) {
+        repo.compactColumnOnRemove(id, status, position);
     }
 
+    @Transactional
     public void move(
             BoardPlacement placement,
             JobApplicationStatus toStatus,
             Integer toPosition
     ) {
+        int id = placement.getApplicationId();
         JobApplicationStatus fromStatus = placement.getStatus();
         int fromPosition = placement.getPosition();
-        int position = toPosition != null ? toPosition : repo.countByStatus(toStatus);
 
-        densifyColumn(fromStatus, fromPosition);
-        repo.incrementColumnOnAdd(toStatus, position);
+        int endPosition = repo.countByStatus(toStatus);
+        int position = toPosition != null ? toPosition : endPosition;
+
+        densifyColumn(id, fromStatus, fromPosition);
+        repo.incrementColumnOnAdd(id, toStatus, position);
 
         placement.setStatus(toStatus);
         placement.setPosition(position);

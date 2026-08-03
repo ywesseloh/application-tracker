@@ -17,4 +17,10 @@ public class GlobalExceptionHandler {
                 .map(cv -> cv.getMessage())
                 .toList();
     }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public String handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return ex.getMessage();
+    }
 }

@@ -19,18 +19,18 @@ public interface BoardPlacementRepository extends JpaRepository<BoardPlacement, 
     @Query("""
             UPDATE BoardPlacement p
             SET p.position = p.position - 1
-            WHERE p.status = :status AND p.position > :removePosition
+            WHERE p.id <> :id AND p.status = :status AND p.position > :removePosition
             """)
-    void compactColumnOnRemove(JobApplicationStatus status, int removePosition);
+    void compactColumnOnRemove(int id, JobApplicationStatus status, int removePosition);
 
     @Modifying
     @Transactional
     @Query("""
             UPDATE BoardPlacement p
             SET p.position = p.position + 1
-            WHERE p.status = :status AND p.position >= :position
+            WHERE p.id <> :id AND p.status = :status AND p.position >= :position
             """)
-    void incrementColumnOnAdd(JobApplicationStatus status, int position);
+    void incrementColumnOnAdd(int id, JobApplicationStatus status, int position);
 
     @Query("""
             SELECT p FROM BoardPlacement p

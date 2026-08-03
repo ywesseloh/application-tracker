@@ -23,10 +23,8 @@ public class JobApplicationController {
     }
 
     @GetMapping("/application/{id}")
-    public ResponseEntity<JobApplicationItem> getJobApplicationById(@PathVariable int id) {
-        return service.getJobApplicationById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public JobApplicationItem getJobApplicationById(@PathVariable int id) {
+        return service.getJobApplicationById(id);
     }
 
     @PostMapping("/application")
@@ -35,19 +33,15 @@ public class JobApplicationController {
     }
 
     @PutMapping("/application/{id}")
-    public ResponseEntity<Void> updateJobApplication(
+    public void updateJobApplication(
             @PathVariable int id,
             @RequestBody JobApplicationMutation application
     ) {
-        return service.updateJobApplication(id, application)
-                ? ResponseEntity.ok().build()
-                : ResponseEntity.notFound().build();
+        service.updateJobApplication(id, application);
     }
 
     @DeleteMapping("/application/{id}")
-    public ResponseEntity<Void> deleteJobApplication(@PathVariable int id) {
-        return service.deleteJobApplication(id)
-                ? ResponseEntity.ok().build()
-                : ResponseEntity.notFound().build();
+    public void deleteJobApplication(@PathVariable int id) {
+        service.deleteJobApplication(id);
     }
 }

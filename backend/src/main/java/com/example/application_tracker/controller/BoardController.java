@@ -23,9 +23,7 @@ public class BoardController {
     }
 
     @PatchMapping("/board/move/{id}")
-    public ResponseEntity<Void> moveJobApplication(@PathVariable int id, @RequestBody JobApplicationPatch patch) {
-        return boardReorderService.moveJobApplication(id, patch)
-                ?  ResponseEntity.ok().build()
-                :  ResponseEntity.notFound().build();
+    public void moveJobApplication(@PathVariable int id, @RequestBody JobApplicationPatch patch) {
+        boardReorderService.moveJobApplication(id, patch);
     }
 }
