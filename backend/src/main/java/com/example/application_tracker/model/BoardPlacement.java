@@ -27,7 +27,7 @@ public class BoardPlacement {
     private JobApplicationStatus status;
 
     @NotNull
-    @Min(value = 0, message = "Position must be positive")
+    @Min(value = 0, message = "Position must be zero or greater")
     private Integer position;
 
     public BoardPlacement(
