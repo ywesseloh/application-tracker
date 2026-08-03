@@ -124,19 +124,3 @@ export function reorderWithinColumn(
   )
   return rebuildByStatus(groups)
 }
-
-export function changedPositions(
-  before: Application[],
-  after: Application[],
-): Application[] {
-  const beforeById = new Map(before.map((app) => [app.id, app]))
-
-  return after.filter((app) => {
-    const previous = beforeById.get(app.id)
-    if (!previous) return false
-    return (
-      previous.status !== app.status ||
-      previous.columnPosition !== app.columnPosition
-    )
-  })
-}

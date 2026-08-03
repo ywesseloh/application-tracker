@@ -15,7 +15,6 @@ import type { Application, FormMode } from '@/features/applications/model/types'
 import {
   STATUSES,
   applicationsForStatus,
-  changedPositions,
   moveBetweenColumns,
   reorderWithinColumn,
 } from '@/features/applications/model/boardOrdering'
@@ -97,15 +96,25 @@ export default function ApplicationBoard() {
 
     if (!before) return
 
-    const changed = changedPositions(before, next)
-    const application = changed.find((app) => app.id.toString() === active.id)
-    console.log(application)
-
-    if (application != undefined) {
-      moveMutation.mutate(application, {
-        onError: () => restore(before),
-      })
+    const application = next.find((app) => app.id.toString() === active.id)
+    const previous = before.find((app) => app.id.toString() === active.id)
+    if (
+      !application ||
+      !previous ||
+      (previous.status === application.status &&
+        previous.columnPosition === application.columnPosition)
+    ) {
+      return
     }
+
+    moveMutation.mutate(
+      {
+        id: application.id,
+        status: application.status,
+        columnPosition: application.columnPosition,
+      },
+      { onError: () => restore(before) },
+    )
   }
 
   function handleDragCancel() {
