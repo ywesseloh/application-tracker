@@ -21,7 +21,7 @@ import {
 } from '@/features/applications/model/boardOrdering'
 import { useApplicationsQuery } from '@/features/applications/hooks/useApplicationsQuery'
 import { useApplicationsCache } from '@/features/applications/hooks/useApplicationsCache'
-import { useMoveApplications } from '@/features/applications/hooks/useApplicationMutations'
+import { useMoveApplication } from '@/features/applications/hooks/useApplicationMutations'
 import { useApplicationActionError } from '@/features/applications/hooks/useApplicationActionError'
 import ActionErrorBanner from '@/shared/components/ActionErrorBanner/ActionErrorBanner'
 import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
@@ -33,7 +33,7 @@ import { CreateApplicationForm } from '../ApplicationForm/CreateApplicationForm'
 export default function ApplicationBoard() {
   const { applications, isPending, error, hasData, refetch } = useApplicationsQuery()
   const { applyLocalChange, snapshot, restore, pauseRefetch } = useApplicationsCache()
-  const { moveMutation } = useMoveApplications()
+  const { moveMutation } = useMoveApplication()
   const { error: actionError, dismiss: dismissActionError } = useApplicationActionError()
 
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -98,8 +98,11 @@ export default function ApplicationBoard() {
     if (!before) return
 
     const changed = changedPositions(before, next)
-    if (changed.length > 0) {
-      moveMutation.mutate(changed, {
+    const application = changed.find((app) => app.id.toString() === active.id)
+    console.log(application)
+
+    if (application != undefined) {
+      moveMutation.mutate(application, {
         onError: () => restore(before),
       })
     }

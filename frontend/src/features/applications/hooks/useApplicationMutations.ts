@@ -2,9 +2,10 @@ import { useMutation, useMutationState, useQueryClient } from '@tanstack/react-q
 import {
   createApplication,
   deleteApplication,
-  patchApplications,
+  moveApplication,
   updateApplication,
   type ApplicationInput,
+  type ApplicationPositionPatch,
 } from '@/shared/api/applicationsApi'
 import {
   applicationMutationKeys,
@@ -65,13 +66,13 @@ export function useDeleteApplication(id: number) {
   }
 }
 
-export function useMoveApplications() {
+export function useMoveApplication() {
   const queryClient = useQueryClient()
   
   const moveMutation = useMutation({
     mutationKey: applicationMutationKeys.reposition,
     scope: boardPositionsScope,
-    mutationFn: patchApplications,
+    mutationFn: (patch: ApplicationPositionPatch) => moveApplication(patch, patch.id),
     onSettled: () => invalidateApplications(queryClient),
   })
   const moveMutationState = useLatestMutationState(applicationMutationKeys.reposition)

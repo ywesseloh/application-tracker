@@ -3,18 +3,17 @@ import type { ApplicationPositionPatch } from '@/shared/api/applicationsApi'
 import { applicationMutationKeys } from '@/features/applications/model/mutationKeys'
 
 export function useApplicationBusy(id: number) {
-  const own = useMutationState({
+  const pendingOwnMutations = useMutationState({
     filters: { mutationKey: applicationMutationKeys.anyFor(id), status: 'pending' },
     select: () => true,
   })
 
-  const repositioning = useMutationState({
+  const pendingRepositionings = useMutationState({
     filters: { mutationKey: applicationMutationKeys.reposition, status: 'pending' },
     select: (mutation) =>
-      (mutation.state.variables as ApplicationPositionPatch[] | undefined)?.some(
-        (patch) => patch.id === id,
-      ) ?? false,
+      (mutation.state.variables as ApplicationPositionPatch | undefined),
   })
+  const pendingOwnRepositionings = pendingRepositionings.filter((patch) => patch?.id === id)
 
-  return own.length > 0 || repositioning.some(Boolean)
+  return pendingOwnMutations.length > 0 || pendingOwnRepositionings.length > 0
 }

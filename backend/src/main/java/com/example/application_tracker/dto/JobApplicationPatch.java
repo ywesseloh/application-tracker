@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class JobApplicationPatch {
-    private Integer id;
     private JobApplicationStatus status;
     private Integer columnPosition;
 }

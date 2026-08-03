@@ -50,9 +50,10 @@ public class JobApplicationService {
 
         BoardPlacement placement = current.getPlacement();
         if (placement != null && current.getStatus() != application.getStatus()) {
-            boardService.moveToStatus(
+            boardService.move(
                     placement,
-                    application.getStatus()
+                    application.getStatus(),
+                    null
             );
         }
 

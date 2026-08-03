@@ -1,6 +1,7 @@
 package com.example.application_tracker.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,6 +25,7 @@ public class BoardPlacement {
     private JobApplicationStatus status;
 
     @NotNull
+    @Min(value = 0, message = "Position must be positive")
     private Integer position;
 
     public BoardPlacement(

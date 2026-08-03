@@ -6,6 +6,7 @@ import com.example.application_tracker.service.BoardReorderService;
 import com.example.application_tracker.service.BoardService;
 import com.example.application_tracker.service.JobApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +22,10 @@ public class BoardController {
         return boardService.getBoard();
     }
 
-    @PatchMapping("/board")
-    public void reorderJobApplications(@RequestBody List<JobApplicationPatch> patches) {
-        boardReorderService.patchJobApplications(patches);
+    @PatchMapping("/board/move/{id}")
+    public ResponseEntity<Void> moveJobApplication(@PathVariable int id, @RequestBody JobApplicationPatch patch) {
+        return boardReorderService.moveJobApplication(id, patch)
+                ?  ResponseEntity.ok().build()
+                :  ResponseEntity.notFound().build();
     }
 }

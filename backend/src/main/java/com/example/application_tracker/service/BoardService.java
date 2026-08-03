@@ -20,27 +20,37 @@ public class BoardService {
                 .toList();
     }
 
+    @Transactional
+    public boolean moveJobApplication(int id, JobApplicationPatch patch) {
+        BoardPlacement currentPlacement = repo.findById(id).orElse(null);
+        if (currentPlacement == null) { return false; }
+
+        move(currentPlacement, patch.getStatus(), patch.getColumnPosition());
+        return true;
+    }
+
     public int getStatusCount(JobApplicationStatus status) {
         return repo.countByStatus(status);
     }
 
-    @Transactional
     public void densifyColumn(JobApplicationStatus status, int position) {
-        repo.compactAfterRemove(status, position);
+        repo.compactColumnOnRemove(status, position);
     }
 
-    @Transactional
-    public void moveToStatus(
+    public void move(
             BoardPlacement placement,
-            JobApplicationStatus toStatus
+            JobApplicationStatus toStatus,
+            Integer toPosition
     ) {
-        densifyColumn(placement.getStatus(), placement.getPosition());
-        int position = repo.countByStatus(toStatus);
-        repo.patch(placement.getApplicationId(), toStatus, position);
-    }
+        JobApplicationStatus fromStatus = placement.getStatus();
+        int fromPosition = placement.getPosition();
+        int position = toPosition != null ? toPosition : repo.countByStatus(toStatus);
 
-    @Transactional
-    public void patch(JobApplicationPatch patch) {
-        repo.patch(patch.getId(), patch.getStatus(), patch.getColumnPosition());
+        densifyColumn(fromStatus, fromPosition);
+        repo.incrementColumnOnAdd(toStatus, position);
+
+        placement.setStatus(toStatus);
+        placement.setPosition(position);
+        repo.save(placement);
     }
 }

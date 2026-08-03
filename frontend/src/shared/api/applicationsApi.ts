@@ -21,8 +21,8 @@ export function updateApplication(application: ApplicationInput, id: number) {
   return apiClient.put<void>(`/application/${id}`, application)
 }
 
-export function patchApplications(applications: ApplicationPositionPatch[]) {
-  return apiClient.patch<void>('/board', applications)
+export function moveApplication(patch: ApplicationPositionPatch, id: number) {
+  return apiClient.patch<void>(`/board/move/${id}`, patch)
 }
 
 export function deleteApplication(id: number) {
