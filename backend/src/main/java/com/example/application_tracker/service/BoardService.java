@@ -1,5 +1,6 @@
 package com.example.application_tracker.service;
 
+import com.example.application_tracker.common.IllegalPositionException;
 import com.example.application_tracker.common.ResourceNotFoundException;
 import com.example.application_tracker.dto.JobApplicationBoardItem;
 import com.example.application_tracker.dto.JobApplicationPatch;
@@ -55,6 +56,10 @@ public class BoardService {
 
         int endPosition = repo.countByStatus(toStatus);
         int position = toPosition != null ? toPosition : endPosition;
+
+        if (position > endPosition) {
+            throw new IllegalPositionException("Maximum position is " + endPosition);
+        }
 
         densifyColumn(id, fromStatus, fromPosition);
         repo.incrementColumnOnAdd(id, toStatus, position);
