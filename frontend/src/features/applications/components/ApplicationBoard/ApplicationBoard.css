@@ -134,7 +134,7 @@ body {
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 2.75rem);
-  padding: 0.65rem 0.65rem 0.75rem;
+  padding: 0.65rem 0.3rem 0.75rem 0.65rem;
   border: none;
   border-radius: 1rem;
   background: var(--column-bg);
@@ -272,16 +272,16 @@ body {
   flex: 0 1 auto;
   overflow-y: auto;
   min-height: 0;
-  padding: 0.1rem 0.15rem 0.35rem;
+  padding: 0.1rem 0.55rem 0.35rem 0.15rem;
 }
 
 .board-column__list::-webkit-scrollbar {
-  width: 0.35rem;
+  width: 0.4rem;
 }
 
 .board-column__list::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: rgba(26, 31, 28, 0.14);
+  background: rgba(26, 31, 28, 0.18);
 }
 
 .application-tile {
