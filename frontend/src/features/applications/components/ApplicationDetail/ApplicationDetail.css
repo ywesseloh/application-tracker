@@ -89,15 +89,36 @@
 }
 
 .application-detail__status {
+  --status-color: var(--accent, #2a6b5a);
   display: inline-block;
   margin: 1rem 0 0;
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
-  background: var(--accent-soft, rgba(42, 107, 90, 0.12));
-  color: var(--accent, #2a6b5a);
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--status-color) 18%, #fff);
+  color: var(--status-color);
+  font-size: 0.85rem;
+  font-weight: 650;
   letter-spacing: -0.01em;
+}
+
+.application-detail__status--wishlist {
+  --status-color: var(--status-wishlist, #3b6eb0);
+}
+
+.application-detail__status--applied {
+  --status-color: var(--status-applied, #1f7a62);
+}
+
+.application-detail__status--interview {
+  --status-color: var(--status-interview, #9a6b28);
+}
+
+.application-detail__status--offer {
+  --status-color: var(--status-offer, #2f8a45);
+}
+
+.application-detail__status--rejected {
+  --status-color: var(--status-rejected, #b0453c);
 }
 
 .application-detail__section {

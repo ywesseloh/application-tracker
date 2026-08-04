@@ -23,11 +23,11 @@ body {
   --font: 'Plus Jakarta Sans', system-ui, sans-serif;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 
-  --status-wishlist: #4a6fa5;
-  --status-applied: #2a6b5a;
-  --status-interview: #8a6d3b;
-  --status-offer: #3d7a4a;
-  --status-rejected: #9a4f45;
+  --status-wishlist: #3b6eb0;
+  --status-applied: #1f7a62;
+  --status-interview: #9a6b28;
+  --status-offer: #2f8a45;
+  --status-rejected: #b0453c;
 
   min-height: 100vh;
   box-sizing: border-box;
@@ -178,12 +178,14 @@ body {
 
 .board-column__title {
   margin: 0;
-  padding-left: 0.55rem;
-  border-left: 3px solid var(--column-accent);
-  font-size: 0.95rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--column-accent) 18%, #fff);
+  color: var(--column-accent);
+  font-size: 0.9rem;
   font-weight: 650;
   letter-spacing: -0.01em;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .board-column__count {

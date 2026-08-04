@@ -67,7 +67,9 @@ export default function ApplicationDetail({
           </button>
         </header>
 
-        <p className="application-detail__status">
+        <p
+          className={`application-detail__status application-detail__status--${application.status.toLowerCase()}`}
+        >
           {STATUS_LABELS[application.status]}
         </p>
 
