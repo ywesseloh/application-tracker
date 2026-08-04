@@ -25,18 +25,18 @@ export default function BoardColumn({
       className={`board-column board-column--${status.toLowerCase()}${isOver ? ' board-column--over' : ''}`}
     >
       <header className="board-column__header">
-        <h2 className="board-column__title">{STATUS_LABELS[status]}</h2>
-        <div className="board-column__header-actions">
+        <h2 className="board-column__title">
+          <span>{STATUS_LABELS[status]}</span>
           <span className="board-column__count">{applications.length}</span>
-          <button
-            type="button"
-            className="board-column__add"
-            onClick={() => onAdd(status)}
-            aria-label={`Add application to ${STATUS_LABELS[status]}`}
-          >
-            <span className="board-column__add-icon" aria-hidden="true" />
-          </button>
-        </div>
+        </h2>
+        <button
+          type="button"
+          className="board-column__add"
+          onClick={() => onAdd(status)}
+          aria-label={`Add application to ${STATUS_LABELS[status]}`}
+        >
+          <span className="board-column__add-icon" aria-hidden="true" />
+        </button>
       </header>
       <SortableContext
         items={applications.map((app) => app.id.toString())}
