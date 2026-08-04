@@ -25,5 +25,5 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
 
 export type FormMode =
   | { type: 'closed' }
-  | { type: 'create' }
+  | { type: 'create'; status: ApplicationStatus }
   | { type: 'edit'; id: number }

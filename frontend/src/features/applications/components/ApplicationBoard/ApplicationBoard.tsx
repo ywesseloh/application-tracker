@@ -138,23 +138,6 @@ export default function ApplicationBoard() {
 
   return (
     <div className="application-board">
-      <header className="application-board__header">
-        <div className="application-board__heading">
-          <h1 className="application-board__title">Application Board</h1>
-          <p className="application-board__subtitle">
-            Drag to reorder within a column or move applications between columns.
-          </p>
-        </div>
-        <button
-          type="button"
-          className="application-board__add"
-          onClick={() => setFormMode({ type: 'create' })}
-          disabled={!hasData}
-        >
-          Add application
-        </button>
-      </header>
-
       {actionError ? (
         <ActionErrorBanner message={actionError} onDismiss={dismissActionError} />
       ) : null}
@@ -198,6 +181,9 @@ export default function ApplicationBoard() {
                   status={status}
                   applications={applicationsForStatus(applications, status)}
                   onOpen={handleOpen}
+                  onAdd={(columnStatus) =>
+                    setFormMode({ type: 'create', status: columnStatus })
+                  }
                 />
               ))}
             </div>
@@ -217,6 +203,7 @@ export default function ApplicationBoard() {
 
       {formMode.type === 'create' ? (
         <CreateApplicationForm
+          initialStatus={formMode.status}
           onClose={() => setFormMode({ type: 'closed' })}
         />
       ) : null}

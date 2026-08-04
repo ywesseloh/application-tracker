@@ -4,13 +4,16 @@ import { EMPTY_VALUES } from './formValues'
 import { useCreateApplication } from '../../hooks/useApplicationMutations'
 import { useApplicationsCache } from '../../hooks/useApplicationsCache'
 import { applicationMutationKeys } from '../../model/mutationKeys'
+import type { ApplicationStatus } from '../../model/types'
 import ApplicationForm from './ApplicationForm'
 
 type CreateApplicationFormProps = {
+  initialStatus: ApplicationStatus
   onClose: () => void
 }
 
 export function CreateApplicationForm({
+  initialStatus,
   onClose,
 }: CreateApplicationFormProps) { 
   const { createMutation, createMutationState } = useCreateApplication()
@@ -30,8 +33,8 @@ export function CreateApplicationForm({
   }
 
   return <ApplicationForm
-           mode={{ type: 'create' }} 
-           initialValues={EMPTY_VALUES}
+           mode={{ type: 'create', status: initialStatus }} 
+           initialValues={{ ...EMPTY_VALUES, status: initialStatus }}
            isSubmitting={createMutationState.isPending} 
            submitError={createMutationState.error} 
            onDismissSubmitError={() => clearSettledMutations(applicationMutationKeys.create)}

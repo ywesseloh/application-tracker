@@ -8,12 +8,14 @@ type BoardColumnProps = {
   status: ApplicationStatus
   applications: Application[]
   onOpen: (id: string) => void
+  onAdd: (status: ApplicationStatus) => void
 }
 
 export default function BoardColumn({
   status,
   applications,
   onOpen,
+  onAdd,
 }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
 
@@ -24,7 +26,17 @@ export default function BoardColumn({
     >
       <header className="board-column__header">
         <h2 className="board-column__title">{STATUS_LABELS[status]}</h2>
-        <span className="board-column__count">{applications.length}</span>
+        <div className="board-column__header-actions">
+          <span className="board-column__count">{applications.length}</span>
+          <button
+            type="button"
+            className="board-column__add"
+            onClick={() => onAdd(status)}
+            aria-label={`Add application to ${STATUS_LABELS[status]}`}
+          >
+            <span className="board-column__add-icon" aria-hidden="true" />
+          </button>
+        </div>
       </header>
       <SortableContext
         items={applications.map((app) => app.id.toString())}
