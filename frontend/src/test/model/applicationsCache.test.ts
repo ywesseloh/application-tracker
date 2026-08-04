@@ -5,7 +5,6 @@ import { applicationMutationKeys } from '@/features/applications/model/mutationK
 import {
   applyLocalChange,
   clearSettledMutations,
-  invalidateApplications,
   restoreApplications,
   snapshotApplications,
 } from '@/features/applications/model/applicationsCache'
