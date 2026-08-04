@@ -1,3 +1,4 @@
+import { queryOptions } from '@tanstack/react-query'
 import { apiClient } from '@/shared/api/apiClient'
 import type { Application } from '@/features/applications/model/types'
 
@@ -12,6 +13,11 @@ export type ApplicationPositionPatch = Pick<
 export function fetchApplications() {
   return apiClient.get<Application[]>('/board')
 }
+
+export const applicationsQueryOptions = queryOptions({
+  queryKey: applicationsQueryKey,
+  queryFn: fetchApplications,
+})
 
 export function createApplication(application: ApplicationInput) {
   return apiClient.post<void>('/application', application)

@@ -1,11 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { applicationsQueryKey, fetchApplications } from '@/shared/api/applicationsApi'
+import { applicationsQueryOptions } from '@/shared/api/applicationsApi'
 
 export function useApplicationsQuery() {
-  const { isPending, error, data, refetch } = useQuery({
-    queryKey: applicationsQueryKey,
-    queryFn: fetchApplications,
-  })
+  const { isPending, error, data, refetch } = useQuery(applicationsQueryOptions)
 
   return {
     applications: data ?? [],
