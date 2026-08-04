@@ -166,7 +166,7 @@ export default function ApplicationBoard() {
           type="button"
           className="application-board__add"
           onClick={() => setFormMode({ type: 'create' })}
-          disabled={!hasData || boardWritesBusy}
+          disabled={!hasData}
         >
           Add application
         </button>
