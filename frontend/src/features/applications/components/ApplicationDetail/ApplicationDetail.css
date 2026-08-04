@@ -20,10 +20,11 @@
 }
 
 .application-detail {
+  display: flex;
+  flex-direction: column;
   width: min(28rem, 100%);
   max-height: min(36rem, calc(100vh - 2.5rem));
-  overflow-y: auto;
-  padding: 1.35rem 1.4rem 1.5rem;
+  overflow: hidden;
   border: none;
   border-radius: 1rem;
   background: #ffffff;
@@ -49,6 +50,15 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
+  flex-shrink: 0;
+  padding: 1.35rem 1.4rem 0;
+}
+
+.application-detail__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 1.4rem 1.5rem;
 }
 
 .application-detail__company {
@@ -157,7 +167,7 @@
   font-size: 0.9rem;
 }
 
-.application-detail > .action-error-banner {
+.application-detail__body > .action-error-banner {
   margin-top: 1.15rem;
 }
 

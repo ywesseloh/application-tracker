@@ -67,71 +67,73 @@ export default function ApplicationDetail({
           </button>
         </header>
 
-        <p
-          className={`application-detail__status application-detail__status--${application.status.toLowerCase()}`}
-        >
-          {STATUS_LABELS[application.status]}
-        </p>
-
-        <section className="application-detail__section">
-          <h3 className="application-detail__label">Notes</h3>
-          {hasNotes ? (
-            <p className="application-detail__notes">{notes}</p>
-          ) : (
-            <p className="application-detail__empty">No notes yet.</p>
-          )}
-        </section>
-
-        <section className="application-detail__section">
-          <h3 className="application-detail__label">Job posting</h3>
-          {hasUrl ? (
-            <a
-              className="application-detail__link"
-              href={jobPostingUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {jobPostingUrl}
-            </a>
-          ) : (
-            <p className="application-detail__empty">No job posting URL.</p>
-          )}
-        </section>
-
-        {error ? (
-          <ActionErrorBanner
-            message={error.message}
-            onDismiss={() =>
-              clearSettledMutations(applicationMutationKeys.remove(application.id))
-            }
-          />
-        ) : null}
-
-        <div className="application-detail__actions">
-          <button
-            type="button"
-            className="application-detail__delete"
-            onClick={handleDelete}
-            disabled={isDeleting}
-            aria-busy={isDeleting}
+        <div className="application-detail__body">
+          <p
+            className={`application-detail__status application-detail__status--${application.status.toLowerCase()}`}
           >
-            {isDeleting ? (
-              <>
-                <span className="application-detail__spinner" aria-hidden="true" />
-                Deleting…
-              </>
+            {STATUS_LABELS[application.status]}
+          </p>
+
+          <section className="application-detail__section">
+            <h3 className="application-detail__label">Notes</h3>
+            {hasNotes ? (
+              <p className="application-detail__notes">{notes}</p>
             ) : (
-              'Delete'
+              <p className="application-detail__empty">No notes yet.</p>
             )}
-          </button>
-          <button
-            type="button"
-            className="application-detail__edit"
-            onClick={onEdit}
-            disabled={isDeleting}
-          >
-            Edit
-          </button>
+          </section>
+
+          <section className="application-detail__section">
+            <h3 className="application-detail__label">Job posting</h3>
+            {hasUrl ? (
+              <a
+                className="application-detail__link"
+                href={jobPostingUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {jobPostingUrl}
+              </a>
+            ) : (
+              <p className="application-detail__empty">No job posting URL.</p>
+            )}
+          </section>
+
+          {error ? (
+            <ActionErrorBanner
+              message={error.message}
+              onDismiss={() =>
+                clearSettledMutations(applicationMutationKeys.remove(application.id))
+              }
+            />
+          ) : null}
+
+          <div className="application-detail__actions">
+            <button
+              type="button"
+              className="application-detail__delete"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              aria-busy={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <span className="application-detail__spinner" aria-hidden="true" />
+                  Deleting…
+                </>
+              ) : (
+                'Delete'
+              )}
+            </button>
+            <button
+              type="button"
+              className="application-detail__edit"
+              onClick={onEdit}
+              disabled={isDeleting}
+            >
+              Edit
+            </button>
+          </div>
         </div>
       </div>
     </div>
