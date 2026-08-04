@@ -21,6 +21,7 @@ import {
 import { useApplicationsQuery } from '@/features/applications/hooks/useApplicationsQuery'
 import { useApplicationsCache } from '@/features/applications/hooks/useApplicationsCache'
 import { useMoveApplication } from '@/features/applications/hooks/useApplicationMutations'
+import { useBoardPositionsBusy } from '@/features/applications/hooks/useBoardPositionsBusy'
 import { useApplicationActionError } from '@/features/applications/hooks/useApplicationActionError'
 import ActionErrorBanner from '@/shared/components/ActionErrorBanner/ActionErrorBanner'
 import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
@@ -33,6 +34,7 @@ export default function ApplicationBoard() {
   const { applications, isPending, error, hasData, refetch } = useApplicationsQuery()
   const { applyLocalChange, snapshot, restore, pauseRefetch } = useApplicationsCache()
   const { moveMutation } = useMoveApplication()
+  const boardPositionsBusy = useBoardPositionsBusy()
   const { error: actionError, dismiss: dismissActionError } = useApplicationActionError()
 
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -63,6 +65,8 @@ export default function ApplicationBoard() {
   }
 
   function handleDragStart(event: DragStartEvent) {
+    if (boardPositionsBusy) return
+
     suppressOpenRef.current = true
     setActiveId(String(event.active.id))
     pauseRefetch()
