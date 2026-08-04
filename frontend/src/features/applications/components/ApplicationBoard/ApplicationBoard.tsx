@@ -144,23 +144,6 @@ export default function ApplicationBoard() {
           <p className="application-board__subtitle">
             Drag to reorder within a column or move applications between columns.
           </p>
-          {showLoading ? (
-            <p className="application-board__status">Loading applications…</p>
-          ) : null}
-          {showLoadError ? (
-            <div className="application-board__load-error">
-              <p className="application-board__status application-board__status--error">
-                {error.message}
-              </p>
-              <button
-                type="button"
-                className="application-board__retry"
-                onClick={() => void refetch()}
-              >
-                Retry
-              </button>
-            </div>
-          ) : null}
         </div>
         <button
           type="button"
@@ -174,6 +157,28 @@ export default function ApplicationBoard() {
 
       {actionError ? (
         <ActionErrorBanner message={actionError} onDismiss={dismissActionError} />
+      ) : null}
+
+      {showLoading ? (
+        <div className="application-board__viewport-state" role="status" aria-live="polite">
+          <span className="application-board__loader" aria-hidden="true" />
+          <p className="application-board__status">Loading applications…</p>
+        </div>
+      ) : null}
+
+      {showLoadError ? (
+        <div className="application-board__viewport-state" role="alert">
+          <p className="application-board__status application-board__status--error">
+            {error.message}
+          </p>
+          <button
+            type="button"
+            className="application-board__retry"
+            onClick={() => void refetch()}
+          >
+            Retry
+          </button>
+        </div>
       ) : null}
 
       {hasData ? (
