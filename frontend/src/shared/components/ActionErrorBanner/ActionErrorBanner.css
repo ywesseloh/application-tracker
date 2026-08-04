@@ -3,11 +3,12 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.75rem 0.9rem;
-  border: 1px solid #d9b3ac;
-  border-radius: 0.55rem;
-  background: #f8ece9;
+  padding: 0.8rem 0.95rem;
+  border: none;
+  border-radius: 0.65rem;
+  background: #f6e8e5;
   color: #8b3a2f;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 .action-error-banner__text {

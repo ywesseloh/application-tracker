@@ -22,7 +22,7 @@ export default function BoardColumn({
   return (
     <section
       ref={setNodeRef}
-      className={`board-column${isOver ? ' board-column--over' : ''}`}
+      className={`board-column board-column--${status.toLowerCase()}${isOver ? ' board-column--over' : ''}`}
     >
       <header className="board-column__header">
         <h2 className="board-column__title">{STATUS_LABELS[status]}</h2>
