@@ -9,8 +9,7 @@ import {
 } from '@/shared/api/applicationsApi'
 import {
   applicationMutationKeys,
-  applicationScope,
-  boardPositionsScope,
+  boardWritesScope,
 } from '@/features/applications/model/mutationKeys'
 import { invalidateApplications } from '@/features/applications/model/applicationsCache'
 
@@ -19,6 +18,7 @@ export function useCreateApplication() {
 
   const createMutation = useMutation({
     mutationKey: applicationMutationKeys.create,
+    scope: boardWritesScope,
     mutationFn: createApplication,
     onSettled: () => invalidateApplications(queryClient),
   })
@@ -35,7 +35,7 @@ export function useUpdateApplication(id: number) {
 
   const updateMutation = useMutation({
     mutationKey: applicationMutationKeys.update(id),
-    scope: applicationScope(id),
+    scope: boardWritesScope,
     mutationFn: (application: ApplicationInput) => updateApplication(application, id),
     onSettled: () => invalidateApplications(queryClient),
   })
@@ -54,7 +54,7 @@ export function useDeleteApplication(id: number) {
 
   const deleteMutation = useMutation({
     mutationKey: applicationMutationKeys.remove(id),
-    scope: applicationScope(id),
+    scope: boardWritesScope,
     mutationFn: () => deleteApplication(id),
     onSettled: () => invalidateApplications(queryClient),
   })
@@ -68,10 +68,10 @@ export function useDeleteApplication(id: number) {
 
 export function useMoveApplication() {
   const queryClient = useQueryClient()
-  
+
   const moveMutation = useMutation({
     mutationKey: applicationMutationKeys.reposition,
-    scope: boardPositionsScope,
+    scope: boardWritesScope,
     mutationFn: (patch: ApplicationPositionPatch) => moveApplication(patch, patch.id),
     onSettled: () => invalidateApplications(queryClient),
   })

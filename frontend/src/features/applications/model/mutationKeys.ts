@@ -7,6 +7,5 @@ export const applicationMutationKeys = {
   remove: (id: number) => ['applications', id, 'delete'] as const,
 }
 
-export const applicationScope = (id: number) => ({ id: `application-${id}` })
-
-export const boardPositionsScope = { id: 'board-positions' }
+/** Serializes create, update, delete, and move so board denseness stays consistent. */
+export const boardWritesScope = { id: 'board-writes' }

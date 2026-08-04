@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import type { Application } from '@/features/applications/model/types'
 import { STATUS_LABELS } from '@/features/applications/model/types'
 import { useDeleteApplication } from '@/features/applications/hooks/useApplicationMutations'
+import { useBoardWritesBusy } from '@/features/applications/hooks/useBoardWritesBusy'
 import { useApplicationsCache } from '@/features/applications/hooks/useApplicationsCache'
 import { applicationMutationKeys } from '@/features/applications/model/mutationKeys'
 import ActionErrorBanner from '@/shared/components/ActionErrorBanner/ActionErrorBanner'
@@ -19,8 +20,10 @@ export default function ApplicationDetail({
   onEdit,
 }: ApplicationDetailProps) {
   const { deleteMutation, deleteMutationState } = useDeleteApplication(application.id)
+  const boardWritesBusy = useBoardWritesBusy()
   const { clearSettledMutations } = useApplicationsCache()
   const { isPending: isDeleting, error } = deleteMutationState
+  const actionsLocked = boardWritesBusy && !isDeleting
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -37,7 +40,7 @@ export default function ApplicationDetail({
   const hasUrl = jobPostingUrl.trim().length > 0
 
   function handleDelete() {
-    if (isDeleting) return
+    if (isDeleting || actionsLocked) return
     deleteMutation.mutate(undefined, { onSuccess: onClose })
   }
 
@@ -110,7 +113,7 @@ export default function ApplicationDetail({
             type="button"
             className="application-detail__delete"
             onClick={handleDelete}
-            disabled={isDeleting}
+            disabled={isDeleting || actionsLocked}
             aria-busy={isDeleting}
           >
             {isDeleting ? (
@@ -126,7 +129,7 @@ export default function ApplicationDetail({
             type="button"
             className="application-detail__edit"
             onClick={onEdit}
-            disabled={isDeleting}
+            disabled={isDeleting || actionsLocked}
           >
             Edit
           </button>

@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Application } from '@/features/applications/model/types'
 import { useApplicationBusy } from '@/features/applications/hooks/useApplicationBusy'
-import { useBoardPositionsBusy } from '@/features/applications/hooks/useBoardPositionsBusy'
+import { useBoardWritesBusy } from '@/features/applications/hooks/useBoardWritesBusy'
 
 type ApplicationTileProps = {
   application: Application
@@ -11,7 +11,7 @@ type ApplicationTileProps = {
 
 export default function ApplicationTile({ application, onOpen }: ApplicationTileProps) {
   const isBusy = useApplicationBusy(application.id)
-  const boardPositionsBusy = useBoardPositionsBusy()
+  const boardWritesBusy = useBoardWritesBusy()
 
   const {
     attributes,
@@ -23,7 +23,7 @@ export default function ApplicationTile({ application, onOpen }: ApplicationTile
   } = useSortable({
     id: application.id.toString(),
     data: { status: application.status },
-    disabled: isBusy || boardPositionsBusy,
+    disabled: isBusy || boardWritesBusy,
   })
 
   const style = {
