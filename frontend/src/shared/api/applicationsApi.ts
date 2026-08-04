@@ -16,7 +16,7 @@ export function fetchApplications() {
 
 export const applicationsQueryOptions = queryOptions({
   queryKey: applicationsQueryKey,
-  queryFn: fetchApplications,
+  queryFn: () => fetchApplications(),
 })
 
 export function createApplication(application: ApplicationInput) {
