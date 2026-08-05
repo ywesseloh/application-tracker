@@ -66,6 +66,7 @@ public class BoardService {
         compactColumnOnRemove(id, fromStatus, fromPosition);
         repo.incrementColumnOnAdd(id, toStatus, position);
 
+        placement.getApplication().setStatus(toStatus);
         placement.setStatus(toStatus);
         placement.setPosition(position);
         repo.save(placement);
