@@ -63,6 +63,23 @@ class BoardServiceTest {
     }
 
     @Test
+    void moveAcrossColumnsUpdatesStatusInJobApplicationTable() {
+        seed(
+                jobApplicationService,
+                mutation("Wish", "Role", WISHLIST),
+                mutation("AppliedA", "Role", APPLIED),
+                mutation("AppliedB", "Role", APPLIED)
+        );
+
+        int wishId = findApplicationId(jobApplicationRepository, "Wish");
+        boardService.moveJobApplication(wishId, patch(APPLIED, 0));
+        refreshPersistence(entityManager);
+
+        assertEquals(List.of(), applicationsIn(jobApplicationRepository, WISHLIST));
+        assertEquals(List.of("Wish", "AppliedA", "AppliedB"), companiesIn(jobApplicationRepository, APPLIED));
+    }
+
+    @Test
     void appendMovesToEndOfTargetColumn() {
         seed(
                 jobApplicationService,

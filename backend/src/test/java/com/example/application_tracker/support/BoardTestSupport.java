@@ -43,6 +43,15 @@ public final class BoardTestSupport {
                 .toList();
     }
 
+    public static List<String> companiesIn(
+            JobApplicationRepository repository,
+            JobApplicationStatus status
+    ) {
+        return applicationsIn(repository, status).stream()
+                .map(JobApplication::getCompany)
+                .toList();
+    }
+
     public static int findApplicationId(JobApplicationRepository repository, String companyName) {
         return repository.findAll().stream()
                 .filter(application -> companyName.equals(application.getCompany()))
@@ -68,11 +77,12 @@ public final class BoardTestSupport {
                 .orElseThrow(() -> new AssertionError("Placement " + applicationId + " not found"));
     }
 
-    public static JobApplicationBoardItem findOnBoard(BoardService boardService, int id) {
-        return boardService.getBoard().stream()
-                .filter(item -> item.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("Application " + id + " not on board"));
+    public static JobApplication applicationFor(
+            JobApplicationRepository repository,
+            int applicationId
+    ) {
+        return repository.findById(applicationId)
+                .orElseThrow(() -> new AssertionError("Job Application " + applicationId + " not found"));
     }
 
     public static void refreshPersistence(EntityManager entityManager) {
@@ -80,7 +90,7 @@ public final class BoardTestSupport {
         entityManager.clear();
     }
 
-    private static List<BoardPlacement> placementsIn(
+    public static List<BoardPlacement> placementsIn(
             BoardPlacementRepository repository,
             JobApplicationStatus status
     ) {
@@ -89,7 +99,7 @@ public final class BoardTestSupport {
                 .toList();
     }
 
-    private static List<JobApplication> applicationsIn(
+    public static List<JobApplication> applicationsIn(
             JobApplicationRepository repository,
             JobApplicationStatus status
     ) {
