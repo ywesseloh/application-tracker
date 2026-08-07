@@ -1,4 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+const API_PREFIX = '/api'
 const REQUEST_TIMEOUT_MS = 8_000
 
 type RequestOptions = Omit<RequestInit, 'body' | 'method'> & {
@@ -32,7 +33,10 @@ function resolveUrl(path: string): string {
 
   const base = API_BASE_URL.replace(/\/$/, '')
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  return `${base}${normalizedPath}`
+  const prefixedPath = normalizedPath.startsWith(`${API_PREFIX}/`) || normalizedPath === API_PREFIX
+    ? normalizedPath
+    : `${API_PREFIX}${normalizedPath}`
+  return `${base}${prefixedPath}`
 }
 
 function withTimeout(signal?: AbortSignal | null): AbortSignal {

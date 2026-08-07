@@ -10,6 +10,7 @@ import java.util.List;
 
 @CrossOrigin
 @RestController
+@RequestMapping("/api")
 public class JobApplicationController {
     @Autowired
     JobApplicationService service;
@@ -19,17 +20,17 @@ public class JobApplicationController {
         return service.getJobApplications();
     }
 
-    @GetMapping("/application/{id}")
+    @GetMapping("/applications/{id}")
     public JobApplicationItem getJobApplicationById(@PathVariable int id) {
         return service.getJobApplicationById(id);
     }
 
-    @PostMapping("/application")
+    @PostMapping("/applications")
     public void addJobApplication(@RequestBody JobApplicationMutation application) {
         service.addJobApplication(application);
     }
 
-    @PutMapping("/application/{id}")
+    @PutMapping("/applications/{id}")
     public void updateJobApplication(
             @PathVariable int id,
             @RequestBody JobApplicationMutation application
@@ -37,7 +38,7 @@ public class JobApplicationController {
         service.updateJobApplication(id, application);
     }
 
-    @DeleteMapping("/application/{id}")
+    @DeleteMapping("/applications/{id}")
     public void deleteJobApplication(@PathVariable int id) {
         service.deleteJobApplication(id);
     }

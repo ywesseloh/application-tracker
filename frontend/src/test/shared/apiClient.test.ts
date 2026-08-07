@@ -21,14 +21,26 @@ describe('apiClient', () => {
     vi.stubGlobal('fetch', fetchMock)
   }
 
-  it('builds relative paths against the API base URL', async () => {
+  it('prefixes relative paths with /api against the API base URL', async () => {
     stubFetch()
     fetchMock.mockResolvedValue(jsonResponse([]))
 
     await apiClient.get('/board')
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8080/board',
+      'http://localhost:8080/api/board',
+      expect.objectContaining({ method: 'GET' }),
+    )
+  })
+
+  it('does not double-prefix paths that already start with /api', async () => {
+    stubFetch()
+    fetchMock.mockResolvedValue(jsonResponse([]))
+
+    await apiClient.get('/api/board')
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8080/api/board',
       expect.objectContaining({ method: 'GET' }),
     )
   })
@@ -58,7 +70,7 @@ describe('apiClient', () => {
     stubFetch()
     fetchMock.mockResolvedValue(new Response('', { status: 200 }))
 
-    await expect(apiClient.delete('/application/1')).resolves.toBeUndefined()
+    await expect(apiClient.delete('/applications/1')).resolves.toBeUndefined()
   })
 
   it('returns undefined for 204 responses', async () => {
@@ -66,7 +78,7 @@ describe('apiClient', () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 204 }))
 
     await expect(
-      apiClient.post('/application', { company: 'Acme' }),
+      apiClient.post('/applications', { company: 'Acme' }),
     ).resolves.toBeUndefined()
   })
 
@@ -75,10 +87,10 @@ describe('apiClient', () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 204 }))
 
     const body = { company: 'Acme', role: 'Engineer' }
-    await apiClient.put('/application/1', body)
+    await apiClient.put('/applications/1', body)
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8080/application/1',
+      'http://localhost:8080/api/applications/1',
       expect.objectContaining({
         method: 'PUT',
         headers: expect.objectContaining({
@@ -95,7 +107,7 @@ describe('apiClient', () => {
       new Response('not found', { status: 404, statusText: 'Not Found' }),
     )
 
-    const error = await apiClient.get('/application/99').catch((err) => err)
+    const error = await apiClient.get('/applications/99').catch((err) => err)
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({

@@ -20,11 +20,11 @@ export const applicationsQueryOptions = queryOptions({
 })
 
 export function createApplication(application: ApplicationInput) {
-  return apiClient.post<void>('/application', application)
+  return apiClient.post<void>('/applications', application)
 }
 
 export function updateApplication(application: ApplicationInput, id: number) {
-  return apiClient.put<void>(`/application/${id}`, application)
+  return apiClient.put<void>(`/applications/${id}`, application)
 }
 
 export function moveApplication(patch: ApplicationPositionPatch, id: number) {
@@ -32,5 +32,5 @@ export function moveApplication(patch: ApplicationPositionPatch, id: number) {
 }
 
 export function deleteApplication(id: number) {
-  return apiClient.delete<void>(`/application/${id}`)
+  return apiClient.delete<void>(`/applications/${id}`)
 }

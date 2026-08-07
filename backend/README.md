@@ -84,15 +84,17 @@ Prefer `docker compose up --build` from the repo root so the backend joins the C
 
 ## API
 
+All endpoints are under the `/api` prefix (e.g. `/board` is served as `/api/board`).
+
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/board` | Board with applications by status |
 | `PATCH` | `/board/move/{id}` | Move / reorder a card |
 | `GET` | `/applications` | List applications |
-| `GET` | `/application/{id}` | Get one application |
-| `POST` | `/application` | Create |
-| `PUT` | `/application/{id}` | Update |
-| `DELETE` | `/application/{id}` | Delete |
+| `GET` | `/applications/{id}` | Get one application |
+| `POST` | `/applications` | Create |
+| `PUT` | `/applications/{id}` | Update |
+| `DELETE` | `/applications/{id}` | Delete |
 
 Controllers use open CORS for local frontend development. There is no authentication yet.
 

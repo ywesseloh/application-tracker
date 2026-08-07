@@ -83,6 +83,7 @@ Pure ordering helpers live in `model/boardOrdering.ts` (`moveBetweenColumns`, `r
 `shared/api/apiClient.ts`:
 
 - Base URL: `import.meta.env.VITE_API_BASE_URL` ?? `http://localhost:8080`
+- Relative paths are prefixed with `/api` (e.g. `/board` → `http://localhost:8080/api/board`)
 - JSON helpers + 8s timeout
 - `ApiError` (HTTP failure) and `NetworkError` (unreachable)
 

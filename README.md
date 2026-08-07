@@ -39,7 +39,7 @@ docker compose up --build
 | Service | URL |
 |---------|-----|
 | Frontend | http://localhost:5173 |
-| Backend API | http://localhost:8080 |
+| Backend API | http://localhost:8080/api |
 | Postgres | `localhost:5432` |
 
 Stop with `Ctrl+C`, or run detached with `docker compose up --build -d` and stop with `docker compose down`.

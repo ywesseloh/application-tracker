@@ -46,7 +46,7 @@ class JobApplicationControllerTest {
 
     @Test
     void getApplicationsReturnsAllItems() throws Exception {
-        mockMvc.perform(get("/applications"))
+        mockMvc.perform(get("/api/applications"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].company").value("Alpha"))
@@ -58,7 +58,7 @@ class JobApplicationControllerTest {
 
     @Test
     void getApplicationByIdReturnsItem() throws Exception {
-        mockMvc.perform(get("/application/{id}", alphaId))
+        mockMvc.perform(get("/api/applications/{id}", alphaId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(alphaId))
                 .andExpect(jsonPath("$.company").value("Alpha"))
@@ -68,14 +68,14 @@ class JobApplicationControllerTest {
 
     @Test
     void getApplicationByIdUnknownReturnsNotFound() throws Exception {
-        mockMvc.perform(get("/application/{id}", 9999))
+        mockMvc.perform(get("/api/applications/{id}", 9999))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Job application with id 9999 not found"));
     }
 
     @Test
     void postApplicationCreatesItem() throws Exception {
-        mockMvc.perform(post("/application")
+        mockMvc.perform(post("/api/applications")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -88,7 +88,7 @@ class JobApplicationControllerTest {
                                 """))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/applications"))
+        mockMvc.perform(get("/api/applications"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[2].company").value("Gamma"))
@@ -98,7 +98,7 @@ class JobApplicationControllerTest {
 
     @Test
     void putApplicationUpdatesItem() throws Exception {
-        mockMvc.perform(put("/application/{id}", alphaId)
+        mockMvc.perform(put("/api/applications/{id}", alphaId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -111,7 +111,7 @@ class JobApplicationControllerTest {
                                 """))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/application/{id}", alphaId))
+        mockMvc.perform(get("/api/applications/{id}", alphaId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.company").value("Alpha Updated"))
                 .andExpect(jsonPath("$.role").value("Staff Engineer"))
@@ -122,7 +122,7 @@ class JobApplicationControllerTest {
 
     @Test
     void putApplicationUnknownIdReturnsNotFound() throws Exception {
-        mockMvc.perform(put("/application/{id}", 9999)
+        mockMvc.perform(put("/api/applications/{id}", 9999)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -139,21 +139,21 @@ class JobApplicationControllerTest {
 
     @Test
     void deleteApplicationRemovesItem() throws Exception {
-        mockMvc.perform(delete("/application/{id}", alphaId))
+        mockMvc.perform(delete("/api/applications/{id}", alphaId))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/applications"))
+        mockMvc.perform(get("/api/applications"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].company").value("Beta"));
 
-        mockMvc.perform(get("/application/{id}", alphaId))
+        mockMvc.perform(get("/api/applications/{id}", alphaId))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void deleteApplicationUnknownIdReturnsNotFound() throws Exception {
-        mockMvc.perform(delete("/application/{id}", 9999))
+        mockMvc.perform(delete("/api/applications/{id}", 9999))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Job application with id 9999 not found"));
     }

@@ -44,7 +44,7 @@ class BoardControllerTest {
 
     @Test
     void getBoardReturnsOrderedApplications() throws Exception {
-        mockMvc.perform(get("/board"))
+        mockMvc.perform(get("/api/board"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].company").value("Beta"))
@@ -57,12 +57,12 @@ class BoardControllerTest {
 
     @Test
     void patchMoveUpdatesBoard() throws Exception {
-        mockMvc.perform(patch("/board/move/{id}", wishlistId)
+        mockMvc.perform(patch("/api/board/move/{id}", wishlistId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"APPLIED\",\"columnPosition\":0}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/board"))
+        mockMvc.perform(get("/api/board"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].company").value("Alpha"))
@@ -75,7 +75,7 @@ class BoardControllerTest {
 
     @Test
     void patchMoveUnknownIdReturnsNotFound() throws Exception {
-        mockMvc.perform(patch("/board/move/{id}", 9999)
+        mockMvc.perform(patch("/api/board/move/{id}", 9999)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"WISHLIST\",\"columnPosition\":0}"))
                 .andExpect(status().isNotFound())
@@ -86,7 +86,7 @@ class BoardControllerTest {
 
     @Test
     void patchMoveIllegalPositionReturnsBadRequest() throws Exception {
-        mockMvc.perform(patch("/board/move/{id}", wishlistId)
+        mockMvc.perform(patch("/api/board/move/{id}", wishlistId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"APPLIED\",\"columnPosition\":99}"))
                 .andExpect(status().isBadRequest())

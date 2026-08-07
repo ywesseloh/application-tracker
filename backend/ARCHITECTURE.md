@@ -55,7 +55,7 @@ Both `job_application.status` and `board_placement.status` store the same enum. 
 ### Create application
 
 ```
-POST /application
+POST /applications
   → create and save new job application
   → create and save board placement at the end of the status column
 ```
@@ -69,12 +69,12 @@ PATCH /board/move/{id}  +  { status, columnPosition }
   → for the specified id, update JobApplication status as well as BoardPlacement status and columnPosition 
 ```
 
-Updating an application’s status via `PUT /application/{id}` appends the application to the end of the new column. Positions past the allowed end raise `IllegalPositionException`.
+Updating an application’s status via `PUT /applications/{id}` appends the application to the end of the new column. Positions past the allowed end raise `IllegalPositionException`.
 
 ### Delete
 
 ```
-DELETE /application/{id}
+DELETE /applications/{id}
   → compact the source column (shift neighbors down)
   → delete application by id (placement removed by orphanRemoval)
 ```
@@ -87,15 +87,17 @@ DELETE /application/{id}
 
 ## API surface
 
+All controllers use `@RequestMapping("/api")`. Paths below are resource paths; the full URL is `/api` + path (e.g. `/board` → `/api/board`).
+
 | Method | Path | Handler |
 |--------|------|---------|
 | `GET` | `/board` | Board with `JobApplicationBoardItem` (includes `columnPosition`) |
 | `PATCH` | `/board/move/{id}` | Move / reorder (`JobApplicationPatch`) |
 | `GET` | `/applications` | List (`JobApplicationItem`) |
-| `GET` | `/application/{id}` | Detail |
-| `POST` | `/application` | Create (`JobApplicationMutation`) |
-| `PUT` | `/application/{id}` | Update |
-| `DELETE` | `/application/{id}` | Delete |
+| `GET` | `/applications/{id}` | Detail |
+| `POST` | `/applications` | Create (`JobApplicationMutation`) |
+| `PUT` | `/applications/{id}` | Update |
+| `DELETE` | `/applications/{id}` | Delete |
 
 ## Error handling
 
