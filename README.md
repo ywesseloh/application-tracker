@@ -2,7 +2,7 @@
 
 A kanban-style job application tracker. Create applications, drag them across pipeline columns, and keep board order consistent on the server.
 
-**Pipeline:** Wishlist → Applied → Interview → Offer / Rejected
+<img src="docs/screenshots/board.png" alt="Board Screenshot" width="1000"/>
 
 ## Features
 
