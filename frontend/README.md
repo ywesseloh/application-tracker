@@ -2,6 +2,8 @@
 
 React SPA for the [Application Tracker](../README.md). Kanban board with drag-and-drop, application forms, and detail views backed by the Spring Boot API.
 
+For module layout, data flow, and optimistic DnD, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## Stack
 
 - React 19, TypeScript, Vite

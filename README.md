@@ -14,10 +14,10 @@ A kanban-style job application tracker. Create applications, drag them across pi
 
 ## Documentation
 
-| Area | README |
-|------|--------|
-| Backend (Spring Boot API) | [backend/README.md](backend/README.md) |
-| Frontend (React SPA) | [frontend/README.md](frontend/README.md) |
+| Area | README | Architecture |
+|------|--------|--------------|
+| Backend (Spring Boot API) | [backend/README.md](backend/README.md) | [backend/ARCHITECTURE.md](backend/ARCHITECTURE.md) |
+| Frontend (React SPA) | [frontend/README.md](frontend/README.md) | [frontend/ARCHITECTURE.md](frontend/ARCHITECTURE.md) |
 
 ## Tech stack
 

@@ -2,6 +2,8 @@
 
 Spring Boot API for the [Application Tracker](../README.md). Manages job applications and kanban board placement (move / reorder with densification).
 
+For layers, domain model, and the board-move algorithm, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## Stack
 
 - Java 26
