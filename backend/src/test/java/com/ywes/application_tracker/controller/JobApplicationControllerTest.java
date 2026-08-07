@@ -157,4 +157,34 @@ class JobApplicationControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Job application with id 9999 not found"));
     }
+
+    @Test
+    void postApplicationMissingCompanyReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/applications")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "company": "",
+                                  "role": "Engineer",
+                                  "status": "WISHLIST"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0]").value("Company is mandatory"));
+    }
+
+    @Test
+    void putApplicationMissingStatusReturnsBadRequest() throws Exception {
+        mockMvc.perform(put("/api/applications/{id}", alphaId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "company": "Alpha",
+                                  "role": "Engineer",
+                                  "status": null
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0]").value("Status is mandatory"));
+    }
 }

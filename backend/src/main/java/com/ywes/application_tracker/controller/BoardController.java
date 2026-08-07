@@ -3,6 +3,7 @@ package com.ywes.application_tracker.controller;
 import com.ywes.application_tracker.dto.JobApplicationBoardItem;
 import com.ywes.application_tracker.dto.JobApplicationPatch;
 import com.ywes.application_tracker.service.BoardService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +21,10 @@ public class BoardController {
     }
 
     @PatchMapping("/board/move/{id}")
-    public void moveJobApplication(@PathVariable int id, @RequestBody JobApplicationPatch patch) {
+    public void moveJobApplication(
+            @PathVariable int id,
+            @Valid @RequestBody JobApplicationPatch patch
+    ) {
         boardService.moveJobApplication(id, patch);
     }
 }

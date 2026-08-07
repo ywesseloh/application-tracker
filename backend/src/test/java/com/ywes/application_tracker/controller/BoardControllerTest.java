@@ -92,4 +92,22 @@ class BoardControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Maximum position is 1"));
     }
+
+    @Test
+    void patchMoveMissingStatusReturnsBadRequest() throws Exception {
+        mockMvc.perform(patch("/api/board/move/{id}", wishlistId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":null,\"columnPosition\":0}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0]").value("Status is mandatory"));
+    }
+
+    @Test
+    void patchMoveNegativePositionReturnsBadRequest() throws Exception {
+        mockMvc.perform(patch("/api/board/move/{id}", wishlistId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"APPLIED\",\"columnPosition\":-1}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0]").value("Position must be zero or greater"));
+    }
 }

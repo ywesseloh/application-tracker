@@ -105,9 +105,12 @@ All controllers use `@RequestMapping("/api")`. Paths below are resource paths; t
 
 | Exception | Status |
 |-----------|--------|
-| `ConstraintViolationException` | 400 |
+| `MethodArgumentNotValidException` | 400 (DTO / `@Valid` failures) |
+| `ConstraintViolationException` | 400 (entity validation on persist) |
 | `IllegalPositionException` | 400 |
 | `ResourceNotFoundException` | 404 |
+
+Request DTOs (`JobApplicationMutation`, `JobApplicationPatch`) carry Bean Validation annotations and controllers use `@Valid`. Entity constraints remain as a persistence safety net.
 
 ## Configuration
 

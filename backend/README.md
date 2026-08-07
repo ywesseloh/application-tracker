@@ -98,6 +98,8 @@ All endpoints are under the `/api` prefix (e.g. `/board` is served as `/api/boar
 
 Controllers use open CORS for local frontend development. There is no authentication yet.
 
+Request bodies are validated with Bean Validation (`@Valid` on DTOs). Invalid payloads return `400` with a list of messages.
+
 ## Package layout
 
 ```

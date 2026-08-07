@@ -3,6 +3,7 @@ package com.ywes.application_tracker.controller;
 import com.ywes.application_tracker.dto.JobApplicationItem;
 import com.ywes.application_tracker.dto.JobApplicationMutation;
 import com.ywes.application_tracker.service.JobApplicationService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,14 +27,14 @@ public class JobApplicationController {
     }
 
     @PostMapping("/applications")
-    public void addJobApplication(@RequestBody JobApplicationMutation application) {
+    public void addJobApplication(@Valid @RequestBody JobApplicationMutation application) {
         service.addJobApplication(application);
     }
 
     @PutMapping("/applications/{id}")
     public void updateJobApplication(
             @PathVariable int id,
-            @RequestBody JobApplicationMutation application
+            @Valid @RequestBody JobApplicationMutation application
     ) {
         service.updateJobApplication(id, application);
     }
