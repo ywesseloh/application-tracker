@@ -2,21 +2,15 @@ package com.ywes.application_tracker.dto;
 
 import com.ywes.application_tracker.model.JobApplication;
 import com.ywes.application_tracker.model.JobApplicationStatus;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class JobApplicationItem {
-    private Integer id;
-    private String company;
-    private String role;
-    private JobApplicationStatus status;
-    private String notes;
-    private String jobPostingUrl;
-
+public record JobApplicationItem(
+        Integer id,
+        String company,
+        String role,
+        JobApplicationStatus status,
+        String notes,
+        String jobPostingUrl
+) {
     public static JobApplicationItem from(JobApplication application) {
         return new JobApplicationItem(
                 application.getId(),

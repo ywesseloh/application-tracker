@@ -19,19 +19,18 @@ public class BoardPlacement {
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId
-    @JoinColumn(name = "application_id")
+    @JoinColumn(name = "application_id", nullable = false)
     private JobApplication application;
 
-    @NotNull
     @Column(name = "user_id", nullable = false)
     private Integer userId;
 
-    @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private JobApplicationStatus status;
 
-    @NotNull
     @Min(value = 0, message = "Position must be zero or greater")
+    @Column(nullable = false)
     private Integer position;
 
     public BoardPlacement(

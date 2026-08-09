@@ -10,33 +10,33 @@ VALUES (
 
 ALTER TABLE users ALTER COLUMN id RESTART WITH 2;
 
-INSERT INTO job_application (id, user_id, company, role, status, notes, job_posting_url)
+INSERT INTO job_application (id, user_id, company, role, status, notes, job_posting_url, created_at, updated_at)
 VALUES
 -- Wishlist
-(1, 1, 'Acme Corp', 'Frontend Engineer', 'WISHLIST', 'Strong design culture. Reach out to Maya on LinkedIn before applying.', 'https://example.com/jobs/acme-frontend'),
-(2, 1, 'Lumen Analytics', 'Senior React Developer', 'WISHLIST', 'Remote friendly, but the team is mostly in Berlin.', 'https://example.com/jobs/lumen-react'),
-(3, 1, 'Fjord Systems', 'Web Platform Engineer', 'WISHLIST', NULL, 'https://example.com/jobs/fjord-platform'),
-(4, 1, 'Beacon Health', 'UI Engineer', 'WISHLIST', 'Healthcare domain. Posting closes end of the month.', NULL),
+(1, 1, 'Acme Corp', 'Frontend Engineer', 'WISHLIST', 'Strong design culture. Reach out to Maya on LinkedIn before applying.', 'https://example.com/jobs/acme-frontend', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 1, 'Lumen Analytics', 'Senior React Developer', 'WISHLIST', 'Remote friendly, but the team is mostly in Berlin.', 'https://example.com/jobs/lumen-react', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(3, 1, 'Fjord Systems', 'Web Platform Engineer', 'WISHLIST', NULL, 'https://example.com/jobs/fjord-platform', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(4, 1, 'Beacon Health', 'UI Engineer', 'WISHLIST', 'Healthcare domain. Posting closes end of the month.', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- Applied
-(5, 1, 'Bright Labs', 'Full Stack Developer', 'APPLIED', 'Submitted via company portal. Recruiter screen scheduled for next week.', 'https://example.com/jobs/bright-labs-fullstack'),
-(6, 1, 'Northwind Trading', 'React Developer', 'APPLIED', 'Applied through a referral from Jonas.', 'https://example.com/jobs/northwind-react'),
-(7, 1, 'Vertex Robotics', 'Frontend Engineer', 'APPLIED', 'Take-home assignment expected before the first call.', 'https://example.com/jobs/vertex-frontend'),
-(8, 1, 'Copperline Media', 'JavaScript Developer', 'APPLIED', NULL, NULL),
+(5, 1, 'Bright Labs', 'Full Stack Developer', 'APPLIED', 'Submitted via company portal. Recruiter screen scheduled for next week.', 'https://example.com/jobs/bright-labs-fullstack', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(6, 1, 'Northwind Trading', 'React Developer', 'APPLIED', 'Applied through a referral from Jonas.', 'https://example.com/jobs/northwind-react', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(7, 1, 'Vertex Robotics', 'Frontend Engineer', 'APPLIED', 'Take-home assignment expected before the first call.', 'https://example.com/jobs/vertex-frontend', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(8, 1, 'Copperline Media', 'JavaScript Developer', 'APPLIED', NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- Interview
-(9, 1, 'Cascade Systems', 'Software Engineer', 'INTERVIEW', 'Onsite loop: system design plus React take-home review.', 'https://example.com/jobs/cascade-swe'),
-(10, 1, 'Orbit Financial', 'Frontend Engineer II', 'INTERVIEW', 'Second round with the platform team on Thursday.', 'https://example.com/jobs/orbit-frontend'),
-(11, 1, 'Tidewater Logistics', 'Full Stack Engineer', 'INTERVIEW', 'Pair programming session went well. Waiting on the hiring manager.', NULL),
+(9, 1, 'Cascade Systems', 'Software Engineer', 'INTERVIEW', 'Onsite loop: system design plus React take-home review.', 'https://example.com/jobs/cascade-swe', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(10, 1, 'Orbit Financial', 'Frontend Engineer II', 'INTERVIEW', 'Second round with the platform team on Thursday.', 'https://example.com/jobs/orbit-frontend', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(11, 1, 'Tidewater Logistics', 'Full Stack Engineer', 'INTERVIEW', 'Pair programming session went well. Waiting on the hiring manager.', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- Offer
-(12, 1, 'Helios AI', 'UI Engineer', 'OFFER', 'Verbal offer received. Waiting on written package.', NULL),
-(13, 1, 'Northstar Ventures', 'Product Engineer', 'OFFER', 'Offer expires in two weeks. Negotiating equity.', 'https://example.com/jobs/northstar-product'),
+(12, 1, 'Helios AI', 'UI Engineer', 'OFFER', 'Verbal offer received. Waiting on written package.', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(13, 1, 'Northstar Ventures', 'Product Engineer', 'OFFER', 'Offer expires in two weeks. Negotiating equity.', 'https://example.com/jobs/northstar-product', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 
 -- Rejected
-(14, 1, 'Ironclad Security', 'Frontend Developer', 'REJECTED', 'Rejected after the take-home. Feedback: wanted deeper testing experience.', 'https://example.com/jobs/ironclad-frontend'),
-(15, 1, 'Marigold Studio', 'Web Developer', 'REJECTED', 'Role was put on hold.', NULL),
-(16, 1, 'Pinnacle Datawork', 'Senior Frontend Engineer', 'REJECTED', NULL, 'https://example.com/jobs/pinnacle-senior-frontend');
+(14, 1, 'Ironclad Security', 'Frontend Developer', 'REJECTED', 'Rejected after the take-home. Feedback: wanted deeper testing experience.', 'https://example.com/jobs/ironclad-frontend', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(15, 1, 'Marigold Studio', 'Web Developer', 'REJECTED', 'Role was put on hold.', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(16, 1, 'Pinnacle Datawork', 'Senior Frontend Engineer', 'REJECTED', NULL, 'https://example.com/jobs/pinnacle-senior-frontend', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO board_placement (application_id, user_id, status, position)
 VALUES

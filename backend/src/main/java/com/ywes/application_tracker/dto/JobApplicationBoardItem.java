@@ -3,22 +3,16 @@ package com.ywes.application_tracker.dto;
 import com.ywes.application_tracker.model.BoardPlacement;
 import com.ywes.application_tracker.model.JobApplication;
 import com.ywes.application_tracker.model.JobApplicationStatus;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class JobApplicationBoardItem {
-    private Integer id;
-    private String company;
-    private String role;
-    private JobApplicationStatus status;
-    private Integer columnPosition;
-    private String notes;
-    private String jobPostingUrl;
-
+public record JobApplicationBoardItem(
+        Integer id,
+        String company,
+        String role,
+        JobApplicationStatus status,
+        Integer columnPosition,
+        String notes,
+        String jobPostingUrl
+) {
     public static JobApplicationBoardItem from(BoardPlacement placement) {
         JobApplication application = placement.getApplication();
         return new JobApplicationBoardItem(

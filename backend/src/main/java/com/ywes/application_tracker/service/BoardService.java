@@ -31,7 +31,7 @@ public class BoardService {
                         new ResourceNotFoundException("Job application with id " + id + " not found")
                 );
 
-        move(currentPlacement, patch.getStatus(), patch.getColumnPosition());
+        move(currentPlacement, patch.status(), patch.columnPosition());
     }
 
     public int getStatusCount(JobApplicationStatus status, Integer userId) {

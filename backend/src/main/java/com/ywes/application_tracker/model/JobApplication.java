@@ -7,6 +7,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.util.Date;
 
 @Entity
 @Data
@@ -21,28 +25,31 @@ public class JobApplication {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @NotBlank(message = "Company is mandatory")
-    @Size(max = 255, message = "Company can have a maximum of 255 letters")
-    @Column(length = 255)
+    @Column(length = 255, nullable = false)
     private String company;
 
-    @NotBlank(message = "Role is mandatory")
-    @Size(max = 255, message = "Role can have a maximum of 255 letters")
-    @Column(length = 255)
+    @Column(length = 255, nullable = false)
     private String role;
 
-    @NotNull(message = "Status is mandatory")
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private JobApplicationStatus status;
 
     private String notes;
 
-    @Size(max = 2048, message = "Url can have a maximum of 2048 letters")
     @Column(length = 2048)
     private String jobPostingUrl;
 
     @OneToOne(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
     private BoardPlacement placement;
+
+    @CreationTimestamp
+    @Column(updatable = false, name = "created_at")
+    private Date createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Date updatedAt;
 
     public JobApplication(
             Integer id,
@@ -66,11 +73,11 @@ public class JobApplication {
     ) {
         return new JobApplication(
                 id,
-                jobApplicationMutation.getCompany(),
-                jobApplicationMutation.getRole(),
-                jobApplicationMutation.getStatus(),
-                jobApplicationMutation.getNotes(),
-                jobApplicationMutation.getJobPostingUrl()
+                jobApplicationMutation.company(),
+                jobApplicationMutation.role(),
+                jobApplicationMutation.status(),
+                jobApplicationMutation.notes(),
+                jobApplicationMutation.jobPostingUrl()
         );
     }
 }

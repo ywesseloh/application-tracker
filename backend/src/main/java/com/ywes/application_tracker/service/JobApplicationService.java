@@ -32,19 +32,18 @@ public class JobApplicationService {
 
     @Transactional
     public void addJobApplication(JobApplicationMutation jobApplication, Integer userId) {
+        User user = userService.getUserById(userId);
         JobApplication entity = JobApplication.fromJobApplicationMutation(jobApplication, null);
+        entity.setUser(user);
         repo.saveAndFlush(entity);
 
-        User user = userService.getUserById(userId);
         int position = boardService.getStatusCount(entity.getStatus(), userId);
         BoardPlacement placement = new BoardPlacement(
                 entity,
                 entity.getStatus(),
                 position,
-                user.getId()
+                userId
         );
-
-        entity.setUser(user);
         entity.setPlacement(placement);
         repo.save(entity);
     }
@@ -54,19 +53,19 @@ public class JobApplicationService {
         JobApplication current = requireOwnedApplication(id, userId);
 
         BoardPlacement placement = current.getPlacement();
-        if (placement != null && current.getStatus() != application.getStatus()) {
+        if (placement != null && current.getStatus() != application.status()) {
             boardService.move(
                     placement,
-                    application.getStatus(),
+                    application.status(),
                     null
             );
         }
 
-        current.setCompany(application.getCompany());
-        current.setRole(application.getRole());
-        current.setStatus(application.getStatus());
-        current.setNotes(application.getNotes());
-        current.setJobPostingUrl(application.getJobPostingUrl());
+        current.setCompany(application.company());
+        current.setRole(application.role());
+        current.setStatus(application.status());
+        current.setNotes(application.notes());
+        current.setJobPostingUrl(application.jobPostingUrl());
         repo.save(current);
     }
 

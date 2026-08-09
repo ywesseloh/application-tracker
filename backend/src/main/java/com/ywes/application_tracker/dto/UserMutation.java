@@ -1,6 +1,5 @@
 package com.ywes.application_tracker.dto;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
