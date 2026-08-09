@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @Table(uniqueConstraints = { @UniqueConstraint(
-        name = "uc_status_position",
-        columnNames = { "status", "position" })
+        name = "uc_user_status_position",
+        columnNames = { "user_id", "status", "position" })
 })
 public class BoardPlacement {
     @Id
@@ -21,6 +21,10 @@ public class BoardPlacement {
     @MapsId
     @JoinColumn(name = "application_id")
     private JobApplication application;
+
+    @NotNull
+    @Column(name = "user_id", nullable = false)
+    private Integer userId;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -33,10 +37,12 @@ public class BoardPlacement {
     public BoardPlacement(
             JobApplication application,
             JobApplicationStatus status,
-            Integer position
+            Integer position,
+            Integer userId
     ) {
         this.application = application;
         this.status = status;
         this.position = position;
+        this.userId = userId;
     }
 }

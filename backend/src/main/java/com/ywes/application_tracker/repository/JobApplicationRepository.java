@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface JobApplicationRepository extends JpaRepository<JobApplication, Integer> {
     @Query("""
@@ -17,15 +19,18 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
                 j.id, j.company, j.role, j.status, j.notes, j.jobPostingUrl
             )
             FROM JobApplication j
+            WHERE j.user.id = :userId
             """)
-    List<JobApplicationItem> findAllItems();
+    List<JobApplicationItem> findAllItemsByUserId(Integer userId);
+
+    Optional<JobApplication> findByIdAndUserId(Integer id, Integer userId);
 
     @Modifying
     @Transactional
     @Query("""
             UPDATE JobApplication p
             SET p.status = :status
-            WHERE p.id = :applicationId
+            WHERE p.id = :applicationId AND p.user.id = :userId
             """)
-    void patchStatus(int applicationId, JobApplicationStatus status);
+    void patchStatus(int applicationId, Integer userId, JobApplicationStatus status);
 }

@@ -1,4 +1,4 @@
-package com.ywes.application_tracker.config;
+package com.ywes.application_tracker.security;
 
 import com.ywes.application_tracker.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

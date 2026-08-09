@@ -15,18 +15,28 @@ public class JobApplication {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     @NotBlank(message = "Company is mandatory")
     @Size(max = 255, message = "Company can have a maximum of 255 letters")
     @Column(length = 255)
     private String company;
+
     @NotBlank(message = "Role is mandatory")
     @Size(max = 255, message = "Role can have a maximum of 255 letters")
     @Column(length = 255)
     private String role;
+
     @NotNull(message = "Status is mandatory")
     @Enumerated(EnumType.STRING)
     private JobApplicationStatus status;
+
     private String notes;
+
     @Size(max = 2048, message = "Url can have a maximum of 2048 letters")
     @Column(length = 2048)
     private String jobPostingUrl;

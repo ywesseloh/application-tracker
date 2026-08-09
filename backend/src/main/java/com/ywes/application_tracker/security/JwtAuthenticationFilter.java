@@ -1,8 +1,7 @@
-package com.ywes.application_tracker.config;
+package com.ywes.application_tracker.security;
 
 import com.ywes.application_tracker.common.InvalidAuthHeaderException;
 import com.ywes.application_tracker.service.JwtService;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,18 +40,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (authentication == null) {
-                String username = jwtService.extractUsername(jwt);
-
-                if (username != null && !username.isBlank()) {
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    username,
-                                    null,
-                                    AuthorityUtils.NO_AUTHORITIES
-                            );
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
+                AuthUser authUser = jwtService.extractAuthUser(jwt);
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                authUser,
+                                null,
+                                AuthorityUtils.NO_AUTHORITIES
+                        );
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
 
             filterChain.doFilter(request, response);

@@ -9,28 +9,37 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BoardPlacementRepository extends JpaRepository<BoardPlacement, Integer> {
-    int countByStatus(JobApplicationStatus status);
+    int countByUserIdAndStatus(Integer userId, JobApplicationStatus status);
+
+    Optional<BoardPlacement> findByApplicationIdAndUserId(Integer applicationId, Integer userId);
 
     @Modifying
     @Transactional
     @Query("""
             UPDATE BoardPlacement p
             SET p.position = p.position - 1
-            WHERE p.id <> :id AND p.status = :status AND p.position > :removePosition
+            WHERE p.id <> :id
+              AND p.userId = :userId
+              AND p.status = :status
+              AND p.position > :removePosition
             """)
-    void compactColumnOnRemove(int id, JobApplicationStatus status, int removePosition);
+    void compactColumnOnRemove(int id, Integer userId, JobApplicationStatus status, int removePosition);
 
     @Modifying
     @Transactional
     @Query("""
             UPDATE BoardPlacement p
             SET p.position = p.position + 1
-            WHERE p.id <> :id AND p.status = :status AND p.position >= :position
+            WHERE p.id <> :id
+              AND p.userId = :userId
+              AND p.status = :status
+              AND p.position >= :position
             """)
-    void incrementColumnOnAdd(int id, JobApplicationStatus status, int position);
+    void incrementColumnOnAdd(int id, Integer userId, JobApplicationStatus status, int position);
 
     @Modifying
     @Transactional
@@ -44,7 +53,8 @@ public interface BoardPlacementRepository extends JpaRepository<BoardPlacement, 
     @Query("""
             SELECT p FROM BoardPlacement p
             JOIN FETCH p.application
+            WHERE p.userId = :userId
             ORDER BY p.status ASC, p.position ASC
             """)
-    List<BoardPlacement> findAllWithApplicationOrdered();
+    List<BoardPlacement> findAllWithApplicationOrdered(Integer userId);
 }

@@ -17,28 +17,30 @@ import java.util.List;
 public class BoardService {
     private static final int PARK_OFFSET = 1_000_000;
     @Autowired private BoardPlacementRepository repo;
-    public List<JobApplicationBoardItem> getBoard() {
-        return repo.findAllWithApplicationOrdered().stream()
+
+    public List<JobApplicationBoardItem> getBoard(Integer userId) {
+        return repo.findAllWithApplicationOrdered(userId).stream()
                 .map(JobApplicationBoardItem::from)
                 .toList();
     }
 
     @Transactional
-    public void moveJobApplication(int id, JobApplicationPatch patch) {
-        BoardPlacement currentPlacement = repo.findById(id).orElseThrow(() ->
-            new ResourceNotFoundException("Job application with id " + id + " not found")
-        );
+    public void moveJobApplication(int id, JobApplicationPatch patch, Integer userId) {
+        BoardPlacement currentPlacement = repo.findByApplicationIdAndUserId(id, userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Job application with id " + id + " not found")
+                );
 
         move(currentPlacement, patch.getStatus(), patch.getColumnPosition());
     }
 
-    public int getStatusCount(JobApplicationStatus status) {
-        return repo.countByStatus(status);
+    public int getStatusCount(JobApplicationStatus status, Integer userId) {
+        return repo.countByUserIdAndStatus(userId, status);
     }
 
-    public void compactColumnOnRemove(int id, JobApplicationStatus status, int position) {
+    public void compactColumnOnRemove(int id, JobApplicationStatus status, int position, Integer userId) {
         repo.parkPlacement(id, PARK_OFFSET);
-        repo.compactColumnOnRemove(id, status, position);
+        repo.compactColumnOnRemove(id, userId, status, position);
     }
 
     @Transactional
@@ -48,18 +50,20 @@ public class BoardService {
             Integer toPosition
     ) {
         int id = placement.getApplicationId();
+        Integer userId = placement.getUserId();
         JobApplicationStatus fromStatus = placement.getStatus();
         int fromPosition = placement.getPosition();
 
-        int endPosition = repo.countByStatus(toStatus);
+        int endPosition = repo.countByUserIdAndStatus(userId, toStatus);
         int position = toPosition != null ? toPosition : endPosition;
 
         if (position > endPosition) {
             throw new IllegalPositionException("Maximum position is " + endPosition);
         }
 
-        compactColumnOnRemove(id, fromStatus, fromPosition);
-        repo.incrementColumnOnAdd(id, toStatus, position);
+        repo.parkPlacement(id, PARK_OFFSET);
+        repo.compactColumnOnRemove(id, userId, fromStatus, fromPosition);
+        repo.incrementColumnOnAdd(id, userId, toStatus, position);
 
         placement.getApplication().setStatus(toStatus);
         placement.setStatus(toStatus);

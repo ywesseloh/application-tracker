@@ -1,5 +1,6 @@
 package com.ywes.application_tracker.service;
 
+import com.ywes.application_tracker.security.AuthUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -9,32 +10,37 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.Map;
 import java.util.function.Function;
 
 @Service
 public class JwtService {
+    public static final String USER_ID_CLAIM = "uid";
+
     @Value("${security.jwt.secret-key}")
     private String secretKeyString;
 
     @Value("${security.jwt.expiration-time}")
     private long jwtExpiration;
 
-    public String generateToken(String username) {
+    public String generateToken(Integer userId, String username) {
         return Jwts.builder()
                 .subject(username)
+                .claims(Map.of(USER_ID_CLAIM, userId))
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSecretKey())
                 .compact();
     }
 
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
-
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+    public AuthUser extractAuthUser(String token) {
+        Claims claims = extractAllClaims(token);
+        String username = claims.getSubject();
+        Integer userId = claims.get(USER_ID_CLAIM, Integer.class);
+        if (username == null || username.isBlank() || userId == null) {
+            throw new IllegalArgumentException("JWT is missing username or user id");
+        }
+        return new AuthUser(userId, username);
     }
 
     public long getExpirationTime() {

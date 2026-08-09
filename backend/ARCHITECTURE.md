@@ -11,44 +11,48 @@ HTTP (controllers)
       → PostgreSQL or H2
 ```
 
-Package root: `com.example.application_tracker`
+Package root: `com.ywes.application_tracker`
 
 | Package | Responsibility |
 |---------|----------------|
-| `controller` | REST endpoints, CORS |
-| `service` | Application lifecycle and board move/reorder |
+| `controller` | REST endpoints, CORS, resolve current user from `Authentication` |
+| `service` | Application lifecycle, board move/reorder, auth helpers |
 | `repository` | Spring Data JPA |
 | `model` | Entities and status enum |
 | `dto` | Request/response payloads |
 | `common` | Domain exceptions and `@RestControllerAdvice` |
+| `config` | Security, JWT filter |
 
 ## Domain model
 
 ```
-JobApplication 1 ── 1 BoardPlacement
-     │                      │
-  company, role,         status + position
-  status, notes,         (unique per column)
-  jobPostingUrl
+User 1 ──── * JobApplication 1 ──── 1 BoardPlacement
+                  │                      │
+               company, role,         userId + status + position
+               status, notes,         (unique per user column)
+               jobPostingUrl
 ```
 
-- **`JobApplication`** — core entity (`job_application`). Status is stored here as the application’s pipeline state (list/detail APIs, updates).
-- **`BoardPlacement`** — one row per application (`board_placement`). Shares the application id via `@MapsId`. Holds the column (`status`) and dense `position` (`0 … n-1`).
-- **Uniqueness:** `(status, position)` must be unique (`uc_status_position`). That constraint drives the park-then-shift move algorithm.
+- **`User`** — account (`users`). JWT subject is the username; controllers load the entity via `UserService`.
+- **`JobApplication`** — core entity (`job_application`), owned by a required `user`. Status is the pipeline state (list/detail APIs, updates).
+- **`BoardPlacement`** — one row per application (`board_placement`). Shares the application id via `@MapsId`. Holds denormalized `userId`, column (`status`), and dense `position` (`0 … n-1`).
+- **Uniqueness:** `(userId, status, position)` must be unique (`uc_user_status_position`) so each user has an independent board.
 - **`JobApplicationStatus`:** `WISHLIST` → `APPLIED` → `INTERVIEW` → `OFFER` → `REJECTED`.
 
-Placement is owned by the application (`cascade = ALL`, `orphanRemoval = true`). Creating an application always appends a placement at the end of the target column.
+Placement is owned by the application (`cascade = ALL`, `orphanRemoval = true`). Creating an application always appends a placement at the end of that user’s target column.
 
-### Why `status` is denormalized
+All list/move/create/update/delete operations are scoped to the authenticated user. The JWT carries `sub` (username) and `uid` (user id); the filter sets an `AuthUser` principal so handlers do not load the user from the database on every request. Create uses `UserRepository.getReferenceById` for the JPA association.
 
-Both `job_application.status` and `board_placement.status` store the same enum. That duplication is intentional:
+### Why `status` (and `userId`) are denormalized on placement
 
-1. **Board uniqueness is column-scoped.** The unique key is `(status, position)` on `board_placement`. Position only makes sense inside a column, so the column key has to live on the placement row—not only on the application.
-2. **Board writes stay on one table.** Compact / increment / park / count queries filter and update `BoardPlacement` by `status` and `position` without joining `JobApplication`. Keeping status on the placement avoids join-heavy bulk JPQL and keeps moves cheaper.
-3. **Board reads order by placement alone.** `findAllWithApplicationOrdered` sorts by `p.status, p.position`, then join-fetches the application for display fields.
-4. **Application status remains the domain field.** List/detail payloads and non-board updates still treat `JobApplication.status` as source of truth for “where is this application in the pipeline?”
+Both `job_application.status` and `board_placement.status` store the same enum; `board_placement.user_id` mirrors `job_application.user_id`. That duplication is intentional:
 
-`BoardService.move` always updates **both** sides together so they stay aligned. The tradeoff is consistency discipline (never change one without the other) in exchange for a placement table that can enforce and maintain board order on its own.
+1. **Board uniqueness is per-user column-scoped.** The unique key is `(userId, status, position)` on `board_placement`.
+2. **Board writes stay on one table.** Compact / increment / park / count queries filter and update `BoardPlacement` by `userId`, `status`, and `position` without joining `JobApplication`.
+3. **Board reads order by placement alone.** `findAllWithApplicationOrdered(userId)` sorts by `p.status, p.position`, then join-fetches the application for display fields.
+4. **Application status remains the domain field.** List/detail payloads still treat `JobApplication.status` as source of truth for pipeline state.
+
+`BoardService.move` always updates application status and placement `status`/`position` together (and keeps `userId` unchanged).
 
 ## Request flows
 
@@ -56,8 +60,9 @@ Both `job_application.status` and `board_placement.status` store the same enum. 
 
 ```
 POST /applications
-  → create and save new job application
-  → create and save board placement at the end of the status column
+  → resolve User from Authentication
+  → create and save job application owned by that user
+  → create board placement (userId + status + end position)
 ```
 
 ### Move / reorder
