@@ -41,4 +41,10 @@ public class GlobalExceptionHandler {
     public String handleResourceNotFoundException(ResourceNotFoundException ex) {
         return ex.getMessage();
     }
+
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ExceptionHandler(InvalidAuthHeaderException.class)
+    public String handleInvalidAuthHeaderException(InvalidAuthHeaderException ex) {
+        return ex.getMessage();
+    }
 }
