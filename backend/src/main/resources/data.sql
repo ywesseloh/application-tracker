@@ -1,3 +1,15 @@
+-- Test user (password: password) — BCrypt via BCryptPasswordEncoder
+INSERT INTO users (id, username, password, created_at, updated_at)
+VALUES (
+  1,
+  'demo',
+  '$2a$10$71azWnax8XBTMn0CbZAZn.AisFEqBqzrmCqjjV0F0hetMTZHZ6ir2',
+  CURRENT_TIMESTAMP,
+  CURRENT_TIMESTAMP
+);
+
+ALTER TABLE users ALTER COLUMN id RESTART WITH 2;
+
 INSERT INTO job_application (id, company, role, status, notes, job_posting_url)
 VALUES
 -- Wishlist
