@@ -30,6 +30,13 @@ public class UserService implements UserDetailsService {
         );
     }
 
+    public void deleteUser(Integer userId) {
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new ResourceNotFoundException("User with id " + userId + " not found")
+        );
+        userRepository.delete(user);
+    }
+
     public User getReferenceById(Integer id) {
         return userRepository.getReferenceById(id);
     }
