@@ -10,9 +10,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.UUID;
-
 @Service
 public class AuthService {
     @Autowired
@@ -29,7 +26,7 @@ public class AuthService {
 
         User user = (User) authentication.getPrincipal();
         String jwt = jwtService.generateToken(user.getId(), user.getUsername());
-        String refreshToken = refreshTokenService.getOrCreateRefreshToken(user.getId());
+        String refreshToken = refreshTokenService.generateRefreshToken(user.getId());
         return new LoginResponse(jwt, refreshToken);
     }
 

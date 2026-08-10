@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService implements UserDetailsService {
     @Autowired private UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    @Autowired private PasswordEncoder passwordEncoder;
 
     public void registerUser(UserMutation userMutation) {
         User userEntity = User.fromUserMutation(userMutation, passwordEncoder);
@@ -32,9 +32,5 @@ public class UserService implements UserDetailsService {
 
     public User getReferenceById(Integer id) {
         return userRepository.getReferenceById(id);
-    }
-
-    public PasswordEncoder getPasswordEncoder() {
-        return passwordEncoder;
     }
 }

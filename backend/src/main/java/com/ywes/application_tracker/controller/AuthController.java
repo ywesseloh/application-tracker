@@ -1,6 +1,7 @@
 package com.ywes.application_tracker.controller;
 
 import com.ywes.application_tracker.dto.LoginResponse;
+import com.ywes.application_tracker.dto.RefreshMutation;
 import com.ywes.application_tracker.dto.UserMutation;
 import com.ywes.application_tracker.repository.RefreshTokenRepository;
 import com.ywes.application_tracker.security.CurrentUserId;
@@ -29,11 +30,8 @@ public class AuthController {
     }
 
     @PostMapping("/auth/refresh")
-    public Map<String, String> refreshToken(@RequestBody Map<String, String> payload) {
-        String jwt =  refreshTokenService.applyRefreshToken(payload.get("refreshToken"));
-        Map<String, String> response = new HashMap<>();
-        response.put("jwt", jwt);
-        return response;
+    public LoginResponse applyRefreshToken(@Valid @RequestBody RefreshMutation refreshMutation) {
+        return refreshTokenService.applyRefreshToken(refreshMutation.refreshToken());
     }
 
     @PostMapping("/auth/logout")
