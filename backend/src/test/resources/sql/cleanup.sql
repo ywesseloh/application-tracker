@@ -1,5 +1,6 @@
 DELETE FROM board_placement;
 DELETE FROM job_application;
+DELETE FROM refresh_token;
 DELETE FROM users;
 
 ALTER TABLE job_application ALTER COLUMN id RESTART WITH 1;

@@ -1,5 +1,7 @@
 package com.ywes.application_tracker.controller;
 
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,7 +16,6 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class UserControllerTest {
     @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
 
     @Test
     @Sql("/sql/cleanup.sql")
@@ -36,7 +38,7 @@ class UserControllerTest {
                                 """))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/login")
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -45,7 +47,8 @@ class UserControllerTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(content().string(not(emptyOrNullString())));
+                .andExpect(jsonPath("$.jwt", not(emptyOrNullString())))
+                .andExpect(jsonPath("$.refreshToken", not(emptyOrNullString())));
     }
 
     @Test
@@ -111,7 +114,7 @@ class UserControllerTest {
     @Test
     @Sql({"/sql/cleanup.sql", "/sql/user.sql"})
     void loginReturnsJwt() throws Exception {
-        mockMvc.perform(post("/api/login")
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -120,13 +123,14 @@ class UserControllerTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(content().string(not(emptyOrNullString())));
+                .andExpect(jsonPath("$.jwt", not(emptyOrNullString())))
+                .andExpect(jsonPath("$.refreshToken", not(emptyOrNullString())));
     }
 
     @Test
     @Sql({"/sql/cleanup.sql", "/sql/user.sql"})
     void loginWrongPasswordIsRejected() throws Exception {
-        mockMvc.perform(post("/api/login")
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -140,7 +144,7 @@ class UserControllerTest {
     @Test
     @Sql({"/sql/cleanup.sql", "/sql/user.sql"})
     void loginUnknownUserIsRejected() throws Exception {
-        mockMvc.perform(post("/api/login")
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -154,7 +158,7 @@ class UserControllerTest {
     @Test
     @Sql({"/sql/cleanup.sql", "/sql/user.sql"})
     void loginMissingUsernameReturnsBadRequest() throws Exception {
-        mockMvc.perform(post("/api/login")
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -195,7 +199,7 @@ class UserControllerTest {
     }
 
     private String loginAsMockUser() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/login")
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -205,6 +209,7 @@ class UserControllerTest {
                                 """))
                 .andExpect(status().isOk())
                 .andReturn();
-        return result.getResponse().getContentAsString();
+        JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
+        return body.get("jwt").asText();
     }
 }
