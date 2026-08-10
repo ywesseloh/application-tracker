@@ -1,6 +1,5 @@
 package com.ywes.application_tracker.security;
 
-import com.ywes.application_tracker.common.InvalidAuthHeaderException;
 import com.ywes.application_tracker.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -53,7 +52,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (Exception exception) {
-            throw new InvalidAuthHeaderException("JWT could not be extracted from the auth header");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("text/plain;charset=UTF-8");
+            response.getWriter().write("JWT could not be validated");
         }
     }
 }
