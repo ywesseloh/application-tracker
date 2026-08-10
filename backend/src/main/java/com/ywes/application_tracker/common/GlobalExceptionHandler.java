@@ -48,4 +48,10 @@ public class GlobalExceptionHandler {
     public String handleAuthenticationException(AuthenticationException ex) {
         return "Invalid credentials";
     }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(BadRefreshTokenException.class)
+    public String handleBadRefreshTokenException(BadRefreshTokenException ex) {
+        return ex.getMessage();
+    }
 }

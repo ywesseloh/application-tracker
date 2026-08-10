@@ -15,16 +15,8 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private AuthService authService;
-
     @PostMapping("/register")
     public void registerUser(@Valid @RequestBody UserMutation userMutation) {
         userService.registerUser(userMutation);
-    }
-
-    @PostMapping("/login")
-    public String login(@Valid @RequestBody UserMutation userMutation) {
-        return authService.login(userMutation);
     }
 }
