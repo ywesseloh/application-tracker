@@ -1,6 +1,5 @@
 package com.ywes.application_tracker.service;
 
-import com.ywes.application_tracker.security.AuthUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.Map;
-import java.util.function.Function;
 
 @Service
 public class JwtService {
@@ -33,14 +31,12 @@ public class JwtService {
                 .compact();
     }
 
-    public AuthUser extractAuthUser(String token) {
-        Claims claims = extractAllClaims(token);
-        String username = claims.getSubject();
-        Integer userId = claims.get(USER_ID_CLAIM, Integer.class);
-        if (username == null || username.isBlank() || userId == null) {
-            throw new IllegalArgumentException("JWT is missing username or user id");
+    public Integer extractUserId(String token) {
+        Integer userId = extractAllClaims(token).get(USER_ID_CLAIM, Integer.class);
+        if (userId == null) {
+            throw new IllegalArgumentException("JWT is missing user id");
         }
-        return new AuthUser(userId, username);
+        return userId;
     }
 
     public long getExpirationTime() {

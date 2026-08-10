@@ -41,7 +41,7 @@ User 1 ──── * JobApplication 1 ──── 1 BoardPlacement
 
 Placement is owned by the application (`cascade = ALL`, `orphanRemoval = true`). Creating an application always appends a placement at the end of that user’s target column.
 
-All list/move/create/update/delete operations are scoped to the authenticated user. The JWT carries `sub` (username) and `uid` (user id); the filter sets an `AuthUser` principal so handlers do not load the user from the database on every request. Create uses `UserRepository.getReferenceById` for the JPA association.
+All list/move/create/update/delete operations are scoped to the authenticated user. The JWT carries `sub` (username) and `uid` (user id); the filter sets the user id (`Integer`) as the security principal so handlers do not load the user from the database on every request. Create loads the user by id when establishing the JPA association.
 
 ### Why `status` (and `userId`) are denormalized on placement
 

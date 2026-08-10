@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static com.ywes.application_tracker.model.JobApplicationStatus.APPLIED;
@@ -24,19 +26,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@WithMockUser(username = "1")
 class BoardControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private JobApplicationService jobApplicationService;
     @Autowired private JobApplicationRepository jobApplicationRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
-    private User user;
     private int wishlistId;
 
     @BeforeEach
     void setUp() {
         jobApplicationRepository.deleteAll();
-        user = persistUser(userRepository, "board-controller");
+        User user = ensureMockUser(userRepository, jdbcTemplate);
         seed(
                 jobApplicationService,
                 user,
@@ -48,7 +51,7 @@ class BoardControllerTest {
 
     @Test
     void getBoardReturnsOrderedApplications() throws Exception {
-        mockMvc.perform(get("/api/board").with(asUser(user)))
+        mockMvc.perform(get("/api/board"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].company").value("Beta"))
@@ -62,12 +65,11 @@ class BoardControllerTest {
     @Test
     void patchMoveUpdatesBoard() throws Exception {
         mockMvc.perform(patch("/api/board/move/{id}", wishlistId)
-                        .with(asUser(user))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"APPLIED\",\"columnPosition\":0}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/board").with(asUser(user)))
+        mockMvc.perform(get("/api/board"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].company").value("Alpha"))
@@ -81,7 +83,6 @@ class BoardControllerTest {
     @Test
     void patchMoveUnknownIdReturnsNotFound() throws Exception {
         mockMvc.perform(patch("/api/board/move/{id}", 9999)
-                        .with(asUser(user))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"WISHLIST\",\"columnPosition\":0}"))
                 .andExpect(status().isNotFound())
@@ -93,7 +94,6 @@ class BoardControllerTest {
     @Test
     void patchMoveIllegalPositionReturnsBadRequest() throws Exception {
         mockMvc.perform(patch("/api/board/move/{id}", wishlistId)
-                        .with(asUser(user))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"APPLIED\",\"columnPosition\":99}"))
                 .andExpect(status().isBadRequest())
@@ -103,7 +103,6 @@ class BoardControllerTest {
     @Test
     void patchMoveMissingStatusReturnsBadRequest() throws Exception {
         mockMvc.perform(patch("/api/board/move/{id}", wishlistId)
-                        .with(asUser(user))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":null,\"columnPosition\":0}"))
                 .andExpect(status().isBadRequest())
@@ -113,7 +112,6 @@ class BoardControllerTest {
     @Test
     void patchMoveNegativePositionReturnsBadRequest() throws Exception {
         mockMvc.perform(patch("/api/board/move/{id}", wishlistId)
-                        .with(asUser(user))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"APPLIED\",\"columnPosition\":-1}"))
                 .andExpect(status().isBadRequest())

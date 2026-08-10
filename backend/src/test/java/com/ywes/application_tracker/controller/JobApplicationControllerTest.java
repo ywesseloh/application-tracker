@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static com.ywes.application_tracker.model.JobApplicationStatus.APPLIED;
@@ -26,19 +28,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@WithMockUser(username = "1")
 class JobApplicationControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private JobApplicationService jobApplicationService;
     @Autowired private JobApplicationRepository jobApplicationRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
-    private User user;
     private int alphaId;
 
     @BeforeEach
     void setUp() {
         jobApplicationRepository.deleteAll();
-        user = persistUser(userRepository, "app-controller");
+        User user = ensureMockUser(userRepository, jdbcTemplate);
         seed(
                 jobApplicationService,
                 user,
@@ -50,7 +53,7 @@ class JobApplicationControllerTest {
 
     @Test
     void getApplicationsReturnsAllItems() throws Exception {
-        mockMvc.perform(get("/api/applications").with(asUser(user)))
+        mockMvc.perform(get("/api/applications"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].company").value("Alpha"))
@@ -62,7 +65,7 @@ class JobApplicationControllerTest {
 
     @Test
     void getApplicationByIdReturnsItem() throws Exception {
-        mockMvc.perform(get("/api/applications/{id}", alphaId).with(asUser(user)))
+        mockMvc.perform(get("/api/applications/{id}", alphaId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(alphaId))
                 .andExpect(jsonPath("$.company").value("Alpha"))
@@ -72,7 +75,7 @@ class JobApplicationControllerTest {
 
     @Test
     void getApplicationByIdUnknownReturnsNotFound() throws Exception {
-        mockMvc.perform(get("/api/applications/{id}", 9999).with(asUser(user)))
+        mockMvc.perform(get("/api/applications/{id}", 9999))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Job application with id 9999 not found"));
     }
@@ -80,7 +83,6 @@ class JobApplicationControllerTest {
     @Test
     void postApplicationCreatesItem() throws Exception {
         mockMvc.perform(post("/api/applications")
-                        .with(asUser(user))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -93,7 +95,7 @@ class JobApplicationControllerTest {
                                 """))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/applications").with(asUser(user)))
+        mockMvc.perform(get("/api/applications"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[2].company").value("Gamma"))
@@ -104,7 +106,6 @@ class JobApplicationControllerTest {
     @Test
     void putApplicationUpdatesItem() throws Exception {
         mockMvc.perform(put("/api/applications/{id}", alphaId)
-                        .with(asUser(user))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -117,7 +118,7 @@ class JobApplicationControllerTest {
                                 """))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/applications/{id}", alphaId).with(asUser(user)))
+        mockMvc.perform(get("/api/applications/{id}", alphaId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.company").value("Alpha Updated"))
                 .andExpect(jsonPath("$.role").value("Staff Engineer"))
@@ -129,7 +130,6 @@ class JobApplicationControllerTest {
     @Test
     void putApplicationUnknownIdReturnsNotFound() throws Exception {
         mockMvc.perform(put("/api/applications/{id}", 9999)
-                        .with(asUser(user))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -146,21 +146,21 @@ class JobApplicationControllerTest {
 
     @Test
     void deleteApplicationRemovesItem() throws Exception {
-        mockMvc.perform(delete("/api/applications/{id}", alphaId).with(asUser(user)))
+        mockMvc.perform(delete("/api/applications/{id}", alphaId))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/applications").with(asUser(user)))
+        mockMvc.perform(get("/api/applications"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].company").value("Beta"));
 
-        mockMvc.perform(get("/api/applications/{id}", alphaId).with(asUser(user)))
+        mockMvc.perform(get("/api/applications/{id}", alphaId))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void deleteApplicationUnknownIdReturnsNotFound() throws Exception {
-        mockMvc.perform(delete("/api/applications/{id}", 9999).with(asUser(user)))
+        mockMvc.perform(delete("/api/applications/{id}", 9999))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Job application with id 9999 not found"));
     }
@@ -168,7 +168,6 @@ class JobApplicationControllerTest {
     @Test
     void postApplicationMissingCompanyReturnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/applications")
-                        .with(asUser(user))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -184,7 +183,6 @@ class JobApplicationControllerTest {
     @Test
     void putApplicationMissingStatusReturnsBadRequest() throws Exception {
         mockMvc.perform(put("/api/applications/{id}", alphaId)
-                        .with(asUser(user))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

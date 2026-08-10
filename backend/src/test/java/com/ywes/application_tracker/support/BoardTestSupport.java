@@ -9,20 +9,18 @@ import com.ywes.application_tracker.model.User;
 import com.ywes.application_tracker.repository.BoardPlacementRepository;
 import com.ywes.application_tracker.repository.JobApplicationRepository;
 import com.ywes.application_tracker.repository.UserRepository;
-import com.ywes.application_tracker.security.AuthUser;
 import com.ywes.application_tracker.service.JobApplicationService;
 import jakarta.persistence.EntityManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-
 public final class BoardTestSupport {
+    /** Matches {@code @WithMockUser(username = "1")} on controller tests. */
+    public static final int MOCK_USER_ID = 1;
+
     private BoardTestSupport() {}
 
     public static User persistUser(UserRepository userRepository, String username) {
@@ -37,16 +35,22 @@ public final class BoardTestSupport {
         );
     }
 
-    public static AuthUser authUser(User user) {
-        return new AuthUser(user.getId(), user.getUsername());
-    }
-
-    public static RequestPostProcessor asUser(User user) {
-        return authentication(new UsernamePasswordAuthenticationToken(
-                authUser(user),
-                null,
-                AuthorityUtils.NO_AUTHORITIES
-        ));
+    public static User ensureMockUser(UserRepository userRepository, JdbcTemplate jdbcTemplate) {
+        return userRepository.findById(MOCK_USER_ID).orElseGet(() -> {
+            jdbcTemplate.update(
+                    """
+                    INSERT INTO users (id, username, password, created_at, updated_at)
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    """,
+                    MOCK_USER_ID,
+                    "mock-user",
+                    new BCryptPasswordEncoder().encode("password")
+            );
+            jdbcTemplate.execute(
+                    "ALTER TABLE users ALTER COLUMN id RESTART WITH " + (MOCK_USER_ID + 1)
+            );
+            return userRepository.findById(MOCK_USER_ID).orElseThrow();
+        });
     }
 
     public static JobApplicationMutation mutation(

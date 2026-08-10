@@ -30,10 +30,8 @@ public class UserService implements UserDetailsService {
         );
     }
 
-    public User getUserById(Integer id) {
-        return userRepository.findById(id).orElseThrow(() ->
-                new ResourceNotFoundException("User with id " + id + " not found")
-        );
+    public User getReferenceById(Integer id) {
+        return userRepository.getReferenceById(id);
     }
 
     public PasswordEncoder getPasswordEncoder() {

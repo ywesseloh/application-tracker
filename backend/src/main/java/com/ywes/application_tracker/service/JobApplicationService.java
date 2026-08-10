@@ -32,7 +32,7 @@ public class JobApplicationService {
 
     @Transactional
     public void addJobApplication(JobApplicationMutation jobApplication, Integer userId) {
-        User user = userService.getUserById(userId);
+        User user = userService.getReferenceById(userId);
         JobApplication entity = JobApplication.fromJobApplicationMutation(jobApplication, null);
         entity.setUser(user);
         repo.saveAndFlush(entity);
