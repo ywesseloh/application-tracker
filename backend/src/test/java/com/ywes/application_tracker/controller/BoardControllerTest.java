@@ -1,22 +1,15 @@
 package com.ywes.application_tracker.controller;
 
-import com.ywes.application_tracker.model.User;
-import com.ywes.application_tracker.repository.JobApplicationRepository;
-import com.ywes.application_tracker.repository.UserRepository;
-import com.ywes.application_tracker.service.JobApplicationService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static com.ywes.application_tracker.model.JobApplicationStatus.APPLIED;
-import static com.ywes.application_tracker.model.JobApplicationStatus.WISHLIST;
-import static com.ywes.application_tracker.support.BoardTestSupport.*;
+import static com.ywes.application_tracker.support.ApplicationTrackerTestSupport.APP_ALPHA;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -27,27 +20,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @WithMockUser(username = "1")
+@Sql({"/sql/cleanup.sql", "/sql/board_alpha_beta.sql"})
 class BoardControllerTest {
     @Autowired private MockMvc mockMvc;
-    @Autowired private JobApplicationService jobApplicationService;
-    @Autowired private JobApplicationRepository jobApplicationRepository;
-    @Autowired private UserRepository userRepository;
-    @Autowired private JdbcTemplate jdbcTemplate;
-
-    private int wishlistId;
-
-    @BeforeEach
-    void setUp() {
-        jobApplicationRepository.deleteAll();
-        User user = ensureMockUser(userRepository, jdbcTemplate);
-        seed(
-                jobApplicationService,
-                user,
-                mutation("Alpha", "Role", WISHLIST),
-                mutation("Beta", "Role", APPLIED)
-        );
-        wishlistId = findApplicationId(jobApplicationRepository, "Alpha");
-    }
 
     @Test
     void getBoardReturnsOrderedApplications() throws Exception {
@@ -64,7 +39,7 @@ class BoardControllerTest {
 
     @Test
     void patchMoveUpdatesBoard() throws Exception {
-        mockMvc.perform(patch("/api/board/move/{id}", wishlistId)
+        mockMvc.perform(patch("/api/board/move/{id}", APP_ALPHA)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"APPLIED\",\"columnPosition\":0}"))
                 .andExpect(status().isOk());
@@ -93,7 +68,7 @@ class BoardControllerTest {
 
     @Test
     void patchMoveIllegalPositionReturnsBadRequest() throws Exception {
-        mockMvc.perform(patch("/api/board/move/{id}", wishlistId)
+        mockMvc.perform(patch("/api/board/move/{id}", APP_ALPHA)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"APPLIED\",\"columnPosition\":99}"))
                 .andExpect(status().isBadRequest())
@@ -102,7 +77,7 @@ class BoardControllerTest {
 
     @Test
     void patchMoveMissingStatusReturnsBadRequest() throws Exception {
-        mockMvc.perform(patch("/api/board/move/{id}", wishlistId)
+        mockMvc.perform(patch("/api/board/move/{id}", APP_ALPHA)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":null,\"columnPosition\":0}"))
                 .andExpect(status().isBadRequest())
@@ -111,7 +86,7 @@ class BoardControllerTest {
 
     @Test
     void patchMoveNegativePositionReturnsBadRequest() throws Exception {
-        mockMvc.perform(patch("/api/board/move/{id}", wishlistId)
+        mockMvc.perform(patch("/api/board/move/{id}", APP_ALPHA)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"APPLIED\",\"columnPosition\":-1}"))
                 .andExpect(status().isBadRequest())

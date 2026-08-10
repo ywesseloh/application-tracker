@@ -3,21 +3,19 @@ package com.ywes.application_tracker.service;
 import com.ywes.application_tracker.common.ResourceNotFoundException;
 import com.ywes.application_tracker.dto.JobApplicationMutation;
 import com.ywes.application_tracker.model.JobApplication;
-import com.ywes.application_tracker.model.User;
 import com.ywes.application_tracker.repository.BoardPlacementRepository;
 import com.ywes.application_tracker.repository.JobApplicationRepository;
-import com.ywes.application_tracker.repository.UserRepository;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 import static com.ywes.application_tracker.model.JobApplicationStatus.*;
-import static com.ywes.application_tracker.support.BoardTestSupport.*;
+import static com.ywes.application_tracker.support.ApplicationTrackerTestSupport.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -28,26 +26,16 @@ class JobApplicationServiceTest {
     @Autowired private BoardService boardService;
     @Autowired private JobApplicationRepository jobApplicationRepository;
     @Autowired private BoardPlacementRepository placementRepository;
-    @Autowired private UserRepository userRepository;
     @Autowired private EntityManager entityManager;
 
-    private User user;
-    private Integer userId;
-
-    @BeforeEach
-    void setUp() {
-        user = persistUser(userRepository, "app-tester");
-        userId = user.getId();
-    }
-
     @Test
+    @Sql({"/sql/cleanup.sql", "/sql/user.sql"})
     void createInsertsNewEntity() {
         jobApplicationService.addJobApplication(
                 new JobApplicationMutation("First", "Role", WISHLIST, "Some notes", "MyUrl"),
-                userId
+                USER_ID
         );
-        int id = findApplicationId(jobApplicationRepository, "First");
-        JobApplication jobApplication = applicationFor(jobApplicationRepository, id);
+        JobApplication jobApplication = applicationFor(jobApplicationRepository, APP_FIRST);
 
         assertEquals(1, jobApplicationRepository.findAll().size());
         assertEquals("First", jobApplication.getCompany());
@@ -55,36 +43,31 @@ class JobApplicationServiceTest {
         assertEquals(WISHLIST, jobApplication.getStatus());
         assertEquals("Some notes", jobApplication.getNotes());
         assertEquals("MyUrl", jobApplication.getJobPostingUrl());
-        assertEquals(userId, jobApplication.getUser().getId());
+        assertEquals(USER_ID, jobApplication.getUser().getId());
     }
 
     @Test
+    @Sql({"/sql/cleanup.sql", "/sql/user.sql"})
     void createAppendsToEndOfStatusColumn() {
-        jobApplicationService.addJobApplication(mutation("First", "Role", WISHLIST), userId);
-        jobApplicationService.addJobApplication(mutation("Second", "Role", WISHLIST), userId);
+        jobApplicationService.addJobApplication(mutation("First", "Role", WISHLIST), USER_ID);
+        jobApplicationService.addJobApplication(mutation("Second", "Role", WISHLIST), USER_ID);
 
-        assertEquals(2, boardService.getBoard(userId).size());
-        int secondId = findApplicationId(jobApplicationRepository, "Second");
-        assertEquals(1, placementFor(placementRepository, secondId).getPosition());
-        assertEquals(List.of(0, 1), positionsIn(placementRepository, user, WISHLIST));
+        assertEquals(2, boardService.getBoard(USER_ID).size());
+        assertEquals(1, placementFor(placementRepository, 2).getPosition());
+        assertEquals(List.of(0, 1), positionsIn(placementRepository, USER_ID, WISHLIST));
     }
 
     @Test
+    @Sql({"/sql/cleanup.sql", "/sql/board_first.sql"})
     void updateMutatesEntity() {
-        seed(
-                jobApplicationService,
-                userId,
-                new JobApplicationMutation("First", "Role", WISHLIST, "Some notes", "MyUrl")
-        );
-        int id = findApplicationId(jobApplicationRepository, "First");
-        jobApplicationService.updateJobApplication(id, new JobApplicationMutation(
+        jobApplicationService.updateJobApplication(APP_FIRST, new JobApplicationMutation(
                 "Second",
                 "OtherRole",
                 INTERVIEW,
                 "Other Notes",
                 "Other Url"
-        ), userId);
-        JobApplication jobApplication = applicationFor(jobApplicationRepository, id);
+        ), USER_ID);
+        JobApplication jobApplication = applicationFor(jobApplicationRepository, APP_FIRST);
 
         assertEquals(1, jobApplicationRepository.findAll().size());
         assertEquals("Second", jobApplication.getCompany());
@@ -95,47 +78,32 @@ class JobApplicationServiceTest {
     }
 
     @Test
+    @Sql({"/sql/cleanup.sql", "/sql/board_existing_moving.sql"})
     void updateStatusMovesToEndOfNewColumn() {
-        seed(
-                jobApplicationService,
-                userId,
-                mutation("Existing", "Role", APPLIED),
-                mutation("Moving", "Role", WISHLIST)
-        );
-
-        int movingId = findApplicationId(jobApplicationRepository, "Moving");
         jobApplicationService.updateJobApplication(
-                movingId,
+                APP_MOVING,
                 mutation("Moving", "Role", APPLIED),
-                userId
+                USER_ID
         );
         refreshPersistence(entityManager);
 
-        var moved = placementFor(placementRepository, movingId);
+        var moved = placementFor(placementRepository, APP_MOVING);
         assertEquals(APPLIED, moved.getStatus());
         assertEquals(1, moved.getPosition());
-        assertEquals(List.of(0, 1), positionsIn(placementRepository, user, APPLIED));
+        assertEquals(List.of(0, 1), positionsIn(placementRepository, USER_ID, APPLIED));
     }
 
     @Test
+    @Sql({"/sql/cleanup.sql", "/sql/board_abc_wishlist.sql"})
     void deleteRemovesApplicationAndDensifiesColumn() {
-        seed(
-                jobApplicationService,
-                userId,
-                mutation("A", "Role", WISHLIST),
-                mutation("B", "Role", WISHLIST),
-                mutation("C", "Role", WISHLIST)
-        );
-
-        int bId = findApplicationId(jobApplicationRepository, "B");
-        jobApplicationService.deleteJobApplication(bId, userId);
+        jobApplicationService.deleteJobApplication(APP_B, USER_ID);
         refreshPersistence(entityManager);
 
         assertEquals(2, jobApplicationRepository.count());
         assertEquals(2, placementRepository.count());
-        assertEquals(List.of(0, 1), positionsIn(placementRepository, user, WISHLIST));
+        assertEquals(List.of(0, 1), positionsIn(placementRepository, USER_ID, WISHLIST));
         assertThrows(ResourceNotFoundException.class, () ->
-                jobApplicationService.getJobApplicationById(bId, userId)
+                jobApplicationService.getJobApplicationById(APP_B, USER_ID)
         );
     }
 }

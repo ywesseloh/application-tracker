@@ -1,22 +1,15 @@
 package com.ywes.application_tracker.controller;
 
-import com.ywes.application_tracker.model.User;
-import com.ywes.application_tracker.repository.JobApplicationRepository;
-import com.ywes.application_tracker.repository.UserRepository;
-import com.ywes.application_tracker.service.JobApplicationService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static com.ywes.application_tracker.model.JobApplicationStatus.APPLIED;
-import static com.ywes.application_tracker.model.JobApplicationStatus.WISHLIST;
-import static com.ywes.application_tracker.support.BoardTestSupport.*;
+import static com.ywes.application_tracker.support.ApplicationTrackerTestSupport.APP_ALPHA;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -29,27 +22,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @WithMockUser(username = "1")
+@Sql({"/sql/cleanup.sql", "/sql/board_alpha_beta.sql"})
 class JobApplicationControllerTest {
     @Autowired private MockMvc mockMvc;
-    @Autowired private JobApplicationService jobApplicationService;
-    @Autowired private JobApplicationRepository jobApplicationRepository;
-    @Autowired private UserRepository userRepository;
-    @Autowired private JdbcTemplate jdbcTemplate;
-
-    private int alphaId;
-
-    @BeforeEach
-    void setUp() {
-        jobApplicationRepository.deleteAll();
-        User user = ensureMockUser(userRepository, jdbcTemplate);
-        seed(
-                jobApplicationService,
-                user,
-                mutation("Alpha", "Engineer", WISHLIST),
-                mutation("Beta", "Designer", APPLIED)
-        );
-        alphaId = findApplicationId(jobApplicationRepository, "Alpha");
-    }
 
     @Test
     void getApplicationsReturnsAllItems() throws Exception {
@@ -65,9 +40,9 @@ class JobApplicationControllerTest {
 
     @Test
     void getApplicationByIdReturnsItem() throws Exception {
-        mockMvc.perform(get("/api/applications/{id}", alphaId))
+        mockMvc.perform(get("/api/applications/{id}", APP_ALPHA))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(alphaId))
+                .andExpect(jsonPath("$.id").value(APP_ALPHA))
                 .andExpect(jsonPath("$.company").value("Alpha"))
                 .andExpect(jsonPath("$.role").value("Engineer"))
                 .andExpect(jsonPath("$.status").value("WISHLIST"));
@@ -105,7 +80,7 @@ class JobApplicationControllerTest {
 
     @Test
     void putApplicationUpdatesItem() throws Exception {
-        mockMvc.perform(put("/api/applications/{id}", alphaId)
+        mockMvc.perform(put("/api/applications/{id}", APP_ALPHA)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -118,7 +93,7 @@ class JobApplicationControllerTest {
                                 """))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/applications/{id}", alphaId))
+        mockMvc.perform(get("/api/applications/{id}", APP_ALPHA))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.company").value("Alpha Updated"))
                 .andExpect(jsonPath("$.role").value("Staff Engineer"))
@@ -146,7 +121,7 @@ class JobApplicationControllerTest {
 
     @Test
     void deleteApplicationRemovesItem() throws Exception {
-        mockMvc.perform(delete("/api/applications/{id}", alphaId))
+        mockMvc.perform(delete("/api/applications/{id}", APP_ALPHA))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/applications"))
@@ -154,7 +129,7 @@ class JobApplicationControllerTest {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].company").value("Beta"));
 
-        mockMvc.perform(get("/api/applications/{id}", alphaId))
+        mockMvc.perform(get("/api/applications/{id}", APP_ALPHA))
                 .andExpect(status().isNotFound());
     }
 
@@ -182,7 +157,7 @@ class JobApplicationControllerTest {
 
     @Test
     void putApplicationMissingStatusReturnsBadRequest() throws Exception {
-        mockMvc.perform(put("/api/applications/{id}", alphaId)
+        mockMvc.perform(put("/api/applications/{id}", APP_ALPHA)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
