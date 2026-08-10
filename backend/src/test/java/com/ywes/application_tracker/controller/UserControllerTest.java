@@ -134,7 +134,7 @@ class UserControllerTest {
                                   "password": "wrong"
                                 }
                                 """))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -148,7 +148,7 @@ class UserControllerTest {
                                   "password": "password"
                                 }
                                 """))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -170,7 +170,7 @@ class UserControllerTest {
     @Sql({"/sql/cleanup.sql", "/sql/board_alpha_beta.sql"})
     void protectedRouteWithoutTokenIsRejected() throws Exception {
         mockMvc.perform(get("/api/applications"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
