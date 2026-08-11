@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { login, logout, refresh, register } from '@/shared/api/authApi'
+import { login, logout, refresh } from '@/shared/api/authApi'
+import { register } from '@/shared/api/userApi'
 import {
   clearAccessToken,
   getAccessToken,
@@ -54,7 +55,7 @@ describe('authApi', () => {
 
     expect(getAccessToken()).toBeNull()
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8080/api/register',
+      'http://localhost:8080/api/user',
       expect.objectContaining({
         method: 'POST',
         credentials: 'include',

@@ -12,10 +12,6 @@ export async function login(credentials: UserCredentials): Promise<AccessTokenRe
   return response
 }
 
-export async function register(credentials: UserCredentials): Promise<void> {
-  await apiClient.post('/register', credentials, false)
-}
-
 export async function refresh(): Promise<AccessTokenResponse> {
   try {
     const response = await apiClient.post<AccessTokenResponse>(

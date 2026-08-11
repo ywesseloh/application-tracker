@@ -15,13 +15,13 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/register")
+    @PostMapping("/user")
     public void registerUser(@Valid @RequestBody UserMutation userMutation) {
         userService.registerUser(userMutation);
     }
 
     @DeleteMapping("/user")
-    public void registerUser(@CurrentUserId Integer userId) {
+    public void deleteUser(@CurrentUserId Integer userId) {
         userService.deleteUser(userId);
     }
 }
