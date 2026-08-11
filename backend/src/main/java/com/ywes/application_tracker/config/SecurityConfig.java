@@ -1,6 +1,6 @@
-package com.ywes.application_tracker.security;
+package com.ywes.application_tracker.config;
 
-import com.ywes.application_tracker.service.UserService;
+import com.ywes.application_tracker.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,7 +34,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/register",
                                 "/api/auth/login",
-                                "/api/auth/refresh").permitAll()
+                                "/api/auth/refresh",
+                                "/api/auth/logout").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)

@@ -127,6 +127,16 @@ Request DTOs (`JobApplicationMutation`, `JobApplicationPatch`) carry Bean Valida
 
 Docker Compose sets `SPRING_PROFILES_ACTIVE=postgres` and datasource env vars so the API can reach the `db` service.
 
+### Authentication
+
+- **Access JWT** — returned in JSON (`AccessTokenResponse { jwt }`) on login and refresh; sent by clients as `Authorization: Bearer …` on protected routes.
+- **Refresh token** — opaque UUID stored as SHA-256 hash in `refresh_token`; never returned in JSON. On login/refresh the API sets an **HttpOnly** cookie (`refresh_token`, path `/api/auth`, configurable `SameSite`/`Secure`).
+- **Refresh** — `POST /api/auth/refresh` with no body; reads the refresh cookie, rotates the stored hash, returns a new access JWT and updates the cookie.
+- **Logout** — `POST /api/auth/logout` without access JWT; revokes the refresh row from the cookie and clears the cookie (`Max-Age=0`).
+- **CORS** — global `/api/**` mapping with `allowCredentials(true)` and explicit origins (`app.cors.allowed-origins`).
+
+Frontend integration (in-memory JWT, `credentials: 'include'`, 401 refresh retry) is deferred.
+
 ## Tests
 
 Under `src/test/java/...`:

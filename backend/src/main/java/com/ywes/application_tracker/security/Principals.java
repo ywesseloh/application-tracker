@@ -7,8 +7,8 @@ public final class Principals {
 
     /**
      * Resolves the authenticated user id from the security principal.
-     * Production JWT auth uses {@link Integer}; {@code @WithMockUser(username = "<id>")}
-     * uses a {@link UserDetails} whose username is the numeric user id.
+     * Production JWT auth uses Integer
+     * Test @WithMockUser uses UserDetails with String username.
      */
     public static Integer resolve(Object principal) {
         return switch (principal) {
