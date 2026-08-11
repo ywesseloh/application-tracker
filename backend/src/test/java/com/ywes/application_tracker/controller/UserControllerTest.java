@@ -126,6 +126,21 @@ class UserControllerTest {
 
     @Test
     @Sql({"/sql/cleanup.sql", "/sql/user.sql"})
+    void registerDuplicateUsernameReturnsConflict() throws Exception {
+        mockMvc.perform(post("/api/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "mock-user",
+                                  "password": "secret"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$").value("Username already exists: mock-user"));
+    }
+
+    @Test
+    @Sql({"/sql/cleanup.sql", "/sql/user.sql"})
     void loginReturnsJwt() throws Exception {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

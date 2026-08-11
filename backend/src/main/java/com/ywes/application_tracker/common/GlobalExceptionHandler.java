@@ -43,6 +43,12 @@ public class GlobalExceptionHandler {
         return ex.getMessage();
     }
 
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(DuplicateUsernameException.class)
+    public String handleDuplicateUsernameException(DuplicateUsernameException ex) {
+        return ex.getMessage();
+    }
+
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(AuthenticationException.class)
     public String handleAuthenticationException(AuthenticationException ex) {

@@ -1,5 +1,6 @@
 package com.ywes.application_tracker.service;
 
+import com.ywes.application_tracker.common.DuplicateUsernameException;
 import com.ywes.application_tracker.common.ResourceNotFoundException;
 import com.ywes.application_tracker.dto.UserMutation;
 import com.ywes.application_tracker.model.User;
@@ -18,6 +19,10 @@ public class UserService implements UserDetailsService {
     @Autowired private PasswordEncoder passwordEncoder;
 
     public void registerUser(UserMutation userMutation) {
+        if (userRepository.existsByUsername(userMutation.username())) {
+            throw new DuplicateUsernameException(userMutation.username());
+        }
+
         User userEntity = User.fromUserMutation(userMutation, passwordEncoder);
         userRepository.save(userEntity);
     }
