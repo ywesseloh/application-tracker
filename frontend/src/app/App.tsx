@@ -1,5 +1,5 @@
-import { ApplicationBoard } from '@/features/applications'
+import { AuthScreen } from '@/features/auth'
 
 export default function App() {
-  return <ApplicationBoard />
+  return <AuthScreen />
 }
