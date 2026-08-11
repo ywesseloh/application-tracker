@@ -4,7 +4,7 @@ import { useApplicationsQuery } from '../../hooks/useApplicationsQuery'
 import { useUpdateApplication } from '../../hooks/useApplicationMutations'
 import { useApplicationsCache } from '../../hooks/useApplicationsCache'
 import { applicationMutationKeys } from '../../model/mutationKeys'
-import type { Application } from '../../model/types'
+import type { Application } from '@/shared/api/types'
 import { EMPTY_VALUES } from './formValues'
 import ApplicationForm from './ApplicationForm'
 

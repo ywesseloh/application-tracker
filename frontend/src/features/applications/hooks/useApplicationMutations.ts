@@ -4,9 +4,11 @@ import {
   deleteApplication,
   moveApplication,
   updateApplication,
-  type ApplicationInput,
-  type ApplicationPositionPatch,
 } from '@/shared/api/applicationsApi'
+import type {
+  ApplicationInput,
+  ApplicationPositionPatch,
+} from '@/shared/api/types'
 import {
   applicationMutationKeys,
   boardWritesScope,

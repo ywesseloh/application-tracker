@@ -1,5 +1,5 @@
 import { arrayMove } from '@dnd-kit/sortable'
-import type { Application, ApplicationStatus } from '@/features/applications/model/types'
+import type { Application, ApplicationStatus } from '@/shared/api/types'
 
 export const STATUSES: ApplicationStatus[] = [
   'WISHLIST',

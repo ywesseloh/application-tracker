@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { login, logout, refresh, register } from '@/shared/auth/authApi'
+import { login, logout, refresh, register } from '@/shared/api/authApi'
 import {
   clearAccessToken,
   getAccessToken,

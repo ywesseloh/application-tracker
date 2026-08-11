@@ -1,6 +1,6 @@
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import type { Application, ApplicationStatus } from '@/features/applications/model/types'
+import type { Application, ApplicationStatus } from '@/shared/api/types'
 import { STATUS_LABELS } from '@/features/applications/model/types'
 import ApplicationTile from '@/features/applications/components/ApplicationTile/ApplicationTile'
 

@@ -11,7 +11,8 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import './ApplicationBoard.css'
-import type { Application, FormMode } from '@/features/applications/model/types'
+import type { FormMode } from '@/features/applications/model/types'
+import type { Application } from '@/shared/api/types'
 import {
   STATUSES,
   applicationsForStatus,

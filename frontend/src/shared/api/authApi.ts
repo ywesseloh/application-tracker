@@ -1,6 +1,6 @@
 import { apiClient } from '@/shared/api/apiClient'
 import { clearAccessToken, setAccessToken } from '@/shared/auth/tokenStore'
-import type { AccessTokenResponse, UserCredentials } from '@/shared/auth/types'
+import type { AccessTokenResponse, UserCredentials } from '@/shared/api/types'
 
 export async function login(credentials: UserCredentials): Promise<AccessTokenResponse> {
   const response = await apiClient.post<AccessTokenResponse>(

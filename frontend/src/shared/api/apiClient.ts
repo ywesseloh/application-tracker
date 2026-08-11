@@ -48,24 +48,6 @@ function withTimeout(signal?: AbortSignal | null): AbortSignal {
   return signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal
 }
 
-function normalizeApiPath(path: string): string {
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    try {
-      path = new URL(path).pathname
-    } catch {
-      return path
-    }
-  }
-
-  if (path.startsWith(`${API_PREFIX}/`)) {
-    return path.slice(API_PREFIX.length)
-  }
-  if (path === API_PREFIX) {
-    return '/'
-  }
-  return path.startsWith('/') ? path : `/${path}`
-}
-
 function buildHeaders(authRequired: boolean, hasBody: boolean, headers?: HeadersInit): Headers {
   const result = new Headers(headers)
 
@@ -88,7 +70,7 @@ let refreshInFlight: Promise<void> | null = null
 async function refreshAccessTokenSingleFlight(): Promise<void> {
   if (!refreshInFlight) {
     refreshInFlight = (async () => {
-        const { refresh } = await import('@/shared/auth/authApi')
+        const { refresh } = await import('@/shared/api/authApi')
         await refresh()
     })().finally(() => {
       refreshInFlight = null

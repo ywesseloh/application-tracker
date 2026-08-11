@@ -1,14 +1,8 @@
 import { queryOptions } from '@tanstack/react-query'
 import { apiClient } from '@/shared/api/apiClient'
-import type { Application } from '@/features/applications/model/types'
+import type { Application, ApplicationInput, ApplicationPositionPatch } from '@/shared/api/types'
 
 export const applicationsQueryKey = ['applications'] as const
-
-export type ApplicationInput = Omit<Application, 'id' | 'columnPosition'>
-export type ApplicationPositionPatch = Pick<
-  Application,
-  'id' | 'status' | 'columnPosition'
->
 
 export function fetchApplications() {
   return apiClient.get<Application[]>('/board')

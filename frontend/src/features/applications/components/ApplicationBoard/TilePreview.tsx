@@ -1,4 +1,4 @@
-import type { Application } from '@/features/applications/model/types'
+import type { Application } from '@/shared/api/types'
 
 export default function TilePreview({ application }: { application: Application }) {
   return (

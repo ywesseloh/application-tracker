@@ -1,19 +1,4 @@
-export type ApplicationStatus =
-  | 'WISHLIST'
-  | 'APPLIED'
-  | 'INTERVIEW'
-  | 'OFFER'
-  | 'REJECTED'
-
-export type Application = {
-  id: number
-  company: string
-  role: string
-  status: ApplicationStatus
-  columnPosition: number
-  notes: string | null
-  jobPostingUrl: string | null
-}
+import type { ApplicationStatus } from '@/shared/api/types'
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   WISHLIST: 'Wishlist',

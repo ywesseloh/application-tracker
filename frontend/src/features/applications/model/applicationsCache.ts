@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { applicationsQueryKey } from '@/shared/api/applicationsApi'
-import type { Application } from '@/features/applications/model/types'
+import type { Application } from '@/shared/api/types'
 
 export function invalidateApplications(queryClient: QueryClient) {
   return queryClient.invalidateQueries({ queryKey: applicationsQueryKey })

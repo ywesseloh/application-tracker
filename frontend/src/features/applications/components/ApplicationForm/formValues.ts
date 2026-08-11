@@ -1,4 +1,4 @@
-import type { ApplicationStatus } from '@/features/applications/model/types'
+import type { ApplicationStatus } from '@/shared/api/types'
 
 export type ApplicationFormValues = {
   company: string

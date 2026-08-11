@@ -4,7 +4,7 @@ import { EMPTY_VALUES } from './formValues'
 import { useCreateApplication } from '../../hooks/useApplicationMutations'
 import { useApplicationsCache } from '../../hooks/useApplicationsCache'
 import { applicationMutationKeys } from '../../model/mutationKeys'
-import type { ApplicationStatus } from '../../model/types'
+import type { ApplicationStatus } from '@/shared/api/types'
 import ApplicationForm from './ApplicationForm'
 
 type CreateApplicationFormProps = {

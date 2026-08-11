@@ -1,5 +1,6 @@
 import { useEffect, useState, type SubmitEvent } from 'react'
-import type { ApplicationStatus, FormMode } from '@/features/applications/model/types'
+import type { FormMode } from '@/features/applications/model/types'
+import type { ApplicationStatus } from '@/shared/api/types'
 import type { ApplicationFormValues } from './formValues'
 import { STATUS_LABELS } from '@/features/applications/model/types'
 import './ApplicationForm.css'

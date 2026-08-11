@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import type { Application } from '@/features/applications/model/types'
+import type { Application } from '@/shared/api/types'
 import { STATUS_LABELS } from '@/features/applications/model/types'
 import { useDeleteApplication } from '@/features/applications/hooks/useApplicationMutations'
 import { useApplicationsCache } from '@/features/applications/hooks/useApplicationsCache'

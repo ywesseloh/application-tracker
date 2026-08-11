@@ -1,5 +1,5 @@
 import { useMutationState } from '@tanstack/react-query'
-import type { ApplicationPositionPatch } from '@/shared/api/applicationsApi'
+import type { ApplicationPositionPatch } from '@/shared/api/types'
 import { applicationMutationKeys } from '@/features/applications/model/mutationKeys'
 
 export function useApplicationBusy(id: number) {

@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { Application } from '@/features/applications/model/types'
+import type { Application } from '@/shared/api/types'
 import { useApplicationBusy } from '@/features/applications/hooks/useApplicationBusy'
 import { useBoardWritesBusy } from '@/features/applications/hooks/useBoardWritesBusy'
 

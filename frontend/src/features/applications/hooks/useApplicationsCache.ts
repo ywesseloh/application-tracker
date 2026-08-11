@@ -8,7 +8,7 @@ import {
   restoreApplications,
   snapshotApplications,
 } from '@/features/applications/model/applicationsCache'
-import type { Application } from '@/features/applications/model/types'
+import type { Application } from '@/shared/api/types'
 
 export function useApplicationsCache() {
   const queryClient = useQueryClient()
