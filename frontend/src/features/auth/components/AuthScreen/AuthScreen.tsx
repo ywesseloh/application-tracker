@@ -3,6 +3,8 @@ import './AuthScreen.css'
 
 type AuthMode = 'login' | 'register'
 
+const MAX_CREDENTIAL_LENGTH = 20
+
 export default function AuthScreen() {
   const [mode, setMode] = useState<AuthMode>('login')
   const [username, setUsername] = useState('')
@@ -10,9 +12,12 @@ export default function AuthScreen() {
   const [showPassword, setShowPassword] = useState(false)
 
   const isLogin = mode === 'login'
+  const usernameTooLong = !isLogin && username.length > MAX_CREDENTIAL_LENGTH
+  const passwordTooLong = !isLogin && password.length > MAX_CREDENTIAL_LENGTH
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (usernameTooLong || passwordTooLong) return
   }
 
   return (
@@ -26,18 +31,27 @@ export default function AuthScreen() {
         </header>
 
         <form className="auth-screen__form" onSubmit={handleSubmit} noValidate>
-          <label className="auth-screen__field">
-            <span className="auth-screen__label">Username</span>
+          <div className="auth-screen__field">
+            <label className="auth-screen__label" htmlFor="auth-username">
+              Username
+            </label>
             <input
-              className="auth-screen__input"
+              id="auth-username"
+              className={`auth-screen__input${usernameTooLong ? ' auth-screen__input--invalid' : ''}`}
               name="username"
               type="text"
               autoComplete="username"
-              maxLength={20}
+              aria-invalid={usernameTooLong}
+              aria-describedby={usernameTooLong ? 'auth-username-error' : undefined}
               value={username}
               onChange={(event) => setUsername(event.target.value)}
             />
-          </label>
+            {usernameTooLong ? (
+              <p id="auth-username-error" className="auth-screen__field-error" role="alert">
+                Username can have a maximum length of 20 characters
+              </p>
+            ) : null}
+          </div>
 
           <div className="auth-screen__field">
             <label className="auth-screen__label" htmlFor="auth-password">
@@ -46,11 +60,12 @@ export default function AuthScreen() {
             <div className="auth-screen__password">
               <input
                 id="auth-password"
-                className={`auth-screen__input${password ? ' auth-screen__input--password' : ''}`}
+                className={`auth-screen__input${password ? ' auth-screen__input--password' : ''}${passwordTooLong ? ' auth-screen__input--invalid' : ''}`}
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete={isLogin ? 'current-password' : 'new-password'}
-                maxLength={20}
+                aria-invalid={passwordTooLong}
+                aria-describedby={passwordTooLong ? 'auth-password-error' : undefined}
                 value={password}
                 onChange={(event) => {
                   const next = event.target.value
@@ -70,6 +85,11 @@ export default function AuthScreen() {
                 </button>
               ) : null}
             </div>
+            {passwordTooLong ? (
+              <p id="auth-password-error" className="auth-screen__field-error" role="alert">
+                Password can have a maximum of 20 characters
+              </p>
+            ) : null}
           </div>
 
           <button className="auth-screen__submit" type="submit">

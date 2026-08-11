@@ -113,6 +113,23 @@ body {
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
+.auth-screen__input--invalid {
+  border-color: #b0453c;
+  background: #fff8f7;
+}
+
+.auth-screen__input--invalid:focus-visible {
+  border-color: #b0453c;
+  box-shadow: 0 0 0 3px rgba(176, 69, 60, 0.15);
+}
+
+.auth-screen__field-error {
+  margin: 0;
+  color: #8b3a2f;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
 .auth-screen__password {
   position: relative;
   display: flex;
