@@ -1,9 +1,13 @@
+import { getAccessToken } from '@/shared/auth/tokenStore'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 const API_PREFIX = '/api'
 const REQUEST_TIMEOUT_MS = 8_000
 
-type RequestOptions = Omit<RequestInit, 'body' | 'method'> & {
+export type RequestOptions = Omit<RequestInit, 'body' | 'method'> & {
   body?: unknown
+  skipAuthRefresh?: boolean
+  authRequired?: boolean
 }
 
 export class ApiError extends Error {
@@ -44,8 +48,58 @@ function withTimeout(signal?: AbortSignal | null): AbortSignal {
   return signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal
 }
 
+function normalizeApiPath(path: string): string {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    try {
+      path = new URL(path).pathname
+    } catch {
+      return path
+    }
+  }
+
+  if (path.startsWith(`${API_PREFIX}/`)) {
+    return path.slice(API_PREFIX.length)
+  }
+  if (path === API_PREFIX) {
+    return '/'
+  }
+  return path.startsWith('/') ? path : `/${path}`
+}
+
+function buildHeaders(authRequired: boolean, hasBody: boolean, headers?: HeadersInit): Headers {
+  const result = new Headers(headers)
+
+  if (hasBody && !result.has('Content-Type')) {
+    result.set('Content-Type', 'application/json')
+  }
+
+  if (authRequired && !result.has('Authorization')) {
+    const token = getAccessToken()
+    if (token) {
+      result.set('Authorization', `Bearer ${token}`)
+    }
+  }
+
+  return result
+}
+
+let refreshInFlight: Promise<void> | null = null
+
+async function refreshAccessTokenSingleFlight(): Promise<void> {
+  if (!refreshInFlight) {
+    refreshInFlight = (async () => {
+        const { refresh } = await import('@/shared/auth/authApi')
+        await refresh()
+    })().finally(() => {
+      refreshInFlight = null
+    })
+  }
+
+  return refreshInFlight
+}
+
 async function request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
-  const { body, headers, signal, ...init } = options
+  const { body, headers, signal, skipAuthRefresh = false, authRequired = true, ...init } = options
   const hasBody = body !== undefined
 
   let response: Response
@@ -53,15 +107,22 @@ async function request<T>(method: string, path: string, options: RequestOptions 
     response = await fetch(resolveUrl(path), {
       ...init,
       method,
+      credentials: 'include',
       signal: withTimeout(signal),
-      headers: {
-        ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
-        ...headers,
-      },
+      headers: buildHeaders(authRequired, hasBody, headers),
       body: hasBody ? JSON.stringify(body) : undefined,
     })
   } catch (cause) {
     throw new NetworkError(cause)
+  }
+
+  if (
+    response.status === 401 &&
+    !skipAuthRefresh &&
+    authRequired
+  ) {
+    await refreshAccessTokenSingleFlight()
+    return request<T>(method, path, { ...options, skipAuthRefresh: true })
   }
 
   if (!response.ok) {
@@ -82,23 +143,23 @@ async function request<T>(method: string, path: string, options: RequestOptions 
 }
 
 export const apiClient = {
-  get<T>(path: string, options?: RequestOptions) {
-    return request<T>('GET', path, options)
+  get<T>(path: string, authRequired = true, options?: RequestOptions) {
+    return request<T>('GET', path, { ...options, authRequired })
   },
 
-  post<T>(path: string, body?: unknown, options?: RequestOptions) {
-    return request<T>('POST', path, { ...options, body })
+  post<T>(path: string, body?: unknown, authRequired = true, options?: RequestOptions) {
+    return request<T>('POST', path, { ...options, body, authRequired })
   },
 
-  put<T>(path: string, body?: unknown, options?: RequestOptions) {
-    return request<T>('PUT', path, { ...options, body })
+  put<T>(path: string, body?: unknown, authRequired = true, options?: RequestOptions) {
+    return request<T>('PUT', path, { ...options, body, authRequired })
   },
 
-  patch<T>(path: string, body?: unknown, options?: RequestOptions) {
-    return request<T>('PATCH', path, { ...options, body })
+  patch<T>(path: string, body?: unknown, authRequired = true, options?: RequestOptions) {
+    return request<T>('PATCH', path, { ...options, body, authRequired })
   },
 
-  delete<T>(path: string, options?: RequestOptions) {
-    return request<T>('DELETE', path, options)
+  delete<T>(path: string, authRequired = true, options?: RequestOptions) {
+    return request<T>('DELETE', path, { ...options, authRequired })
   },
 }

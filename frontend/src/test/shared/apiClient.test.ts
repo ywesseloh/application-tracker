@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ApiError, NetworkError, apiClient } from '@/shared/api/apiClient'
+import { clearAccessToken, setAccessToken } from '@/shared/auth/tokenStore'
 
 const fetchMock = vi.fn<typeof fetch>()
 
@@ -15,6 +16,7 @@ describe('apiClient', () => {
   afterEach(() => {
     fetchMock.mockReset()
     vi.unstubAllGlobals()
+    clearAccessToken()
   })
 
   function stubFetch() {
@@ -29,7 +31,7 @@ describe('apiClient', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:8080/api/board',
-      expect.objectContaining({ method: 'GET' }),
+      expect.objectContaining({ method: 'GET', credentials: 'include' }),
     )
   })
 
@@ -93,12 +95,46 @@ describe('apiClient', () => {
       'http://localhost:8080/api/applications/1',
       expect.objectContaining({
         method: 'PUT',
-        headers: expect.objectContaining({
-          'Content-Type': 'application/json',
-        }),
+        credentials: 'include',
+        headers: expect.any(Headers),
         body: JSON.stringify(body),
       }),
     )
+
+    const headers = fetchMock.mock.calls[0][1]?.headers as Headers
+    expect(headers.get('Content-Type')).toBe('application/json')
+  })
+
+  it('attaches Bearer Authorization when an access token is set', async () => {
+    stubFetch()
+    setAccessToken('access-jwt')
+    fetchMock.mockResolvedValue(jsonResponse([]))
+
+    await apiClient.get('/board')
+
+    const headers = fetchMock.mock.calls[0][1]?.headers as Headers
+    expect(headers.get('Authorization')).toBe('Bearer access-jwt')
+  })
+
+  it('does not attach Authorization when no access token is set', async () => {
+    stubFetch()
+    fetchMock.mockResolvedValue(jsonResponse([]))
+
+    await apiClient.get('/board')
+
+    const headers = fetchMock.mock.calls[0][1]?.headers as Headers
+    expect(headers.get('Authorization')).toBeNull()
+  })
+
+  it('does not attach Authorization when auth not required', async () => {
+    stubFetch()
+    setAccessToken('access-jwt')
+    fetchMock.mockResolvedValue(jsonResponse({ jwt: 'new' }))
+
+    await apiClient.post('/auth/refresh', undefined, false)
+
+    const headers = fetchMock.mock.calls[0][1]?.headers as Headers
+    expect(headers.get('Authorization')).toBeNull()
   })
 
   it('throws ApiError on non-OK responses', async () => {
@@ -138,5 +174,69 @@ describe('apiClient', () => {
     fetchMock.mockRejectedValue(new DOMException('Aborted', 'AbortError'))
 
     await expect(apiClient.get('/board')).rejects.toBeInstanceOf(NetworkError)
+  })
+
+  it('refreshes once and retries the original request after a 401', async () => {
+    stubFetch()
+    setAccessToken('expired-jwt')
+
+    fetchMock
+      .mockResolvedValueOnce(new Response('unauthorized', { status: 401 }))
+      .mockResolvedValueOnce(jsonResponse({ jwt: 'fresh-jwt' }))
+      .mockResolvedValueOnce(jsonResponse([{ id: 1 }]))
+
+    await expect(apiClient.get('/board')).resolves.toEqual([{ id: 1 }])
+
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(fetchMock.mock.calls[0][0]).toBe('http://localhost:8080/api/board')
+    expect(fetchMock.mock.calls[1][0]).toBe('http://localhost:8080/api/auth/refresh')
+    expect(fetchMock.mock.calls[2][0]).toBe('http://localhost:8080/api/board')
+
+    const retryHeaders = fetchMock.mock.calls[2][1]?.headers as Headers
+    expect(retryHeaders.get('Authorization')).toBe('Bearer fresh-jwt')
+  })
+
+  it('shares a single refresh across concurrent 401 responses', async () => {
+    stubFetch()
+    setAccessToken('expired-jwt')
+
+    let refreshCalls = 0
+    fetchMock.mockImplementation(async (input) => {
+      const url = String(input)
+      if (url.endsWith('/board')) {
+        if (refreshCalls === 0) {
+          return new Response('unauthorized', { status: 401 })
+        }
+        return jsonResponse([])
+      }
+      if (url.endsWith('/auth/refresh')) {
+        refreshCalls += 1
+        await new Promise((resolve) => setTimeout(resolve, 20))
+        return jsonResponse({ jwt: 'fresh-jwt' })
+      }
+      throw new Error(`Unexpected URL: ${url}`)
+    })
+
+    await Promise.all([apiClient.get('/board'), apiClient.get('/board')])
+
+    expect(refreshCalls).toBe(1)
+  })
+
+  it('clears the access token and throws when refresh fails after a 401', async () => {
+    stubFetch()
+    setAccessToken('expired-jwt')
+
+    fetchMock
+      .mockResolvedValueOnce(new Response('unauthorized', { status: 401 }))
+      .mockResolvedValueOnce(new Response('bad refresh', { status: 401 }))
+
+    const error = await apiClient.get('/board').catch((err) => err)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ status: 401, body: 'bad refresh' })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+
+    const { getAccessToken } = await import('@/shared/auth/tokenStore')
+    expect(getAccessToken()).toBeNull()
   })
 })

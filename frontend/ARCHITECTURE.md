@@ -15,6 +15,7 @@ src/
 ├── features/applications/       # board feature (only feature)
 ├── shared/
 │   ├── api/                     # apiClient, applicationsApi
+│   ├── auth/                    # tokenStore, authApi (no UI yet)
 │   └── components/              # ActionErrorBanner
 └── test/                        # Vitest setup, fixtures, specs
 ```
@@ -84,10 +85,24 @@ Pure ordering helpers live in `model/boardOrdering.ts` (`moveBetweenColumns`, `r
 
 - Base URL: `import.meta.env.VITE_API_BASE_URL` ?? `http://localhost:8080`
 - Relative paths are prefixed with `/api` (e.g. `/board` → `http://localhost:8080/api/board`)
-- JSON helpers + 8s timeout
+- JSON helpers + 8s timeout; always sends `credentials: 'include'`
+- Attaches `Authorization: Bearer <jwt>` from the in-memory token store (except refresh/logout)
+- On **401** from secured endpoints: single-flight `POST /auth/refresh`, then retry once; refresh failure clears the token
 - `ApiError` (HTTP failure) and `NetworkError` (unreachable)
 
 `shared/api/applicationsApi.ts` wraps board and application endpoints used by the hooks.
+
+## Auth (client, no UI)
+
+`shared/auth/`:
+
+| Module | Role |
+|--------|------|
+| `tokenStore` | In-memory access JWT (`get` / `set` / `clear`) — not persisted |
+| `authApi` | `login` / `register` / `refresh` / `logout` against `/api/auth/*` and `/api/register` |
+| `types` | `AccessTokenResponse`, `UserCredentials` |
+
+Refresh uses the HttpOnly `refresh_token` cookie (path `/api/auth`); access JWT stays in memory + Bearer header. Login/register UI and auth providers are still deferred.
 
 ## Busy and error UX
 
@@ -107,7 +122,8 @@ Vitest + jsdom (`src/test/`):
 
 | Area | Focus |
 |------|--------|
-| `shared/apiClient.test.ts` | URL building, JSON, errors |
+| `shared/apiClient.test.ts` | URL building, JSON, credentials, Bearer, 401 refresh retry |
+| `shared/auth/*` | tokenStore + authApi login/refresh/logout |
 | `model/boardOrdering.test.ts` | Filter/sort, move, reorder, densify |
 | `model/applicationsCache.test.ts` | Snapshot / restore / apply |
 | `hooks/useApplicationMutations.test.tsx` | Invalidation after mutations |

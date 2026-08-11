@@ -135,7 +135,7 @@ Docker Compose sets `SPRING_PROFILES_ACTIVE=postgres` and datasource env vars so
 - **Logout** — `POST /api/auth/logout` without access JWT; revokes the refresh row from the cookie and clears the cookie (`Max-Age=0`).
 - **CORS** — global `/api/**` mapping with `allowCredentials(true)` and explicit origins (`app.cors.allowed-origins`).
 
-Frontend integration (in-memory JWT, `credentials: 'include'`, 401 refresh retry) is deferred.
+Frontend client wiring is in place (`tokenStore`, `authApi`, `apiClient` credentials + 401 refresh retry). Login/register UI is still deferred.
 
 ## Tests
 
