@@ -1,0 +1,24 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-bootstrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  background:
+    radial-gradient(ellipse 70% 45% at 8% -5%, #dfe8e3 0%, transparent 55%),
+    radial-gradient(ellipse 55% 40% at 100% 0%, #e4e8ef 0%, transparent 50%),
+    #f0f2f0;
+  color: #5f6b64;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 0.95rem;
+}

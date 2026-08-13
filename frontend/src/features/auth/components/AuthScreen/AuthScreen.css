@@ -183,7 +183,12 @@ body {
   transition: filter 160ms ease;
 }
 
-.auth-screen__submit:hover {
+.auth-screen__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-screen__submit:hover:not(:disabled) {
   filter: brightness(0.96);
 }
 
@@ -213,7 +218,12 @@ body {
   text-underline-offset: 0.15em;
 }
 
-.auth-screen__switch-link:hover {
+.auth-screen__switch-link:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-screen__switch-link:hover:not(:disabled) {
   filter: brightness(0.92);
 }
 

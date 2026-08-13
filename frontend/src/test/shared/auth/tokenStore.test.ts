@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   clearAccessToken,
   getAccessToken,
   setAccessToken,
+  subscribe,
 } from '@/shared/auth/tokenStore'
 
 describe('tokenStore', () => {
@@ -23,5 +24,18 @@ describe('tokenStore', () => {
 
     clearAccessToken()
     expect(getAccessToken()).toBeNull()
+  })
+
+  it('notifies subscribers when the token changes', () => {
+    const listener = vi.fn()
+    const unsubscribe = subscribe(listener)
+
+    setAccessToken('jwt-1')
+    clearAccessToken()
+    expect(listener).toHaveBeenCalledTimes(2)
+
+    unsubscribe()
+    setAccessToken('jwt-2')
+    expect(listener).toHaveBeenCalledTimes(2)
   })
 })

@@ -8,14 +8,16 @@ There is **no client-side router** — create/edit/detail are overlays driven by
 
 ```
 src/
-├── app/                         # bootstrap
+├── app/                         # bootstrap + auth gate
 │   ├── main.tsx                 # createRoot → providers → App
 │   ├── providers.tsx            # QueryClient defaults
-│   └── App.tsx                  # renders ApplicationBoard
-├── features/applications/       # board feature (only feature)
+│   └── App.tsx                  # refresh bootstrap → AuthScreen | ApplicationBoard
+├── features/
+│   ├── applications/            # board feature
+│   └── auth/                    # AuthScreen (login / register)
 ├── shared/
-│   ├── api/                     # apiClient, applicationsApi
-│   ├── auth/                    # tokenStore, authApi (no UI yet)
+│   ├── api/                     # apiClient, applicationsApi, authApi, userApi, types
+│   ├── auth/                    # tokenStore, useAccessToken
 │   └── components/              # ActionErrorBanner
 └── test/                        # Vitest setup, fixtures, specs
 ```
@@ -92,17 +94,22 @@ Pure ordering helpers live in `model/boardOrdering.ts` (`moveBetweenColumns`, `r
 
 `shared/api/applicationsApi.ts` wraps board and application endpoints used by the hooks.
 
-## Auth (client, no UI)
+## Auth
 
 `shared/auth/`:
 
 | Module | Role |
 |--------|------|
-| `tokenStore` | In-memory access JWT (`get` / `set` / `clear`) — not persisted |
-| `authApi` | `login` / `register` / `refresh` / `logout` against `/api/auth/*` and `/api/register` |
-| `types` | `AccessTokenResponse`, `UserCredentials` |
+| `tokenStore` | In-memory access JWT with `subscribe` for React; not persisted |
+| `useAccessToken` | `useSyncExternalStore` over the token store |
+| `authApi` | `login` / `refresh` / `logout` (`/api/auth/*`) |
+| `userApi` | `register` / `deleteUser` (`/api/user`) |
 
-Refresh uses the HttpOnly `refresh_token` cookie (path `/api/auth`); access JWT stays in memory + Bearer header. Login/register UI and auth providers are still deferred.
+`features/auth` — `AuthScreen` (login default, switch to register). Submit calls `login`, or `register` then `login`. Client length validation on register only; API error UI deferred.
+
+[`App.tsx`](src/app/App.tsx) gates the app: bootstrap with `refresh()` (restore session from HttpOnly cookie), then `AuthScreen` if no access token, else `ApplicationBoard`.
+
+Refresh cookie path `/api/auth`; access JWT in memory + Bearer header. `apiClient` sends `credentials: 'include'` and retries once after 401 via refresh.
 
 ## Busy and error UX
 
