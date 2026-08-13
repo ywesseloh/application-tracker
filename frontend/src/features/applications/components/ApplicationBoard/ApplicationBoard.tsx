@@ -155,14 +155,19 @@ export default function ApplicationBoard() {
   return (
     <div className="application-board">
       <header className="application-board__header">
-        <button
-          type="button"
-          className="application-board__logout"
-          onClick={() => void handleLogout()}
-          disabled={loggingOut}
-        >
-          {loggingOut ? 'Logging out…' : 'Log out'}
-        </button>
+        <div className="application-board__header-bar">
+          <div className="application-board__brand">
+            <h1 className="application-board__title">Application Tracker</h1>
+          </div>
+          <button
+            type="button"
+            className="application-board__logout"
+            onClick={() => void handleLogout()}
+            disabled={loggingOut}
+          >
+            {loggingOut ? 'Logging out…' : 'Log out'}
+          </button>
+        </div>
       </header>
 
       {actionError ? (
