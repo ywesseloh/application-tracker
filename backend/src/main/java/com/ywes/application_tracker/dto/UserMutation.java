@@ -9,6 +9,6 @@ public record UserMutation(
         String username,
 
         @NotBlank(message = "Password is mandatory")
-        @Size(max = 20, message = "Password can have a maximum length of 20 characters")
+        @Size(min = 8, max = 20, message = "Password must have between 8 and 20 characters")
         String password
 ) { }

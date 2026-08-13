@@ -110,7 +110,7 @@ Pure ordering helpers live in `model/boardOrdering.ts` (`moveBetweenColumns`, `r
 
 [`App.tsx`](src/app/App.tsx) gates the app: if `loggedInLocally` is true, bootstrap calls `refresh()` to restore the session from the HttpOnly cookie; otherwise skip refresh. Then `AuthScreen` if no access token, else `ApplicationBoard`.
 
-`loggedInLocally` lifecycle: set `true` on successful `login` (Sign in or post-register); set `false` on `logout` or when `refresh` fails (expired/revoked refresh token).
+`loggedInLocally` lifecycle: set `true` on successful `login` (Sign in or post-register); set `false` on `logout` or when `refresh` fails (expired/revoked refresh token). `logout` clears the access token and `loggedInLocally` immediately, then posts `/api/auth/logout` in the background (best-effort).
 
 Refresh cookie path `/api/auth`; access JWT in memory + Bearer header. `apiClient` sends `credentials: 'include'` and retries once after 401 via refresh.
 

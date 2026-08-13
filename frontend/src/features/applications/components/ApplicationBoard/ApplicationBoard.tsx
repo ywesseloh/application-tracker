@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   DndContext,
   DragOverlay,
@@ -33,6 +34,7 @@ import { EditApplicationForm } from '../ApplicationForm/EditApplicationForm'
 import { CreateApplicationForm } from '../ApplicationForm/CreateApplicationForm'
 
 export default function ApplicationBoard() {
+  const queryClient = useQueryClient()
   const { applications, isPending, error, hasData, refetch } = useApplicationsQuery()
   const { applyLocalChange, snapshot, restore, pauseRefetch } = useApplicationsCache()
   const { moveMutation } = useMoveApplication()
@@ -42,7 +44,6 @@ export default function ApplicationBoard() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formMode, setFormMode] = useState<FormMode>({ type: 'closed' })
-  const [loggingOut, setLoggingOut] = useState(false)
   const dragSnapshotRef = useRef<Application[] | null>(null)
   const suppressOpenRef = useRef(false)
 
@@ -67,17 +68,9 @@ export default function ApplicationBoard() {
     setSelectedId(null)
   }
 
-  async function handleLogout() {
-    if (loggingOut) return
-
-    setLoggingOut(true)
-    try {
-      await logout()
-    } catch {
-      // Token is cleared in logout() even when the request fails.
-    } finally {
-      setLoggingOut(false)
-    }
+  function handleLogout() {
+    logout()
+    queryClient.clear()
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -162,10 +155,9 @@ export default function ApplicationBoard() {
           <button
             type="button"
             className="application-board__logout"
-            onClick={() => void handleLogout()}
-            disabled={loggingOut}
+            onClick={handleLogout}
           >
-            {loggingOut ? 'Logging out…' : 'Log out'}
+            Log out
           </button>
         </div>
       </header>

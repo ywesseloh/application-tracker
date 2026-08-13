@@ -30,11 +30,10 @@ export async function refresh(): Promise<AccessTokenResponse> {
   }
 }
 
-export async function logout(): Promise<void> {
-  try {
-    await apiClient.post('/auth/logout', undefined, false)
-  } finally {
-    clearAccessToken()
-    setLoggedInLocally(false)
-  }
+export function logout(): void {
+  clearAccessToken()
+  setLoggedInLocally(false)
+  void apiClient.post('/auth/logout', undefined, false).catch(() => {
+    // Best-effort server revoke; local session already cleared.
+  })
 }

@@ -92,24 +92,20 @@ describe('authApi', () => {
     expect(isLoggedInLocally()).toBe(false)
   })
 
-  it('logout clears the access token even when the request fails', async () => {
+  it('logout clears local session immediately and still posts logout', async () => {
     stubFetch()
     setAccessToken('login-jwt')
     setLoggedInLocally(true)
-    fetchMock.mockResolvedValue(new Response('gone', { status: 401 }))
 
-    await expect(logout()).rejects.toMatchObject({ status: 401 })
-    expect(getAccessToken()).toBeNull()
-    expect(isLoggedInLocally()).toBe(false)
-  })
+    let resolveLogout!: (response: Response) => void
+    fetchMock.mockImplementation(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveLogout = resolve
+        }),
+    )
 
-  it('logout clears the access token on success', async () => {
-    stubFetch()
-    setAccessToken('login-jwt')
-    setLoggedInLocally(true)
-    fetchMock.mockResolvedValue(new Response('', { status: 200 }))
-
-    await logout()
+    logout()
 
     expect(getAccessToken()).toBeNull()
     expect(isLoggedInLocally()).toBe(false)
@@ -120,5 +116,21 @@ describe('authApi', () => {
         credentials: 'include',
       }),
     )
+
+    resolveLogout(new Response('', { status: 200 }))
+    await Promise.resolve()
+  })
+
+  it('logout ignores network failures after clearing local session', async () => {
+    stubFetch()
+    setAccessToken('login-jwt')
+    setLoggedInLocally(true)
+    fetchMock.mockResolvedValue(new Response('gone', { status: 401 }))
+
+    logout()
+
+    expect(getAccessToken()).toBeNull()
+    expect(isLoggedInLocally()).toBe(false)
+    await Promise.resolve()
   })
 })
