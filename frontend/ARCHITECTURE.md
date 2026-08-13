@@ -101,13 +101,16 @@ Pure ordering helpers live in `model/boardOrdering.ts` (`moveBetweenColumns`, `r
 | Module | Role |
 |--------|------|
 | `tokenStore` | In-memory access JWT with `subscribe` for React; not persisted |
+| `loggedInLocallyStore` | Persisted `loggedInLocally` flag in localStorage; gates bootstrap refresh |
 | `useAccessToken` | `useSyncExternalStore` over the token store |
 | `authApi` | `login` / `refresh` / `logout` (`/api/auth/*`) |
 | `userApi` | `register` / `deleteUser` (`/api/user`) |
 
 `features/auth` — `AuthScreen` (login default, switch to register). Submit calls `login`, or `register` then `login`. Client length validation on register only; API error UI deferred.
 
-[`App.tsx`](src/app/App.tsx) gates the app: bootstrap with `refresh()` (restore session from HttpOnly cookie), then `AuthScreen` if no access token, else `ApplicationBoard`.
+[`App.tsx`](src/app/App.tsx) gates the app: if `loggedInLocally` is true, bootstrap calls `refresh()` to restore the session from the HttpOnly cookie; otherwise skip refresh. Then `AuthScreen` if no access token, else `ApplicationBoard`.
+
+`loggedInLocally` lifecycle: set `true` on successful `login` (Sign in or post-register); set `false` on `logout` or when `refresh` fails (expired/revoked refresh token).
 
 Refresh cookie path `/api/auth`; access JWT in memory + Bearer header. `apiClient` sends `credentials: 'include'` and retries once after 401 via refresh.
 
@@ -130,7 +133,7 @@ Vitest + jsdom (`src/test/`):
 | Area | Focus |
 |------|--------|
 | `shared/apiClient.test.ts` | URL building, JSON, credentials, Bearer, 401 refresh retry |
-| `shared/auth/*` | tokenStore + authApi login/refresh/logout |
+| `shared/auth/*` | tokenStore, loggedInLocallyStore, authApi login/refresh/logout |
 | `model/boardOrdering.test.ts` | Filter/sort, move, reorder, densify |
 | `model/applicationsCache.test.ts` | Snapshot / restore / apply |
 | `hooks/useApplicationMutations.test.tsx` | Invalidation after mutations |

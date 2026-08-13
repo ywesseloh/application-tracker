@@ -2,6 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { login, logout, refresh } from '@/shared/api/authApi'
 import { register } from '@/shared/api/userApi'
 import {
+  isLoggedInLocally,
+  setLoggedInLocally,
+} from '@/shared/auth/loggedInLocallyStore'
+import {
   clearAccessToken,
   getAccessToken,
   setAccessToken,
@@ -22,6 +26,7 @@ describe('authApi', () => {
     fetchMock.mockReset()
     vi.unstubAllGlobals()
     clearAccessToken()
+    localStorage.clear()
   })
 
   function stubFetch() {
@@ -37,6 +42,7 @@ describe('authApi', () => {
     ).resolves.toEqual({ jwt: 'login-jwt' })
 
     expect(getAccessToken()).toBe('login-jwt')
+    expect(isLoggedInLocally()).toBe(true)
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:8080/api/auth/login',
       expect.objectContaining({
@@ -83,25 +89,30 @@ describe('authApi', () => {
 
     await expect(refresh()).rejects.toMatchObject({ status: 401 })
     expect(getAccessToken()).toBeNull()
+    expect(isLoggedInLocally()).toBe(false)
   })
 
   it('logout clears the access token even when the request fails', async () => {
     stubFetch()
     setAccessToken('login-jwt')
+    setLoggedInLocally(true)
     fetchMock.mockResolvedValue(new Response('gone', { status: 401 }))
 
     await expect(logout()).rejects.toMatchObject({ status: 401 })
     expect(getAccessToken()).toBeNull()
+    expect(isLoggedInLocally()).toBe(false)
   })
 
   it('logout clears the access token on success', async () => {
     stubFetch()
     setAccessToken('login-jwt')
+    setLoggedInLocally(true)
     fetchMock.mockResolvedValue(new Response('', { status: 200 }))
 
     await logout()
 
     expect(getAccessToken()).toBeNull()
+    expect(isLoggedInLocally()).toBe(false)
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:8080/api/auth/logout',
       expect.objectContaining({

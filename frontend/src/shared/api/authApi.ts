@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api/apiClient'
+import { setLoggedInLocally } from '@/shared/auth/loggedInLocallyStore'
 import { clearAccessToken, setAccessToken } from '@/shared/auth/tokenStore'
 import type { AccessTokenResponse, UserCredentials } from '@/shared/api/types'
 
@@ -9,6 +10,7 @@ export async function login(credentials: UserCredentials): Promise<AccessTokenRe
     false,
   )
   setAccessToken(response.jwt)
+  setLoggedInLocally(true)
   return response
 }
 
@@ -23,6 +25,7 @@ export async function refresh(): Promise<AccessTokenResponse> {
     return response
   } catch (error) { 
     clearAccessToken()
+    setLoggedInLocally(false)
     throw error
   }
 }
@@ -32,5 +35,6 @@ export async function logout(): Promise<void> {
     await apiClient.post('/auth/logout', undefined, false)
   } finally {
     clearAccessToken()
+    setLoggedInLocally(false)
   }
 }
