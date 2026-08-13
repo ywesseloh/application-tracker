@@ -38,4 +38,16 @@ export type Application = {
   jobPostingUrl: string | null
 }
 
+export type ApiErrorType =
+  | 'AUTHENTICATION_FAILED'
+  | 'BAD_REFRESH_TOKEN'
+  | 'GENERIC_ERROR'
+  | 'ILLEGAL_COLUMN_POSITION'
+  | 'INVALID_REQUEST_BODY'
+  | 'RESOURCE_NOT_FOUND'
+  | 'USERNAME_ALREADY_EXISTS'
 
+export type ErrorResponse = {
+  errorType: ApiErrorType
+  errorMessage: string
+}

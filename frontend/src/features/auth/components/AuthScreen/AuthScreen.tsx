@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { login } from '@/shared/api/authApi'
+import { getErrorMessage } from '@/shared/api/getErrorMessage'
 import { register } from '@/shared/api/userApi'
+import ActionErrorBanner from '@/shared/components/ActionErrorBanner/ActionErrorBanner'
 import './AuthScreen.css'
 
 type AuthMode = 'login' | 'register'
@@ -13,6 +15,7 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const isLogin = mode === 'login'
   const usernameTooLong = !isLogin && username.length > MAX_CREDENTIAL_LENGTH
@@ -31,16 +34,21 @@ export default function AuthScreen() {
     }
 
     setIsSubmitting(true)
+    setSubmitError(null)
     try {
       if (!isLogin) {
         await register(credentials)
       }
       await login(credentials)
-    } catch {
-      // Error UI deferred
+    } catch (error) {
+      setSubmitError(getErrorMessage(error))
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  function clearSubmitError() {
+    setSubmitError(null)
   }
 
   return (
@@ -67,7 +75,10 @@ export default function AuthScreen() {
               aria-invalid={usernameTooLong}
               aria-describedby={usernameTooLong ? 'auth-username-error' : undefined}
               value={username}
-              onChange={(event) => setUsername(event.target.value)}
+              onChange={(event) => {
+                setUsername(event.target.value)
+                clearSubmitError()
+              }}
               disabled={isSubmitting}
             />
             {usernameTooLong ? (
@@ -94,6 +105,7 @@ export default function AuthScreen() {
                 onChange={(event) => {
                   const next = event.target.value
                   setPassword(next)
+                  clearSubmitError()
                   if (!next) setShowPassword(false)
                 }}
                 disabled={isSubmitting}
@@ -118,10 +130,17 @@ export default function AuthScreen() {
             ) : null}
           </div>
 
+          {submitError ? (
+            <div id="auth-submit-error">
+              <ActionErrorBanner message={submitError} onDismiss={clearSubmitError} />
+            </div>
+          ) : null}
+
           <button
             className="auth-screen__submit"
             type="submit"
             disabled={isSubmitDisabled}
+            aria-describedby={submitError ? 'auth-submit-error' : undefined}
           >
             {isLogin ? 'Sign in' : 'Create account'}
           </button>
@@ -132,7 +151,10 @@ export default function AuthScreen() {
             <button
               type="button"
               className="auth-screen__switch-link"
-              onClick={() => setMode('register')}
+              onClick={() => {
+                setMode('register')
+                clearSubmitError()
+              }}
               disabled={isSubmitting}
             >
               Create an account
@@ -143,7 +165,10 @@ export default function AuthScreen() {
               <button
                 type="button"
                 className="auth-screen__switch-link"
-                onClick={() => setMode('login')}
+                onClick={() => {
+                  setMode('login')
+                  clearSubmitError()
+                }}
                 disabled={isSubmitting}
               >
                 Sign in

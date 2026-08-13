@@ -1,4 +1,5 @@
 import { getAccessToken } from '@/shared/auth/tokenStore'
+import type { ApiErrorType, ErrorResponse } from './types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 const API_PREFIX = '/api'
@@ -12,13 +13,22 @@ export type RequestOptions = Omit<RequestInit, 'body' | 'method'> & {
 
 export class ApiError extends Error {
   readonly status: number
-  readonly body: string
+  readonly type: ApiErrorType
+  readonly message: string
 
   constructor(status: number, body: string) {
     super(`Request failed with status ${status}`)
     this.name = 'ApiError'
     this.status = status
-    this.body = body
+
+    try {
+      const errorResponse: ErrorResponse = JSON.parse(body)
+      this.type = errorResponse.errorType
+      this.message = errorResponse.errorMessage
+    } catch {
+      this.type = 'GENERIC_ERROR'
+      this.message = 'Something went wrong. Please try again.'
+    }
   }
 }
 

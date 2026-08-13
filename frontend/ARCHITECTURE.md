@@ -106,7 +106,7 @@ Pure ordering helpers live in `model/boardOrdering.ts` (`moveBetweenColumns`, `r
 | `authApi` | `login` / `refresh` / `logout` (`/api/auth/*`) |
 | `userApi` | `register` / `deleteUser` (`/api/user`) |
 
-`features/auth` — `AuthScreen` (login default, switch to register). Submit calls `login`, or `register` then `login`. Client length validation on register only; API error UI deferred.
+`features/auth` — `AuthScreen` (login default, switch to register). Submit calls `login`, or `register` then `login`. Client length validation on register only. Failed login/register shows `ActionErrorBanner` with messages from `getRequestErrorMessage` (network failures and HTTP errors).
 
 [`App.tsx`](src/app/App.tsx) gates the app: if `loggedInLocally` is true, bootstrap calls `refresh()` to restore the session from the HttpOnly cookie; otherwise skip refresh. Then `AuthScreen` if no access token, else `ApplicationBoard`.
 
@@ -133,6 +133,7 @@ Vitest + jsdom (`src/test/`):
 | Area | Focus |
 |------|--------|
 | `shared/apiClient.test.ts` | URL building, JSON, credentials, Bearer, 401 refresh retry |
+| `shared/api/getRequestErrorMessage.test.ts` | Auth/API error message mapping |
 | `shared/auth/*` | tokenStore, loggedInLocallyStore, authApi login/refresh/logout |
 | `model/boardOrdering.test.ts` | Filter/sort, move, reorder, densify |
 | `model/applicationsCache.test.ts` | Snapshot / restore / apply |
