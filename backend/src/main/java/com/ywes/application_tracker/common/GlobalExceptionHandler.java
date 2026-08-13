@@ -1,5 +1,7 @@
 package com.ywes.application_tracker.common;
 
+import com.ywes.application_tracker.dto.ErrorResponse;
+import com.ywes.application_tracker.dto.ErrorType;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -8,56 +10,80 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public List<String> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
-        return ex.getBindingResult().getFieldErrors().stream()
+    public ErrorResponse handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+        List<String> messageList = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getDefaultMessage() != null
                         ? error.getDefaultMessage()
                         : error.getField() + " is invalid")
                 .toList();
+
+        return new ErrorResponse(
+                ErrorType.INVALID_REQUEST_BODY,
+                String.join(", ", messageList)
+        );
+
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(ConstraintViolationException.class)
-    public List<String> handleConstraintViolationExceptions(ConstraintViolationException ex) {
-        return ex.getConstraintViolations().stream()
+    public ErrorResponse handleConstraintViolationExceptions(ConstraintViolationException ex) {
+        List<String> messageList =  ex.getConstraintViolations().stream()
                 .map(ConstraintViolation::getMessage)
                 .toList();
+        return new ErrorResponse(
+                ErrorType.INVALID_REQUEST_BODY,
+                String.join(", ", messageList)
+        );
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(IllegalPositionException.class)
-    public String handleIllegalPositionException(IllegalPositionException ex) {
-        return ex.getMessage();
+    public ErrorResponse handleIllegalPositionException(IllegalPositionException ex) {
+        return new ErrorResponse(
+                ErrorType.ILLEGAL_COLUMN_POSITION,
+                ex.getMessage()
+        );
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(ResourceNotFoundException.class)
-    public String handleResourceNotFoundException(ResourceNotFoundException ex) {
-        return ex.getMessage();
+    public ErrorResponse handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return new ErrorResponse(
+                ErrorType.RESOURCE_NOT_FOUND,
+                ex.getMessage()
+        );
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(DuplicateUsernameException.class)
-    public String handleDuplicateUsernameException(DuplicateUsernameException ex) {
-        return ex.getMessage();
+    public ErrorResponse handleDuplicateUsernameException(DuplicateUsernameException ex) {
+        return new ErrorResponse(
+                ErrorType.USERNAME_ALREADY_EXISTS,
+                ex.getMessage()
+        );
     }
 
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(AuthenticationException.class)
-    public String handleAuthenticationException(AuthenticationException ex) {
-        return "Invalid credentials";
+    public ErrorResponse handleAuthenticationException(AuthenticationException ex) {
+        return new ErrorResponse(
+                ErrorType.AUTHENTICATION_FAILED,
+                "Invalid credentials"
+        );
     }
 
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(BadRefreshTokenException.class)
-    public String handleBadRefreshTokenException(BadRefreshTokenException ex) {
-        return ex.getMessage();
+    public ErrorResponse handleBadRefreshTokenException(BadRefreshTokenException ex) {
+        return new ErrorResponse(
+                ErrorType.BAD_REFRESH_TOKEN,
+                ex.getMessage()
+        );
     }
 }
