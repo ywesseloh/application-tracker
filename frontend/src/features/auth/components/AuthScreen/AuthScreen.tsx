@@ -17,16 +17,18 @@ export default function AuthScreen() {
   const isLogin = mode === 'login'
   const usernameTooLong = !isLogin && username.length > MAX_CREDENTIAL_LENGTH
   const passwordTooLong = !isLogin && password.length > MAX_CREDENTIAL_LENGTH
+  const hasValidationError = usernameTooLong || passwordTooLong
+  const credentialsEmpty = !username.trim() || !password.trim()
+  const isSubmitDisabled = isSubmitting || credentialsEmpty || hasValidationError
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (isSubmitting || usernameTooLong || passwordTooLong) return
+    if (isSubmitDisabled) return
 
     const credentials = {
       username: username.trim(),
       password: password.trim(),
     }
-    if (!credentials.username || !credentials.password) return
 
     setIsSubmitting(true)
     try {
@@ -119,7 +121,7 @@ export default function AuthScreen() {
           <button
             className="auth-screen__submit"
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitDisabled}
           >
             {isLogin ? 'Sign in' : 'Create account'}
           </button>
