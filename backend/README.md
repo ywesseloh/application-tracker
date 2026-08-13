@@ -1,13 +1,15 @@
 # Backend
 
-Spring Boot API for the [Application Tracker](../README.md). Manages job applications and kanban board placement (move / reorder with densification).
+Spring Boot API for the [Application Tracker](../README.md). Manages users, job applications, and kanban board placement (move / reorder with densification).
 
-For layers, domain model, and the board-move algorithm, see [ARCHITECTURE.md](ARCHITECTURE.md).
+For layers, domain model, auth, and the board-move algorithm, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Stack
 
 - Java 26
-- Spring Boot 4 (Web MVC, Data JPA, Validation)
+- Spring Boot 4 (Web MVC, Data JPA, Validation, Security)
+- JWT access tokens + HttpOnly refresh cookies
+- BCrypt password hashing
 - H2 (default local profile) and PostgreSQL
 - Gradle, Lombok
 - JUnit for controller and service tests
@@ -56,7 +58,7 @@ export SPRING_DATASOURCE_PASSWORD=postgres
 | `h2` | `application-h2.properties` | In-memory H2 |
 | `postgres` | `application-postgres.properties` | PostgreSQL |
 
-Shared settings live in `application.properties`.
+Shared settings live in `application.properties`. Profile files also hold JWT, refresh-cookie, and CORS settings (`security.jwt.*`, `security.refresh.*`, `app.cors.allowed-origins`).
 
 ## Tests
 
@@ -64,7 +66,7 @@ Shared settings live in `application.properties`.
 ./gradlew test
 ```
 
-Coverage includes application CRUD and board move/reorder behavior (controller + service tests).
+Coverage includes auth/user controllers, application CRUD, and board move/reorder behavior (controller + service tests).
 
 ## Docker
 
@@ -86,8 +88,20 @@ Prefer `docker compose up --build` from the repo root so the backend joins the C
 
 All endpoints are under the `/api` prefix (e.g. `/board` is served as `/api/board`).
 
+### Public
+
 | Method | Path | Description |
 |--------|------|-------------|
+| `POST` | `/user` | Register |
+| `POST` | `/auth/login` | Login → access JWT + refresh cookie |
+| `POST` | `/auth/refresh` | Refresh access JWT (cookie) |
+| `POST` | `/auth/logout` | Revoke refresh token and clear cookie |
+
+### Authenticated (Bearer JWT)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `DELETE` | `/user` | Delete current user |
 | `GET` | `/board` | Board with applications by status |
 | `PATCH` | `/board/move/{id}` | Move / reorder a card |
 | `GET` | `/applications` | List applications |
@@ -96,18 +110,24 @@ All endpoints are under the `/api` prefix (e.g. `/board` is served as `/api/boar
 | `PUT` | `/applications/{id}` | Update |
 | `DELETE` | `/applications/{id}` | Delete |
 
-Controllers use open CORS for local frontend development. There is no authentication yet.
+### Auth and CORS
 
-Request bodies are validated with Bean Validation (`@Valid` on DTOs). Invalid payloads return `400` with a list of messages.
+- Access JWT in JSON (`{ "jwt": "…" }`) on login/refresh; send as `Authorization: Bearer …` on protected routes.
+- Refresh token is an HttpOnly cookie (`refresh_token`, path `/api/auth`). Browser clients must use `credentials: 'include'`.
+- CORS is allowlisted via `app.cors.allowed-origins` (defaults include `http://localhost:5173`) with `allowCredentials(true)`.
+
+Request bodies are validated with Bean Validation (`@Valid` on DTOs). Invalid payloads return `400`.
 
 ## Package layout
 
 ```
-src/main/java/com/example/application_tracker/
+src/main/java/com/ywes/application_tracker/
 ├── controller/     # HTTP endpoints
-├── service/        # Business logic (applications + board)
+├── service/        # Business logic (applications, board, auth)
 ├── repository/     # Spring Data JPA
 ├── model/          # Entities and status enum
 ├── dto/            # Request/response payloads
-└── common/         # Exceptions and global error handling
+├── common/         # Exceptions and global error handling
+├── config/         # Security, CORS, cookie properties
+└── security/       # JWT authentication filter
 ```

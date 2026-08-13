@@ -1,8 +1,8 @@
 # Frontend
 
-React SPA for the [Application Tracker](../README.md). Kanban board with drag-and-drop, application forms, and detail views backed by the Spring Boot API.
+React SPA for the [Application Tracker](../README.md). Auth screen, kanban board with drag-and-drop, application forms, and detail views backed by the Spring Boot API.
 
-For module layout, data flow, and optimistic DnD, see [ARCHITECTURE.md](ARCHITECTURE.md).
+For module layout, auth session flow, data flow, and optimistic DnD, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Stack
 
@@ -26,6 +26,8 @@ npm run dev
 ```
 
 Dev server: http://localhost:5173
+
+Create an account or sign in on the auth screen, then use the board.
 
 ## Scripts
 
@@ -51,6 +53,8 @@ Default fallback: `http://localhost:8080`.
 
 In Docker Compose this is passed as a build arg so the browser still calls the host-mapped backend (`localhost:8080`), not the Compose service name `backend`.
 
+Auth uses an HttpOnly refresh cookie, so the API client always sends `credentials: 'include'`. Backend CORS must allow the SPA origin (see backend docs).
+
 ## Docker
 
 Built from the repo root Compose file (`../docker-compose.yml`) or alone:
@@ -68,17 +72,29 @@ The image builds the SPA, then serves it with nginx (`nginx.conf` handles client
 
 ```
 src/
-├── features/applications/   # Board, tiles, forms, detail, hooks, cache/ordering
-├── shared/api/              # HTTP client
+├── app/                     # providers, App auth gate
+├── features/
+│   ├── applications/        # Board, tiles, forms, detail, hooks, cache/ordering
+│   └── auth/                # AuthScreen (login / register)
+├── shared/
+│   ├── api/                 # apiClient, authApi, userApi, applicationsApi, getErrorMessage
+│   ├── auth/                # tokenStore, loggedInLocallyStore, useAccessToken
+│   └── components/          # ActionErrorBanner
 └── test/                    # Vitest setup and unit tests
 ```
 
 Path alias: `@/` → `src/`.
 
+## Auth flow
+- [`App.tsx`](src/app/App.tsx) bootstraps the session and toggles between auth screen and application board based on login state.
+- `AuthScreen` handles login and register.
+- Access JWT lives in memory; refresh token cookie is managed by the browser for `/api/auth/*`.
+- Expired JWT triggers token refresh; If refresh token is expired the user is logged out
+- Logging out from the user side clears local session immediately and posts logout in the background.
 ## Tests
 
 ```bash
 npm test
 ```
 
-Focus areas: API client, board ordering helpers, applications cache, and mutation hooks.
+Focus areas: API client, auth stores/`authApi`, board ordering helpers, applications cache, and mutation hooks (`src/test/shared/auth/*`, `src/test/shared/apiClient.test.ts`).

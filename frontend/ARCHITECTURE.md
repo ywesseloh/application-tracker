@@ -1,8 +1,8 @@
 # Frontend architecture
 
-React SPA for the kanban board. One feature module (`applications`) owns UI, React Query hooks, and pure board/cache helpers. The shared layer provides the HTTP client and a reusable error banner.
+React SPA for the kanban board. Feature modules own UI and domain helpers; the shared layer provides the HTTP client, auth session stores, and a reusable error banner.
 
-There is **no client-side router** — create/edit/detail are overlays driven by local state on the board.
+There is **no client-side router** — create/edit/detail are overlays driven by local state on the board. Auth gating lives in `App.tsx`.
 
 ## High-level structure
 
@@ -16,8 +16,8 @@ src/
 │   ├── applications/            # board feature
 │   └── auth/                    # AuthScreen (login / register)
 ├── shared/
-│   ├── api/                     # apiClient, applicationsApi, authApi, userApi, types
-│   ├── auth/                    # tokenStore, useAccessToken
+│   ├── api/                     # apiClient, applicationsApi, authApi, userApi, getErrorMessage, types
+│   ├── auth/                    # tokenStore, loggedInLocallyStore, useAccessToken
 │   └── components/              # ActionErrorBanner
 └── test/                        # Vitest setup, fixtures, specs
 ```
@@ -29,7 +29,7 @@ Path alias: `@/` → `src/` (`vite.config.ts`).
 ```
 features/applications/
 ├── components/
-│   ├── ApplicationBoard/        # orchestration + DnD
+│   ├── ApplicationBoard/        # orchestration + DnD + logout
 │   ├── ApplicationTile/         # sortable card
 │   ├── ApplicationDetail/       # detail modal
 │   └── ApplicationForm/         # create / edit
@@ -88,29 +88,44 @@ Pure ordering helpers live in `model/boardOrdering.ts` (`moveBetweenColumns`, `r
 - Base URL: `import.meta.env.VITE_API_BASE_URL` ?? `http://localhost:8080`
 - Relative paths are prefixed with `/api` (e.g. `/board` → `http://localhost:8080/api/board`)
 - JSON helpers + 8s timeout; always sends `credentials: 'include'`
-- Attaches `Authorization: Bearer <jwt>` from the in-memory token store (except refresh/logout)
-- On **401** from secured endpoints: single-flight `POST /auth/refresh`, then retry once; refresh failure clears the token
+- Attaches `Authorization: Bearer <jwt>` from the in-memory token store when `authRequired` (default true)
+- On **401** from secured endpoints: single-flight `POST /auth/refresh`, then retry once; refresh failure clears the token and sets `loggedInLocally` to `false`
 - `ApiError` (HTTP failure) and `NetworkError` (unreachable)
 
 `shared/api/applicationsApi.ts` wraps board and application endpoints used by the hooks.
 
+`shared/api/getErrorMessage.ts` maps thrown values to a display string (`Error.message`, else `String(error)`).
+
 ## Auth
 
-`shared/auth/`:
+### Session stores (`shared/auth/`)
 
 | Module | Role |
 |--------|------|
 | `tokenStore` | In-memory access JWT with `subscribe` for React; not persisted |
 | `loggedInLocallyStore` | Persisted `loggedInLocally` flag in localStorage; gates bootstrap refresh |
 | `useAccessToken` | `useSyncExternalStore` over the token store |
+
+### Auth APIs (`shared/api/`)
+
+| Module | Role |
+|--------|------|
 | `authApi` | `login` / `refresh` / `logout` (`/api/auth/*`) |
-| `userApi` | `register` / `deleteUser` (`/api/user`) |
+| `userApi` | `register` / `deleteUser` (`/api/user`) — delete is API-only (no UI yet) |
 
-`features/auth` — `AuthScreen` (login default, switch to register). Submit calls `login`, or `register` then `login`. Client length validation on register only. Failed login/register shows `ActionErrorBanner` with messages from `getRequestErrorMessage` (network failures and HTTP errors).
+### UI and bootstrap
 
-[`App.tsx`](src/app/App.tsx) gates the app: if `loggedInLocally` is true, bootstrap calls `refresh()` to restore the session from the HttpOnly cookie; otherwise skip refresh. Then `AuthScreen` if no access token, else `ApplicationBoard`.
+`features/auth` — `AuthScreen` (login default, switch to register). Submit calls `login`, or `register` then `login`. Client max-length validation (20) on register only; backend also enforces password min length. Failed login/register shows `ActionErrorBanner` via `getErrorMessage`. Submit button shows a spinner while the request is in flight.
 
-`loggedInLocally` lifecycle: set `true` on successful `login` (Sign in or post-register); set `false` on `logout` or when `refresh` fails (expired/revoked refresh token). `logout` clears the access token and `loggedInLocally` immediately, then posts `/api/auth/logout` in the background (best-effort).
+[`App.tsx`](src/app/App.tsx) gates the app:
+
+1. Show bootstrap **Loading…**
+2. If `loggedInLocally` is true, call `refresh()` to restore the session from the HttpOnly cookie; otherwise skip refresh
+3. Then `AuthScreen` if no access token, else `ApplicationBoard`
+
+`loggedInLocally` lifecycle: set `true` on successful `login` (Sign in or post-register); set `false` on `logout` or when `refresh` fails (expired/revoked refresh token).
+
+`logout` clears the access token and `loggedInLocally` immediately, then posts `/api/auth/logout` in the background (best-effort). The board **Log out** button also calls `queryClient.clear()` so cached applications data cannot leak into the next session.
 
 Refresh cookie path `/api/auth`; access JWT in memory + Bearer header. `apiClient` sends `credentials: 'include'` and retries once after 401 via refresh.
 
@@ -118,7 +133,10 @@ Refresh cookie path `/api/auth`; access JWT in memory + Bearer header. `apiClien
 
 | Concern | Behavior |
 |---------|----------|
-| Initial load | Spinner until first successful board fetch |
+| App bootstrap | “Loading…” until refresh attempt finishes (or is skipped) |
+| Auth submit | Spinner + “Signing in…” / “Creating account…”; submit disabled when empty/invalid/in flight |
+| Auth API errors | `ActionErrorBanner` above submit; clears on edit / mode switch / dismiss |
+| Initial board load | Spinner until first successful board fetch |
 | Load failure | Full-page alert + Retry |
 | Mutation errors | `ActionErrorBanner` (board / form / detail) with dismiss |
 | Tile syncing | Spinner, `aria-busy`, sortable disabled |
@@ -133,10 +151,9 @@ Vitest + jsdom (`src/test/`):
 | Area | Focus |
 |------|--------|
 | `shared/apiClient.test.ts` | URL building, JSON, credentials, Bearer, 401 refresh retry |
-| `shared/api/getRequestErrorMessage.test.ts` | Auth/API error message mapping |
 | `shared/auth/*` | tokenStore, loggedInLocallyStore, authApi login/refresh/logout |
 | `model/boardOrdering.test.ts` | Filter/sort, move, reorder, densify |
 | `model/applicationsCache.test.ts` | Snapshot / restore / apply |
 | `hooks/useApplicationMutations.test.tsx` | Invalidation after mutations |
 
-No full-board component E2E suite yet — coverage targets ordering, cache, and API glue.
+No full-board component E2E suite yet — coverage targets ordering, cache, auth, and API glue.

@@ -6,6 +6,8 @@ A kanban-style job application tracker. Create applications, drag them across pi
 
 ## Features
 
+- User registration and sign-in (access JWT + HttpOnly refresh cookie)
+- Per-user boards; session restore on reload when locally logged in
 - Drag-and-drop board with optimistic UI updates and rollback on failure
 - Create, edit, view, and delete job applications
 - Server-side board placement with densification when cards move between columns
@@ -19,12 +21,14 @@ A kanban-style job application tracker. Create applications, drag them across pi
 | Backend (Spring Boot API) | [backend/README.md](backend/README.md) | [backend/ARCHITECTURE.md](backend/ARCHITECTURE.md) |
 | Frontend (React SPA) | [frontend/README.md](frontend/README.md) | [frontend/ARCHITECTURE.md](frontend/ARCHITECTURE.md) |
 
+Auth details (public vs protected routes, cookies, CORS, SPA bootstrap) live in the architecture docs above.
+
 ## Tech stack
 
 | Layer | Stack |
 |-------|--------|
 | Frontend | React 19, TypeScript, Vite, TanStack Query, @dnd-kit |
-| Backend | Java 26, Spring Boot 4, Spring Data JPA, Bean Validation |
+| Backend | Java 26, Spring Boot 4, Spring Security, Spring Data JPA, Bean Validation |
 | Database | H2 (local default), PostgreSQL (Docker / postgres profile) |
 | Infra | Docker Compose, multi-stage Dockerfiles, nginx (SPA) |
 
@@ -42,7 +46,7 @@ docker compose up --build
 | Backend API | http://localhost:8080/api |
 | Postgres | `localhost:5432` |
 
-Stop with `Ctrl+C`, or run detached with `docker compose up --build -d` and stop with `docker compose down`.
+Open the frontend, create an account (or sign in), then use the board. Stop with `Ctrl+C`, or run detached with `docker compose up --build -d` and stop with `docker compose down`.
 
 ## Local development
 
@@ -75,6 +79,8 @@ npm run dev
 
 Dev server: http://localhost:5173
 
+Create an account via **Create an account** on the auth screen (or **Sign in** if you already registered), then use the board.
+
 ## Project layout
 
 ```
@@ -87,7 +93,7 @@ application-tracker/
 
 ## Notes
 
-- APIs are currently open (no authentication). Fine for a local/demo portfolio project; not production-hardened.
+- Board and application APIs require a JWT. Register and auth endpoints are public. Fine for a local/demo portfolio project; not production-hardened.
 - The frontend talks to the API from the browser, so Compose uses `http://localhost:8080` as the API base URL—not the Docker service hostname `backend`.
 
 ## License
