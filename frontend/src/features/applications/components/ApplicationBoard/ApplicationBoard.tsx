@@ -25,6 +25,7 @@ import { useMoveApplication } from '@/features/applications/hooks/useApplication
 import { useBoardWritesBusy } from '@/features/applications/hooks/useBoardWritesBusy'
 import { useApplicationActionError } from '@/features/applications/hooks/useApplicationActionError'
 import ActionErrorBanner from '@/shared/components/ActionErrorBanner/ActionErrorBanner'
+import { logout } from '@/shared/api/authApi'
 import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
 import BoardColumn from './BoardColumn'
 import TilePreview from './TilePreview'
@@ -41,6 +42,7 @@ export default function ApplicationBoard() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formMode, setFormMode] = useState<FormMode>({ type: 'closed' })
+  const [loggingOut, setLoggingOut] = useState(false)
   const dragSnapshotRef = useRef<Application[] | null>(null)
   const suppressOpenRef = useRef(false)
 
@@ -63,6 +65,19 @@ export default function ApplicationBoard() {
     if (!selectedApplication) return
     setFormMode({ type: 'edit', id: selectedApplication.id })
     setSelectedId(null)
+  }
+
+  async function handleLogout() {
+    if (loggingOut) return
+
+    setLoggingOut(true)
+    try {
+      await logout()
+    } catch {
+      // Token is cleared in logout() even when the request fails.
+    } finally {
+      setLoggingOut(false)
+    }
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -139,6 +154,17 @@ export default function ApplicationBoard() {
 
   return (
     <div className="application-board">
+      <header className="application-board__header">
+        <button
+          type="button"
+          className="application-board__logout"
+          onClick={() => void handleLogout()}
+          disabled={loggingOut}
+        >
+          {loggingOut ? 'Logging out…' : 'Log out'}
+        </button>
+      </header>
+
       {actionError ? (
         <ActionErrorBanner message={actionError} onDismiss={dismissActionError} />
       ) : null}
