@@ -140,9 +140,19 @@ export default function AuthScreen() {
             className="auth-screen__submit"
             type="submit"
             disabled={isSubmitDisabled}
+            aria-busy={isSubmitting}
             aria-describedby={submitError ? 'auth-submit-error' : undefined}
           >
-            {isLogin ? 'Sign in' : 'Create account'}
+            {isSubmitting ? (
+              <>
+                <span className="auth-screen__submit-spinner" aria-hidden="true" />
+                {isLogin ? 'Signing in…' : 'Creating account…'}
+              </>
+            ) : isLogin ? (
+              'Sign in'
+            ) : (
+              'Create account'
+            )}
           </button>
         </form>
 
