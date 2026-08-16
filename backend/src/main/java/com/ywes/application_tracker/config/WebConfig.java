@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:80}")
+    @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
     @Override

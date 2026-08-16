@@ -27,7 +27,6 @@ import jakarta.servlet.DispatcherType;
 @EnableWebSecurity
 public class SecurityConfig {
 
-//    @Autowired private UserService userService;
     @Autowired private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
