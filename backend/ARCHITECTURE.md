@@ -148,7 +148,7 @@ Request DTOs (`JobApplicationMutation`, `JobApplicationPatch`, `UserMutation`) c
 | File | Role |
 |------|------|
 | `application.properties` | App name; default active profile `h2` |
-| `application-h2.properties` | In-memory H2, console, seed via `data.sql`; JWT / refresh / CORS |
+| `application-h2.properties` | In-memory H2, console, seed via `data-h2.sql`; JWT / refresh / CORS |
 | `application-postgres.properties` | Local/Compose Postgres; JWT / refresh / CORS (`cookie-secure=true`) |
 
 Notable keys in profile files:
@@ -167,4 +167,4 @@ Under `src/test/java/...`:
 - **Service** — transactional Spring tests for densify, cross-column move, append, illegal position, CRUD
 - **Support** — `BoardTestSupport` shared seed/assert helpers
 
-Tests disable `data.sql` seeding (`src/test/resources/application.properties`).
+Tests disable `data-h2.sql` seeding (`src/test/resources/application.properties`).
