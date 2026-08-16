@@ -37,7 +37,8 @@ Auth details (public vs protected routes, cookies, CORS, SPA bootstrap) live in 
 Requires [Docker](https://docs.docker.com/get-docker/) and Docker Compose.
 
 ```bash
-docker compose up --build
+cd docker
+docker compose --env-file .env.dev up --build
 ```
 
 | Service | URL |
@@ -46,7 +47,15 @@ docker compose up --build
 | Backend API | http://localhost:8080/api |
 | Postgres | `localhost:5432` |
 
-Open the frontend, create an account (or sign in), then use the board. Stop with `Ctrl+C`, or run detached with `docker compose up --build -d` and stop with `docker compose down`.
+Open the frontend, create an account (or sign in), then use the board. Stop with `Ctrl+C`, or run detached with `docker compose --env-file .env.dev up --build -d` and stop with `docker compose down` (from the `docker/` directory).
+
+Compose reads secrets and ports from [`docker/.env.dev`](docker/.env.dev). For production, use the same compose file with `--env-file .env.prod` (do not commit `.env.prod`).
+
+From the repo root you can instead run:
+
+```bash
+docker compose -f docker/docker-compose.yml --env-file docker/.env.dev up --build
+```
 
 ## Local development
 
@@ -87,14 +96,17 @@ Create an account via **Create an account** on the auth screen (or **Sign in** i
 application-tracker/
 ├── backend/                 # Spring Boot API → backend/README.md
 ├── frontend/                # React SPA → frontend/README.md
-├── docker-compose.yml       # Full stack (db + backend + frontend)
-└── docker-compose-db.yml    # Postgres only (local apps on the host)
+└── docker/
+    ├── docker-compose.yml       # Full stack (db + backend + frontend)
+    ├── docker-compose-db.yml    # Postgres only (local apps on the host)
+    └── .env.dev                 # Local Compose env (ports, DB, JWT, CORS)
 ```
 
 ## Notes
 
 - Board and application APIs require a JWT. Register and auth endpoints are public. Fine for a local/demo portfolio project; not production-hardened.
-- The frontend talks to the API from the browser, so Compose uses `http://localhost:8080` as the API base URL—not the Docker service hostname `backend`.
+- The frontend talks to the API from the browser, so Compose uses `http://localhost:8080` as the API base URL (`VITE_API_BASE_URL` in `.env.dev`)—not the Docker service hostname `backend`.
+- Infra lives under [`docker/`](docker/); run Compose from that directory (or pass `-f` / `--env-file` paths from the repo root).
 
 ## License
 
