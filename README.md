@@ -49,7 +49,7 @@ docker compose --env-file .env.dev up --build
 
 Open the frontend, create an account (or sign in), then use the board. Stop with `Ctrl+C`, or run detached with `docker compose --env-file .env.dev up --build -d` and stop with `docker compose down` (from the `docker/` directory).
 
-Compose reads secrets and ports from [`docker/.env.dev`](docker/.env.dev).
+Compose reads secrets and config from [`docker/.env.dev`](docker/.env.dev).
 
 ### Production (Docker)
 
@@ -126,7 +126,7 @@ application-tracker/
     ├── docker-compose-db.yml    # Postgres only (local apps on the host)
     ├── Caddyfile                # Reverse proxy (/ → SPA, /api → backend)
     ├── deploy.sh                # Recurring prod deploy (git pull + Compose)
-    ├── .env.dev                 # Local Compose env (ports, DB, JWT, CORS)
+    ├── .env.dev                 # Local Compose env (DB, JWT, CORS)
     └── .env.prod.example        # Prod env template (copy to .env.prod)
 ```
 
