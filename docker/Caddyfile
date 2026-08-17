@@ -1,0 +1,12 @@
+# APP_DOMAIN is injected by Compose (e.g. tracker.example.com).
+# Caddy obtains and renews a Let's Encrypt certificate automatically.
+
+{$APP_DOMAIN} {
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+
+	handle {
+		reverse_proxy frontend:80
+	}
+}

@@ -1,0 +1,40 @@
+# Production overrides for docker-compose.yml
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#     --env-file .env.prod up -d --build
+
+services:
+  db:
+    restart: unless-stopped
+    ports: !reset []
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    restart: unless-stopped
+    ports: !reset []
+
+  frontend:
+    restart: unless-stopped
+    ports: !reset []
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

@@ -1,5 +1,8 @@
 # Variable substitution from --env-file (e.g. .env.dev or .env.prod):
 #   docker compose --env-file .env.dev up --build
+# Production (adds Caddy, volumes, no public DB/API ports):
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#     --env-file .env.prod up -d --build
 
 name: application-tracker
 services:

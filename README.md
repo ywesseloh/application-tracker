@@ -49,7 +49,19 @@ docker compose --env-file .env.dev up --build
 
 Open the frontend, create an account (or sign in), then use the board. Stop with `Ctrl+C`, or run detached with `docker compose --env-file .env.dev up --build -d` and stop with `docker compose down` (from the `docker/` directory).
 
-Compose reads secrets and ports from [`docker/.env.dev`](docker/.env.dev). For production, use the same compose file with `--env-file .env.prod` (do not commit `.env.prod`).
+Compose reads secrets and ports from [`docker/.env.dev`](docker/.env.dev).
+
+### Production (Docker)
+
+Copy [`docker/.env.prod.example`](docker/.env.prod.example) to `docker/.env.prod`, set secrets and your public hostname, point DNS at the server, then:
+
+```bash
+cd docker
+docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+  --env-file .env.prod up -d --build
+```
+
+The prod override adds **Caddy** (HTTPS + same-origin routing), **Postgres persistence**, `restart: unless-stopped`, and stops publishing DB/backend/frontend ports publicly. Do not commit `.env.prod`.
 
 From the repo root you can instead run:
 
@@ -98,8 +110,11 @@ application-tracker/
 ├── frontend/                # React SPA → frontend/README.md
 └── docker/
     ├── docker-compose.yml       # Full stack (db + backend + frontend)
+    ├── docker-compose.prod.yml  # Prod override (Caddy, volumes, internal ports)
     ├── docker-compose-db.yml    # Postgres only (local apps on the host)
-    └── .env.dev                 # Local Compose env (ports, DB, JWT, CORS)
+    ├── Caddyfile                # Reverse proxy (/ → SPA, /api → backend)
+    ├── .env.dev                 # Local Compose env (ports, DB, JWT, CORS)
+    └── .env.prod.example        # Prod env template (copy to .env.prod)
 ```
 
 ## Notes
