@@ -63,13 +63,13 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml \
 
 The prod override adds **Caddy** (HTTPS + same-origin routing), **Postgres persistence**, `restart: unless-stopped`, and stops publishing DB/backend/frontend ports publicly. Do not commit `.env.prod`.
 
-Recurring deploys on the server (pull, rebuild, restart; no-op if git is already up to date):
+Deploy the current checkout on the server:
 
 ```bash
 ./infra/scripts/deploy.sh
 ```
 
-Use `--force` to rebuild even when there are no git changes (for example after editing `.env.prod`). Point cron at the script if you want hourly or daily updates:
+Cron example:
 
 ```
 0 * * * * /opt/application-tracker/infra/scripts/deploy.sh >> /var/log/application-tracker-deploy.log 2>&1
@@ -149,7 +149,7 @@ application-tracker/
     │   ├── Caddyfile                # Reverse proxy (/ → SPA, /api → backend)
     │   └── .env.dev                 # Local Compose env (DB, JWT, CORS)
     └── scripts/
-        ├── deploy.sh                # Prod deploy (git pull + Compose)
+        ├── deploy.sh                # Prod deploy (Compose build + up)
         ├── backup-db.sh             # Postgres backup (+ optional OCI upload)
         ├── upload-backup.sh
         ├── download-backup.sh
