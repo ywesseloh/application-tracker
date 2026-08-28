@@ -17,7 +17,7 @@ For layers, domain model, auth, and the board-move algorithm, see [ARCHITECTURE.
 ## Prerequisites
 
 - JDK 26
-- Optional: Docker for PostgreSQL (`../docker-compose-db.yml`)
+- Optional: Docker for PostgreSQL (`../infra/docker/docker-compose-db.yml`)
 
 ## Run
 
@@ -33,7 +33,7 @@ API: http://localhost:8080
 ### PostgreSQL
 
 ```bash
-# from repo root
+# from infra/docker
 docker compose -f docker-compose-db.yml up -d
 
 ./gradlew bootRun --args='--spring.profiles.active=postgres'
@@ -70,7 +70,7 @@ Coverage includes auth/user controllers, application CRUD, and board move/reorde
 
 ## Docker
 
-Built from the repo root Compose file (`../docker-compose.yml`) or alone:
+Built from the Compose file (`../infra/docker/docker-compose.yml`) or alone:
 
 ```bash
 docker build -t application-tracker-backend .

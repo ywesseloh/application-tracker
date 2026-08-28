@@ -37,7 +37,7 @@ Auth details (public vs protected routes, cookies, CORS, SPA bootstrap) live in 
 Requires [Docker](https://docs.docker.com/get-docker/) and Docker Compose.
 
 ```bash
-cd docker
+cd infra/docker
 docker compose --env-file .env.dev up --build
 ```
 
@@ -47,16 +47,16 @@ docker compose --env-file .env.dev up --build
 | Backend API | http://localhost:8080/api |
 | Postgres | `localhost:5432` |
 
-Open the frontend, create an account (or sign in), then use the board. Stop with `Ctrl+C`, or run detached with `docker compose --env-file .env.dev up --build -d` and stop with `docker compose down` (from the `docker/` directory).
+Open the frontend, create an account (or sign in), then use the board. Stop with `Ctrl+C`, or run detached with `docker compose --env-file .env.dev up --build -d` and stop with `docker compose down` (from the `infra/docker/` directory).
 
-Compose reads secrets and config from [`docker/.env.dev`](docker/.env.dev).
+Compose reads secrets and config from [`infra/docker/.env.dev`](infra/docker/.env.dev).
 
 ### Production (Docker)
 
-Copy [`docker/.env.prod.example`](docker/.env.prod.example) to `docker/.env.prod`, set secrets and your public hostname, point DNS at the server, then:
+Create `infra/docker/.env.prod` with production secrets and your public hostname (use `.env.dev` as a template), point DNS at the server, then:
 
 ```bash
-cd docker
+cd infra/docker
 docker compose -f docker-compose.yml -f docker-compose.prod.yml \
   --env-file .env.prod up -d --build
 ```
@@ -66,19 +66,40 @@ The prod override adds **Caddy** (HTTPS + same-origin routing), **Postgres persi
 Recurring deploys on the server (pull, rebuild, restart; no-op if git is already up to date):
 
 ```bash
-./docker/deploy.sh
+./infra/scripts/deploy.sh
 ```
 
 Use `--force` to rebuild even when there are no git changes (for example after editing `.env.prod`). Point cron at the script if you want hourly or daily updates:
 
 ```
-0 * * * * /opt/application-tracker/docker/deploy.sh >> /var/log/application-tracker-deploy.log 2>&1
+0 * * * * /opt/application-tracker/infra/scripts/deploy.sh >> /var/log/application-tracker-deploy.log 2>&1
+```
+
+#### Database backups
+
+Scripts under [`infra/scripts/`](infra/scripts/) dump Postgres via `pg_dump`, store gzipped files in `backups/` (gitignored), and optionally upload to OCI Object Storage.
+
+```bash
+# One-off backup (local staging only)
+./infra/scripts/backup-db.sh
+
+# Optional: copy infra/scripts/backup.env.example → backup.env and set OCI_UPLOAD=1
+# Or upload an existing local file:
+# ./infra/scripts/upload-backup.sh --latest
+# Restore (destructive — stops backend first)
+./infra/scripts/restore-db.sh --yes backups/2026-08-28T03-00-00Z.sql.gz
+```
+
+Daily cron example:
+
+```
+0 3 * * * /opt/application-tracker/infra/scripts/backup-db.sh >> /var/log/application-tracker-backup.log 2>&1
 ```
 
 From the repo root you can instead run:
 
 ```bash
-docker compose -f docker/docker-compose.yml --env-file docker/.env.dev up --build
+docker compose -f infra/docker/docker-compose.yml --env-file infra/docker/.env.dev up --build
 ```
 
 ## Local development
@@ -120,21 +141,28 @@ Create an account via **Create an account** on the auth screen (or **Sign in** i
 application-tracker/
 ├── backend/                 # Spring Boot API → backend/README.md
 ├── frontend/                # React SPA → frontend/README.md
-└── docker/
-    ├── docker-compose.yml       # Full stack (db + backend + frontend)
-    ├── docker-compose.prod.yml  # Prod override (Caddy, volumes, internal ports)
-    ├── docker-compose-db.yml    # Postgres only (local apps on the host)
-    ├── Caddyfile                # Reverse proxy (/ → SPA, /api → backend)
-    ├── deploy.sh                # Recurring prod deploy (git pull + Compose)
-    ├── .env.dev                 # Local Compose env (DB, JWT, CORS)
-    └── .env.prod.example        # Prod env template (copy to .env.prod)
+└── infra/
+    ├── docker/
+    │   ├── docker-compose.yml       # Full stack (db + backend + frontend)
+    │   ├── docker-compose.prod.yml  # Prod override (Caddy, volumes, internal ports)
+    │   ├── docker-compose-db.yml    # Postgres only (local apps on the host)
+    │   ├── Caddyfile                # Reverse proxy (/ → SPA, /api → backend)
+    │   └── .env.dev                 # Local Compose env (DB, JWT, CORS)
+    └── scripts/
+        ├── deploy.sh                # Prod deploy (git pull + Compose)
+        ├── backup-db.sh             # Postgres backup (+ optional OCI upload)
+        ├── upload-backup.sh
+        ├── download-backup.sh
+        ├── restore-db.sh
+        ├── prune-backups.sh
+        └── backup.env.example
 ```
 
 ## Notes
 
 - Board and application APIs require a JWT. Register and auth endpoints are public. Fine for a local/demo portfolio project; not production-hardened.
 - The frontend talks to the API from the browser, so Compose uses `http://localhost:8080` as the API base URL (`VITE_API_BASE_URL` in `.env.dev`)—not the Docker service hostname `backend`.
-- Infra lives under [`docker/`](docker/); run Compose from that directory (or pass `-f` / `--env-file` paths from the repo root).
+- Infra lives under [`infra/`](infra/); run Compose from `infra/docker/` (or pass `-f` / `--env-file` paths from the repo root).
 
 ## License
 

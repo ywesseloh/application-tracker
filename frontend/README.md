@@ -57,7 +57,7 @@ Auth uses an HttpOnly refresh cookie, so the API client always sends `credential
 
 ## Docker
 
-Built from the repo root Compose file (`../docker-compose.yml`) or alone:
+Built from the Compose file (`../infra/docker/docker-compose.yml`) or alone:
 
 ```bash
 docker build \

@@ -2,29 +2,32 @@
 # Recurring production deploy: pull git, rebuild Compose, prune dangling images.
 #
 # Usage (from any cwd; safe for cron):
-#   /path/to/repo/docker/deploy.sh
-#   /path/to/repo/docker/deploy.sh --force
+#   /path/to/repo/infra/scripts/deploy.sh
+#   /path/to/repo/infra/scripts/deploy.sh --force
 #
 # Env:
 #   DEPLOY_BRANCH  Branch to fast-forward (default: current branch, else main)
-#   ENV_FILE       Compose env file (default: docker/.env.prod)
+#   ENV_FILE       Compose env file (default: infra/docker/.env.prod)
 #
 # Cron example (hourly):
-#   0 * * * * /opt/application-tracker/docker/deploy.sh >> /var/log/application-tracker-deploy.log 2>&1
+#   0 * * * * /opt/application-tracker/infra/scripts/deploy.sh >> /var/log/application-tracker-deploy.log 2>&1
 
 set -euo pipefail
+
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 usage() {
   cat <<'EOF'
 Recurring production deploy: pull git, rebuild Compose, prune dangling images.
 
 Usage:
-  docker/deploy.sh
-  docker/deploy.sh --force
+  infra/scripts/deploy.sh
+  infra/scripts/deploy.sh --force
 
 Env:
   DEPLOY_BRANCH  Branch to fast-forward (default: current branch, else main)
-  ENV_FILE       Compose env file (default: docker/.env.prod)
+  ENV_FILE       Compose env file (default: infra/docker/.env.prod)
 EOF
 }
 
@@ -44,23 +47,8 @@ for arg in "$@"; do
   esac
 done
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/.env.prod}"
-
-log() {
-  printf '%s %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$*"
-}
-
-die() {
-  log "error: $*" >&2
-  exit 1
-}
-
 command -v git >/dev/null || die "git is required"
-command -v docker >/dev/null || die "docker is required"
-docker compose version >/dev/null 2>&1 || die "docker compose is required"
-[[ -f "$ENV_FILE" ]] || die "missing env file: $ENV_FILE (copy docker/.env.prod.example)"
+require_docker
 
 cd "$REPO_ROOT"
 
@@ -92,28 +80,14 @@ else
   log "no git changes; rebuilding anyway (--force)"
 fi
 
-cd "$SCRIPT_DIR"
-
 log "pulling images"
-docker compose \
-  -f docker-compose.yml \
-  -f docker-compose.prod.yml \
-  --env-file "$ENV_FILE" \
-  pull
+compose pull
 
 log "building and starting stack"
-docker compose \
-  -f docker-compose.yml \
-  -f docker-compose.prod.yml \
-  --env-file "$ENV_FILE" \
-  up -d --build --remove-orphans
+compose up -d --build --remove-orphans
 
 log "pruning dangling images"
 docker image prune -f
 
 log "deploy complete"
-docker compose \
-  -f docker-compose.yml \
-  -f docker-compose.prod.yml \
-  --env-file "$ENV_FILE" \
-  ps
+compose ps

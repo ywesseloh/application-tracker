@@ -54,6 +54,10 @@ dist-ssr
 .env
 .env.prod
 .env.*.local
+infra/scripts/backup.env
+
+# Database backup staging (server-local)
+backups/
 
 # Editor directories and files
 .vscode/*
