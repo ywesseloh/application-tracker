@@ -1,4 +1,4 @@
-package com.ywes.application_tracker.security;
+package com.ywes.application_tracker.utils;
 
 import org.springframework.security.core.userdetails.UserDetails;
 

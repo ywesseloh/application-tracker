@@ -1,7 +1,7 @@
 package com.ywes.application_tracker.service;
 
-import com.ywes.application_tracker.common.DuplicateUsernameException;
-import com.ywes.application_tracker.common.ResourceNotFoundException;
+import com.ywes.application_tracker.exceptions.DuplicateUsernameException;
+import com.ywes.application_tracker.exceptions.ResourceNotFoundException;
 import com.ywes.application_tracker.dto.UserMutation;
 import com.ywes.application_tracker.model.User;
 import com.ywes.application_tracker.repository.UserRepository;
@@ -9,7 +9,6 @@ import org.jspecify.annotations.NullMarked;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

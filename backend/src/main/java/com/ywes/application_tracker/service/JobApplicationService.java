@@ -1,6 +1,6 @@
 package com.ywes.application_tracker.service;
 
-import com.ywes.application_tracker.common.ResourceNotFoundException;
+import com.ywes.application_tracker.exceptions.ResourceNotFoundException;
 import com.ywes.application_tracker.dto.JobApplicationItem;
 import com.ywes.application_tracker.dto.JobApplicationMutation;
 import com.ywes.application_tracker.model.BoardPlacement;
@@ -8,7 +8,6 @@ import com.ywes.application_tracker.model.JobApplication;
 import com.ywes.application_tracker.model.JobApplicationStatus;
 import com.ywes.application_tracker.model.User;
 import com.ywes.application_tracker.repository.JobApplicationRepository;
-import com.ywes.application_tracker.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

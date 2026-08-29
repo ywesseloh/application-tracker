@@ -22,7 +22,7 @@ Package root: `com.ywes.application_tracker`
 | `dto` | Request/response payloads |
 | `common` | Domain exceptions and `@RestControllerAdvice` |
 | `config` | `SecurityConfig`, `WebConfig` (CORS), refresh-cookie properties |
-| `security` | `JwtAuthenticationFilter` |
+| `filters` | `JwtAuthenticationFilter`, `RequestLoggingFilter` |
 
 ## Domain model
 
@@ -46,6 +46,8 @@ User 1 ──── 1 RefreshToken
 Placement is owned by the application (`cascade = ALL`, `orphanRemoval = true`). Creating an application always appends a placement at the end of that user’s target column.
 
 All list/move/create/update/delete operations are scoped to the authenticated user. The JWT carries `sub` (username) and `uid` (user id); the filter sets the user id (`Integer`) as the security principal so handlers do not load the user from the database on every request. Create loads the user by id when establishing the JPA association.
+
+`RequestLoggingFilter` runs before JWT in the security chain and emits one INFO line per request: `method`, `path` (URI only), `status`, `durationMs`, and `userId` when authenticated. It skips `/error` and ERROR dispatches; it does not log bodies or auth headers.
 
 ### Why `status` (and `userId`) are denormalized on placement
 

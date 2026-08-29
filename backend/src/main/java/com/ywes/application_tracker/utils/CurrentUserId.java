@@ -1,4 +1,4 @@
-package com.ywes.application_tracker.security;
+package com.ywes.application_tracker.utils;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
@@ -11,6 +11,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@AuthenticationPrincipal(expression = "T(com.ywes.application_tracker.security.Principals).resolve(#this)")
+@AuthenticationPrincipal(expression = "T(com.ywes.application_tracker.utils.Principals).resolve(#this)")
 public @interface CurrentUserId {
 }

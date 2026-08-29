@@ -2,7 +2,7 @@ package com.ywes.application_tracker.controller;
 
 import com.ywes.application_tracker.dto.JobApplicationBoardItem;
 import com.ywes.application_tracker.dto.JobApplicationPatch;
-import com.ywes.application_tracker.security.CurrentUserId;
+import com.ywes.application_tracker.utils.CurrentUserId;
 import com.ywes.application_tracker.service.BoardService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

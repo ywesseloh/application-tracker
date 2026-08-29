@@ -1,6 +1,6 @@
 package com.ywes.application_tracker.service;
 
-import com.ywes.application_tracker.common.ResourceNotFoundException;
+import com.ywes.application_tracker.exceptions.ResourceNotFoundException;
 import com.ywes.application_tracker.dto.JobApplicationMutation;
 import com.ywes.application_tracker.model.JobApplication;
 import com.ywes.application_tracker.repository.BoardPlacementRepository;

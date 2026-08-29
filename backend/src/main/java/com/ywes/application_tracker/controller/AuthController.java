@@ -1,6 +1,6 @@
 package com.ywes.application_tracker.controller;
 
-import com.ywes.application_tracker.common.BadRefreshTokenException;
+import com.ywes.application_tracker.exceptions.BadRefreshTokenException;
 import com.ywes.application_tracker.dto.AccessTokenResponse;
 import com.ywes.application_tracker.dto.AuthTokenPair;
 import com.ywes.application_tracker.dto.UserMutation;

@@ -1,10 +1,14 @@
 package com.ywes.application_tracker.config;
 
-import com.ywes.application_tracker.security.JwtAuthenticationFilter;
+import com.ywes.application_tracker.filters.JwtAuthenticationFilter;
+import com.ywes.application_tracker.filters.RequestLoggingFilter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -16,18 +20,16 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import jakarta.servlet.DispatcherType;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     @Autowired private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Autowired private RequestLoggingFilter  requestLoggingFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -53,10 +55,25 @@ public class SecurityConfig {
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(requestLoggingFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }
+//
+//    /**
+//     * Prevent Spring Boot from registering {@link JwtAuthenticationFilter} as a servlet filter.
+//     * It must run only inside {@link SecurityFilterChain}; dual registration with
+//     * {@code OncePerRequestFilter} causes auth to be wiped before authorization (401 on protected routes).
+//     */
+//    @Bean
+//    public FilterRegistrationBean<JwtAuthenticationFilter> jwtAuthenticationFilterRegistration(
+//            JwtAuthenticationFilter filter) {
+//        FilterRegistrationBean<JwtAuthenticationFilter> registration =
+//                new FilterRegistrationBean<>(filter);
+//        registration.setEnabled(false);
+//        return registration;
+//    }
 
     @Bean
     public AuthenticationManager authenticationManager(

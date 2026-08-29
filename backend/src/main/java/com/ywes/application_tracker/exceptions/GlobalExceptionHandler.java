@@ -1,4 +1,4 @@
-package com.ywes.application_tracker.common;
+package com.ywes.application_tracker.exceptions;
 
 import com.ywes.application_tracker.dto.ErrorResponse;
 import com.ywes.application_tracker.dto.ErrorType;

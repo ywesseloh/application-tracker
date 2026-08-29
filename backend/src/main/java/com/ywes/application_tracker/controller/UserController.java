@@ -1,8 +1,7 @@
 package com.ywes.application_tracker.controller;
 
 import com.ywes.application_tracker.dto.UserMutation;
-import com.ywes.application_tracker.security.CurrentUserId;
-import com.ywes.application_tracker.service.AuthService;
+import com.ywes.application_tracker.utils.CurrentUserId;
 import com.ywes.application_tracker.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

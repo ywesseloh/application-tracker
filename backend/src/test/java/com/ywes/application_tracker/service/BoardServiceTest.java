@@ -1,7 +1,7 @@
 package com.ywes.application_tracker.service;
 
-import com.ywes.application_tracker.common.IllegalPositionException;
-import com.ywes.application_tracker.common.ResourceNotFoundException;
+import com.ywes.application_tracker.exceptions.IllegalPositionException;
+import com.ywes.application_tracker.exceptions.ResourceNotFoundException;
 import com.ywes.application_tracker.repository.BoardPlacementRepository;
 import com.ywes.application_tracker.repository.JobApplicationRepository;
 import jakarta.persistence.EntityManager;
