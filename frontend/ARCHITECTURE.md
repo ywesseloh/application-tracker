@@ -20,7 +20,7 @@ src/
 │   ├── api/                     # apiClient, applicationsApi, authApi, userApi, getErrorMessage, types
 │   ├── auth/                    # tokenStore, loggedInLocallyStore, useAccessToken
 │   ├── hooks/                   # useDeleteAccount
-│   └── components/              # ActionErrorBanner, ConfirmDialog
+│   └── components/              # ActionErrorBanner, ConfirmDialog, Modal
 └── test/                        # Vitest setup, fixtures, specs
 ```
 
@@ -33,8 +33,8 @@ features/applications/
 ├── components/
 │   ├── ApplicationBoard/        # orchestration + DnD + profile menu
 │   ├── ApplicationTile/         # sortable card
-│   ├── ApplicationDetail/       # detail modal
-│   └── ApplicationForm/         # create / edit
+│   ├── ApplicationDetail/       # detail modal (composes shared Modal)
+│   └── ApplicationForm/         # create / edit (composes shared Modal)
 ├── hooks/                       # query, mutations, busy, errors
 ├── model/                       # types, ordering, cache, mutation keys
 └── index.ts                     # exports ApplicationBoard
@@ -44,7 +44,7 @@ Board local state:
 
 - `selectedId` → detail overlay
 - `formMode` (`closed` | create+status | edit+id) → form overlay
-- Profile menu open flag; delete-account flow uses shared `ConfirmDialog`
+- Profile menu open flag; delete-account flow uses shared `ConfirmDialog` (also on `Modal`)
 - DnD: `activeId`, drag snapshot, suppress-open-after-drag
 
 Column order matches the backend enum: `WISHLIST` → `APPLIED` → `INTERVIEW` → `OFFER` → `REJECTED` (`STATUSES` in `boardOrdering.ts`).
