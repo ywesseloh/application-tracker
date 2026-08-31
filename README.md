@@ -51,57 +51,6 @@ Open the frontend, create an account (or sign in), then use the board. Stop with
 
 Compose reads secrets and config from [`infra/docker/.env.dev`](infra/docker/.env.dev).
 
-### Production (Docker)
-
-Create `infra/docker/.env.prod` with production secrets and your public hostname (use `.env.dev` as a template), point DNS at the server, then:
-
-```bash
-cd infra/docker
-docker compose -f docker-compose.yml -f docker-compose.prod.yml \
-  --env-file .env.prod up -d --build
-```
-
-The prod override adds **Caddy** (HTTPS + same-origin routing), **Postgres persistence**, `restart: unless-stopped`, and stops publishing DB/backend/frontend ports publicly. Do not commit `.env.prod`.
-
-Deploy the current checkout on the server:
-
-```bash
-./infra/scripts/deploy.sh
-```
-
-Cron example:
-
-```
-0 * * * * /opt/application-tracker/infra/scripts/deploy.sh >> /var/log/application-tracker-deploy.log 2>&1
-```
-
-#### Database backups
-
-Scripts under [`infra/scripts/`](infra/scripts/) dump Postgres via `pg_dump`, store gzipped files in `backups/` (gitignored), and optionally upload to OCI Object Storage.
-
-```bash
-# One-off backup (local staging only)
-./infra/scripts/backup-db.sh
-
-# Optional: copy infra/scripts/backup.env.example → backup.env and set OCI_UPLOAD=1
-# Or upload an existing local file:
-# ./infra/scripts/upload-backup.sh --latest
-# Restore (destructive — stops backend first)
-./infra/scripts/restore-db.sh --yes backups/2026-08-28T03-00-00Z.sql.gz
-```
-
-Daily cron example:
-
-```
-0 3 * * * /opt/application-tracker/infra/scripts/backup-db.sh >> /var/log/application-tracker-backup.log 2>&1
-```
-
-From the repo root you can instead run:
-
-```bash
-docker compose -f infra/docker/docker-compose.yml --env-file infra/docker/.env.dev up --build
-```
-
 ## Local development
 
 ### Prerequisites
@@ -141,28 +90,8 @@ Create an account via **Create an account** on the auth screen (or **Sign in** i
 application-tracker/
 ├── backend/                 # Spring Boot API → backend/README.md
 ├── frontend/                # React SPA → frontend/README.md
-└── infra/
-    ├── docker/
-    │   ├── docker-compose.yml       # Full stack (db + backend + frontend)
-    │   ├── docker-compose.prod.yml  # Prod override (Caddy, volumes, internal ports)
-    │   ├── docker-compose-db.yml    # Postgres only (local apps on the host)
-    │   ├── Caddyfile                # Reverse proxy (/ → SPA, /api → backend)
-    │   └── .env.dev                 # Local Compose env (DB, JWT, CORS)
-    └── scripts/
-        ├── deploy.sh                # Prod deploy (Compose build + up)
-        ├── backup-db.sh             # Postgres backup (+ optional OCI upload)
-        ├── upload-backup.sh
-        ├── download-backup.sh
-        ├── restore-db.sh
-        ├── prune-backups.sh
-        └── backup.env.example
+└── infra/                   # Docker compose files and helper scripts
 ```
-
-## Notes
-
-- Board and application APIs require a JWT. Register and auth endpoints are public. Fine for a local/demo portfolio project; not production-hardened.
-- The frontend talks to the API from the browser, so Compose uses `http://localhost:8080` as the API base URL (`VITE_API_BASE_URL` in `.env.dev`)—not the Docker service hostname `backend`.
-- Infra lives under [`infra/`](infra/); run Compose from `infra/docker/` (or pass `-f` / `--env-file` paths from the repo root).
 
 ## License
 
