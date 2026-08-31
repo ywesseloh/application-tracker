@@ -8,6 +8,7 @@ There is **no client-side router** — create/edit/detail are overlays driven by
 
 ```
 src/
+├── assets/                      # SVG icons imported as React components (`?react`, svgr)
 ├── app/                         # bootstrap + auth gate
 │   ├── main.tsx                 # createRoot → providers → App
 │   ├── providers.tsx            # QueryClient defaults
@@ -23,7 +24,7 @@ src/
 └── test/                        # Vitest setup, fixtures, specs
 ```
 
-Path alias: `@/` → `src/` (`vite.config.ts`).
+Path alias: `@/` → `src/` (`vite.config.ts`). SVGs import as components via `vite-plugin-svgr` (`import Icon from '@/assets/x.svg?react'`), so they inherit `currentColor`.
 
 ## Feature module
 

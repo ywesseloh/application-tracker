@@ -34,6 +34,7 @@ import BoardColumn from './BoardColumn'
 import TilePreview from './TilePreview'
 import { EditApplicationForm } from '../ApplicationForm/EditApplicationForm'
 import { CreateApplicationForm } from '../ApplicationForm/CreateApplicationForm'
+import ProfileIcon from '@/assets/profile.svg?react'
 
 export default function ApplicationBoard() {
   const queryClient = useQueryClient()
@@ -67,6 +68,24 @@ export default function ApplicationBoard() {
   const activeApplication = applications.find((app) => app.id.toString() === activeId) ?? null
   const selectedApplication =
     applications.find((app) => app.id.toString() === selectedId) ?? null
+
+  useEffect(() => {
+    if (!menuOpen) return
+    function handlePointerDown(event: MouseEvent) {
+      if (!profileMenuRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setMenuOpen(false)
+    }
+    window.addEventListener('mousedown', handlePointerDown)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('mousedown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [menuOpen])
 
   function handleOpen(id: string) {
     if (suppressOpenRef.current) return
@@ -192,16 +211,10 @@ export default function ApplicationBoard() {
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((open) => !open)}
             >
-              <svg
+              <ProfileIcon
                 className="application-board__profile-icon"
-                viewBox="0 0 24 24"
                 aria-hidden="true"
-              >
-                <path
-                  fill="currentColor"
-                  d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"
-                />
-              </svg>
+              />
             </button>
             {menuOpen ? (
               <div className="application-board__profile-menu" role="menu">
