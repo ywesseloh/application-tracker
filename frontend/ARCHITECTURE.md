@@ -18,7 +18,8 @@ src/
 ├── shared/
 │   ├── api/                     # apiClient, applicationsApi, authApi, userApi, getErrorMessage, types
 │   ├── auth/                    # tokenStore, loggedInLocallyStore, useAccessToken
-│   └── components/              # ActionErrorBanner
+│   ├── hooks/                   # useDeleteAccount
+│   └── components/              # ActionErrorBanner, ConfirmDialog
 └── test/                        # Vitest setup, fixtures, specs
 ```
 
@@ -29,7 +30,7 @@ Path alias: `@/` → `src/` (`vite.config.ts`).
 ```
 features/applications/
 ├── components/
-│   ├── ApplicationBoard/        # orchestration + DnD + logout
+│   ├── ApplicationBoard/        # orchestration + DnD + profile menu
 │   ├── ApplicationTile/         # sortable card
 │   ├── ApplicationDetail/       # detail modal
 │   └── ApplicationForm/         # create / edit
@@ -42,6 +43,7 @@ Board local state:
 
 - `selectedId` → detail overlay
 - `formMode` (`closed` | create+status | edit+id) → form overlay
+- Profile menu open flag; delete-account flow uses shared `ConfirmDialog`
 - DnD: `activeId`, drag snapshot, suppress-open-after-drag
 
 Column order matches the backend enum: `WISHLIST` → `APPLIED` → `INTERVIEW` → `OFFER` → `REJECTED` (`STATUSES` in `boardOrdering.ts`).
@@ -111,7 +113,7 @@ Pure ordering helpers live in `model/boardOrdering.ts` (`moveBetweenColumns`, `r
 | Module | Role |
 |--------|------|
 | `authApi` | `login` / `refresh` / `logout` (`/api/auth/*`) |
-| `userApi` | `register` / `deleteUser` (`/api/user`) — delete is API-only (no UI yet) |
+| `userApi` | `register` / `deleteUser` (`/api/user`) |
 
 ### UI and bootstrap
 
@@ -125,7 +127,7 @@ Pure ordering helpers live in `model/boardOrdering.ts` (`moveBetweenColumns`, `r
 
 `loggedInLocally` lifecycle: set `true` on successful `login` (Sign in or post-register); set `false` on `logout` or when `refresh` fails (expired/revoked refresh token).
 
-`logout` clears the access token and `loggedInLocally` immediately, then posts `/api/auth/logout` in the background (best-effort). The board **Log out** button also calls `queryClient.clear()` so cached applications data cannot leak into the next session.
+`logout` clears the access token and `loggedInLocally` immediately, then posts `/api/auth/logout` in the background (best-effort). The board profile menu **Logout** (and successful **Delete Account**) also calls `queryClient.clear()` so cached applications data cannot leak into the next session. **Delete Account** confirms in a dialog, then `useDeleteAccount` runs `DELETE /user` via `deleteUser()` and tears down the session on success.
 
 Refresh cookie path `/api/auth`; access JWT in memory + Bearer header. `apiClient` sends `credentials: 'include'` and retries once after 401 via refresh.
 
@@ -155,5 +157,6 @@ Vitest + jsdom (`src/test/`):
 | `model/boardOrdering.test.ts` | Filter/sort, move, reorder, densify |
 | `model/applicationsCache.test.ts` | Snapshot / restore / apply |
 | `hooks/useApplicationMutations.test.tsx` | Invalidation after mutations |
+| `shared/hooks/useDeleteAccount.test.tsx` | deleteUser success teardown / failure keeps session |
 
 No full-board component E2E suite yet — coverage targets ordering, cache, auth, and API glue.

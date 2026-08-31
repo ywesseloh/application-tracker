@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   DndContext,
@@ -26,7 +26,9 @@ import { useMoveApplication } from '@/features/applications/hooks/useApplication
 import { useBoardWritesBusy } from '@/features/applications/hooks/useBoardWritesBusy'
 import { useApplicationActionError } from '@/features/applications/hooks/useApplicationActionError'
 import ActionErrorBanner from '@/shared/components/ActionErrorBanner/ActionErrorBanner'
+import ConfirmDialog from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import { logout } from '@/shared/api/authApi'
+import { useDeleteAccount } from '@/shared/hooks/useDeleteAccount'
 import ApplicationDetail from '@/features/applications/components/ApplicationDetail/ApplicationDetail'
 import BoardColumn from './BoardColumn'
 import TilePreview from './TilePreview'
@@ -40,12 +42,21 @@ export default function ApplicationBoard() {
   const { moveMutation } = useMoveApplication()
   const boardWritesBusy = useBoardWritesBusy()
   const { error: actionError, dismiss: dismissActionError } = useApplicationActionError()
+  const {
+    deleteAccountMutation,
+    isPending: isDeletingAccount,
+    error: deleteAccountError,
+    reset: resetDeleteAccount,
+  } = useDeleteAccount()
 
   const [activeId, setActiveId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formMode, setFormMode] = useState<FormMode>({ type: 'closed' })
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const dragSnapshotRef = useRef<Application[] | null>(null)
   const suppressOpenRef = useRef(false)
+  const profileMenuRef = useRef<HTMLDivElement | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -69,8 +80,28 @@ export default function ApplicationBoard() {
   }
 
   function handleLogout() {
+    setMenuOpen(false)
     logout()
     queryClient.clear()
+  }
+
+  function handleDeleteAccountClick() {
+    setMenuOpen(false)
+    resetDeleteAccount()
+    setDeleteConfirmOpen(true)
+  }
+
+  const handleCancelDeleteAccount = useCallback(() => {
+    if (isDeletingAccount) return
+    setDeleteConfirmOpen(false)
+    resetDeleteAccount()
+  }, [isDeletingAccount, resetDeleteAccount])
+
+  function handleConfirmDeleteAccount() {
+    if (isDeletingAccount) return
+    deleteAccountMutation.mutate(undefined, {
+      onSuccess: () => setDeleteConfirmOpen(false),
+    })
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -152,13 +183,47 @@ export default function ApplicationBoard() {
           <div className="application-board__brand">
             <h1 className="application-board__title">Application Tracker</h1>
           </div>
-          <button
-            type="button"
-            className="application-board__logout"
-            onClick={handleLogout}
-          >
-            Log out
-          </button>
+          <div className="application-board__profile" ref={profileMenuRef}>
+            <button
+              type="button"
+              className="application-board__profile-trigger"
+              aria-label="Account"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              <svg
+                className="application-board__profile-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  fill="currentColor"
+                  d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"
+                />
+              </svg>
+            </button>
+            {menuOpen ? (
+              <div className="application-board__profile-menu" role="menu">
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="application-board__profile-menu-item"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="application-board__profile-menu-item application-board__profile-menu-item--danger"
+                  onClick={handleDeleteAccountClick}
+                >
+                  Delete Account
+                </button>
+              </div>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -236,6 +301,20 @@ export default function ApplicationBoard() {
         <EditApplicationForm
           id={formMode.id}
           onClose={() => setFormMode({ type: 'closed' })}
+        />
+      ) : null}
+
+      {deleteConfirmOpen ? (
+        <ConfirmDialog
+          title="Delete account"
+          body="This permanently deletes your account and all applications. This cannot be undone."
+          confirmLabel="Delete account"
+          busyLabel="Deleting…"
+          isBusy={isDeletingAccount}
+          error={deleteAccountError?.message ?? null}
+          onDismissError={resetDeleteAccount}
+          onCancel={handleCancelDeleteAccount}
+          onConfirm={handleConfirmDeleteAccount}
         />
       ) : null}
     </div>

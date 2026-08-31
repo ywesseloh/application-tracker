@@ -76,17 +76,23 @@ body {
   line-height: 1.2;
 }
 
-.application-board__logout {
+.application-board__profile {
+  position: relative;
   flex-shrink: 0;
-  padding: 0.5rem 0.95rem;
+}
+
+.application-board__profile-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
   border: 1px solid color-mix(in srgb, var(--board-muted) 25%, transparent);
-  border-radius: 0.55rem;
+  border-radius: 999px;
   background: var(--tile-bg);
   color: var(--board-muted);
   box-shadow: var(--shadow);
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
   cursor: pointer;
   transition:
     color 160ms var(--ease),
@@ -95,21 +101,69 @@ body {
     box-shadow 160ms var(--ease);
 }
 
-.application-board__logout:hover:not(:disabled) {
+.application-board__profile-trigger:hover {
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   background: #ffffff;
   color: var(--accent);
   box-shadow: var(--shadow-lift);
 }
 
-.application-board__logout:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
-.application-board__logout:focus-visible {
+.application-board__profile-trigger:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.application-board__profile-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.application-board__profile-menu {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  z-index: 20;
+  min-width: 11.5rem;
+  padding: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--board-ink) 10%, transparent);
+  border-radius: 0.7rem;
+  background: #ffffff;
+  box-shadow: var(--shadow-lift);
+}
+
+.application-board__profile-menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--board-ink);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms var(--ease);
+}
+
+.application-board__profile-menu-item:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.application-board__profile-menu-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.application-board__profile-menu-item--danger {
+  color: #8b3a2f;
+}
+
+.application-board__profile-menu-item--danger:hover {
+  background: rgba(139, 58, 47, 0.1);
+  color: #8b3a2f;
 }
 
 .application-board__status {
@@ -464,9 +518,9 @@ body {
     font-size: 1rem;
   }
 
-  .application-board__logout {
-    padding: 0.45rem 0.75rem;
-    font-size: 0.8rem;
+  .application-board__profile-trigger {
+    width: 2.15rem;
+    height: 2.15rem;
   }
 
   .board-column {
