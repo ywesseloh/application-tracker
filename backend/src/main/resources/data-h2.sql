@@ -1,14 +1,22 @@
--- Test user (password: password) — BCrypt via BCryptPasswordEncoder
+-- Test users (password: password) — BCrypt via BCryptPasswordEncoder
 INSERT INTO users (id, username, password, created_at, updated_at)
-VALUES (
+VALUES
+(
   1,
   'demo',
   '$2a$10$71azWnax8XBTMn0CbZAZn.AisFEqBqzrmCqjjV0F0hetMTZHZ6ir2',
   CURRENT_TIMESTAMP,
   CURRENT_TIMESTAMP
+),
+(
+  2,
+  'demo2',
+  '$2a$10$71azWnax8XBTMn0CbZAZn.AisFEqBqzrmCqjjV0F0hetMTZHZ6ir2',
+  CURRENT_TIMESTAMP,
+  CURRENT_TIMESTAMP
 );
 
-ALTER TABLE users ALTER COLUMN id RESTART WITH 2;
+ALTER TABLE users ALTER COLUMN id RESTART WITH 3;
 
 INSERT INTO job_application (id, user_id, company, role, status, notes, job_posting_url, created_at, updated_at)
 VALUES
@@ -36,7 +44,16 @@ VALUES
 -- Rejected
 (14, 1, 'Ironclad Security', 'Frontend Developer', 'REJECTED', 'Rejected after the take-home. Feedback: wanted deeper testing experience.', 'https://example.com/jobs/ironclad-frontend', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 (15, 1, 'Marigold Studio', 'Web Developer', 'REJECTED', 'Role was put on hold.', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(16, 1, 'Pinnacle Datawork', 'Senior Frontend Engineer', 'REJECTED', NULL, 'https://example.com/jobs/pinnacle-senior-frontend', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+(16, 1, 'Pinnacle Datawork', 'Senior Frontend Engineer', 'REJECTED', NULL, 'https://example.com/jobs/pinnacle-senior-frontend', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+-- User 2 (alex)
+(17, 2, 'Redwood Digital', 'Backend Engineer', 'WISHLIST', 'Interesting Rust side project mentioned in the job post.', 'https://example.com/jobs/redwood-backend', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(18, 2, 'Summit Cloud', 'Platform Engineer', 'WISHLIST', NULL, 'https://example.com/jobs/summit-platform', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(19, 2, 'Harbor Payments', 'Full Stack Developer', 'APPLIED', 'Applied yesterday. Waiting for recruiter reply.', 'https://example.com/jobs/harbor-fullstack', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(20, 2, 'Atlas Mobility', 'Software Engineer', 'APPLIED', 'Referral from a former colleague.', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(21, 2, 'Clearwater AI', 'ML Platform Engineer', 'INTERVIEW', 'Technical interview scheduled for Friday.', 'https://example.com/jobs/clearwater-ml', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(22, 2, 'Granite Labs', 'Senior Software Engineer', 'OFFER', 'Written offer received. Reviewing benefits package.', 'https://example.com/jobs/granite-senior', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(23, 2, 'Silverline Retail', 'Java Developer', 'REJECTED', 'No feedback provided.', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 INSERT INTO board_placement (application_id, user_id, status, position)
 VALUES
@@ -55,6 +72,13 @@ VALUES
 (13, 1, 'OFFER', 1),
 (14, 1, 'REJECTED', 0),
 (15, 1, 'REJECTED', 1),
-(16, 1, 'REJECTED', 2);
+(16, 1, 'REJECTED', 2),
+(17, 2, 'WISHLIST', 0),
+(18, 2, 'WISHLIST', 1),
+(19, 2, 'APPLIED', 0),
+(20, 2, 'APPLIED', 1),
+(21, 2, 'INTERVIEW', 0),
+(22, 2, 'OFFER', 0),
+(23, 2, 'REJECTED', 0);
 
-ALTER TABLE job_application ALTER COLUMN id RESTART WITH 17;
+ALTER TABLE job_application ALTER COLUMN id RESTART WITH 24;
