@@ -4,7 +4,9 @@ import {
   createRootRoute,
 } from '@tanstack/react-router'
 import App from '@/app/App'
-// import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import LegalDocument from '@/shared/components/LegalDocument/LegalDocument'
+import privacyPolicyHtml from '@/assets/privacy-policy.html?raw'
+import termsAndConditionsHtml from '@/assets/terms-and-conditions.html?raw'
 
 const rootRoute = createRootRoute()
 
@@ -17,17 +19,13 @@ const appRoute = createRoute({
 const privacyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/privacy',
-  component: function Privacy() {
-    return <div className="p-2">Hello from Privacy!</div>
-  },
+  component: () => <LegalDocument html={privacyPolicyHtml} />,
 })
 
 const termsAndConditionsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/terms-and-conditions',
-  component: function TermsAndConditions() {
-    return <div className="p-2">Hello from Terms and Conditions!</div>
-  },
+  component: () => <LegalDocument html={termsAndConditionsHtml} />,
 })
 
 const routeTree = rootRoute.addChildren([appRoute, privacyRoute, termsAndConditionsRoute])

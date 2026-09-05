@@ -1,0 +1,71 @@
+
+.legal-document {
+  min-height: 100vh;
+  padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 4vw, 2rem);
+  background:
+    radial-gradient(ellipse 70% 45% at 8% -5%, #dfe8e3 0%, transparent 55%),
+    radial-gradient(ellipse 55% 40% at 100% 0%, #e4e8ef 0%, transparent 50%),
+    #f0f2f0;
+  color: #1a1f1c;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+.legal-document__content {
+  width: min(100%, 52rem);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 5vw, 3.5rem);
+  border: 1px solid rgba(26, 31, 28, 0.08);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12px 28px rgba(26, 31, 28, 0.08);
+}
+
+.legal-document__body {
+  color: #46534c;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.legal-document__body h1,
+.legal-document__body h2,
+.legal-document__body h3,
+.legal-document__body h4 {
+  margin: 2rem 0 0.75rem;
+  color: #1a1f1c;
+  line-height: 1.25;
+}
+
+.legal-document__body h1 {
+  font-size: 1.75rem;
+}
+
+.legal-document__body h2 {
+  font-size: 1.35rem;
+}
+
+.legal-document__body h3 {
+  font-size: 1.1rem;
+}
+
+.legal-document__body h4 {
+  font-size: 1rem;
+}
+
+.legal-document__body p {
+  margin: 0 0 1rem;
+}
+
+.legal-document__body ul,
+.legal-document__body ol {
+  margin: 0 0 1rem;
+  padding-left: 1.5rem;
+}
+
+.legal-document__body li + li {
+  margin-top: 0.5rem;
+}
+
+.legal-document__body a {
+  color: #2a6b5a;
+  text-underline-offset: 0.2em;
+}
