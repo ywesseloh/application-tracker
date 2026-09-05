@@ -55,7 +55,7 @@ export default function AuthScreen() {
     <div className="auth-screen">
       <div className="auth-screen__panel">
         <header className="auth-screen__header">
-          <h1 className="auth-screen__brand">Application Tracker</h1>
+          <h1 className="auth-screen__brand">Job Tracker</h1>
           <p className="auth-screen__supporting">
             {isLogin ? 'Sign in to continue' : 'Create an account to get started'}
           </p>

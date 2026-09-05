@@ -343,6 +343,9 @@ body {
   color: var(--board-muted);
   box-shadow: var(--shadow);
   cursor: pointer;
+  appearance: none;
+  -moz-appearance: none;
+  line-height: 0;
   transition:
     color 160ms var(--ease),
     background-color 160ms var(--ease),
@@ -353,8 +356,8 @@ body {
 .board-column__add-icon {
   position: relative;
   display: block;
-  width: 0.65rem;
-  height: 0.65rem;
+  width: 0.75rem;
+  height: 0.75rem;
 }
 
 .board-column__add-icon::before,
