@@ -72,6 +72,13 @@ body {
   line-height: 1.4;
 }
 
+.auth-screen__demo-notice {
+  margin: 0.85rem 0 0;
+  color: #8b3a2f;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
 .auth-screen__form {
   display: flex;
   flex-direction: column;

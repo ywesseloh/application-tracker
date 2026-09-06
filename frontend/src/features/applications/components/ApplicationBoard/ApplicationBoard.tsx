@@ -200,7 +200,7 @@ export default function ApplicationBoard() {
       <header className="application-board__header">
         <div className="application-board__header-bar">
           <div className="application-board__brand">
-            <h1 className="application-board__title">Job Tracker</h1>
+            <h1 className="application-board__title">Job Tracker Demo</h1>
           </div>
           <div className="application-board__profile" ref={profileMenuRef}>
             <button

@@ -29,6 +29,8 @@ Dev server: http://localhost:5173
 
 Create an account or sign in on the auth screen, then use the board.
 
+> **Demo application:** Use test data only. Do not enter real personal, confidential, or sensitive information.
+
 ## Scripts
 
 | Command | Description |
