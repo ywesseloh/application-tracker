@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { ApplicationBoard } from '@/features/applications'
 import { AuthScreen } from '@/features/auth'
 import { refresh } from '@/shared/api/authApi'
@@ -30,17 +31,29 @@ export default function App() {
     }
   }, [])
 
+  let content
   if (bootstrapping) {
-    return (
+    content = (
       <div className="app-bootstrap" role="status" aria-live="polite">
         Loading…
       </div>
     )
+  } else if (!accessToken) {
+    content = <AuthScreen />
+  } else {
+    content = <ApplicationBoard />
   }
 
-  if (!accessToken) {
-    return <AuthScreen />
-  }
-
-  return <ApplicationBoard />
+  return (
+    <div className="app-shell">
+      <div className="app-shell__content">{content}</div>
+      <footer className="app-footer">
+        <nav className="app-footer__links" aria-label="Legal and contact links">
+          <Link to="/privacy">Privacy Policy</Link>
+          <Link to="/terms-and-conditions">Terms and Conditions</Link>
+          <a href="mailto:info@ywesseloh.com">Contact</a>
+        </nav>
+      </footer>
+    </div>
+  )
 }

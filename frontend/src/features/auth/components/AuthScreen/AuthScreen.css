@@ -17,7 +17,8 @@ body {
   --font: 'Plus Jakarta Sans', system-ui, sans-serif;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;

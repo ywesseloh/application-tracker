@@ -29,7 +29,13 @@ body {
   --status-offer: #2f8a45;
   --status-rejected: #b0453c;
 
-  min-height: 100vh;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
   box-sizing: border-box;
   padding: 0 clamp(1rem, 2.5vw, 1.75rem) 1.5rem;
   background:
@@ -239,9 +245,12 @@ body {
 
 .application-board__columns {
   display: flex;
+  flex: 1;
   gap: 1.15rem;
-  align-items: flex-start;
+  align-items: stretch;
   overflow-x: auto;
+  min-width: 0;
+  min-height: 0;
   padding-bottom: 0.35rem;
   scrollbar-gutter: stable;
 }
@@ -260,7 +269,8 @@ body {
   flex: 0 0 min(19rem, 82vw);
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 2.75rem);
+  min-height: 0;
+  height: 100%;
   padding: 0.65rem 0.3rem 0.75rem 0.65rem;
   border: none;
   border-radius: 1rem;
@@ -399,7 +409,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   overflow-y: auto;
   min-height: 0;
   padding: 0.1rem 0.55rem 0.35rem 0.15rem;
