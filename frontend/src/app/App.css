@@ -13,7 +13,6 @@ body {
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .app-shell__content {
