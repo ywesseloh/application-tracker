@@ -1,10 +1,12 @@
 import { useState, type SubmitEvent } from 'react'
 import type { FormMode } from '@/features/applications/model/types'
 import type { ApplicationStatus } from '@/shared/api/types'
-import type { ApplicationFormValues } from './formValues'
+import type { ApplicationFormValues } from '@/features/applications/model/types'
 import { STATUS_LABELS } from '@/features/applications/model/types'
+import { hasUnsavedApplicationFormChanges } from '@/features/applications/model/unsavedChanges'
 import './ApplicationForm.css'
 import ActionErrorBanner from '@/shared/components/ActionErrorBanner/ActionErrorBanner'
+import ConfirmDialog from '@/shared/components/ConfirmDialog/ConfirmDialog'
 import Modal from '@/shared/components/Modal/Modal'
 
 type ApplicationFormProps = {
@@ -34,10 +36,20 @@ export default function ApplicationForm({
 
   const [values, setValues] = useState<ApplicationFormValues>(initialValues)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false)
 
   function handleClose() {
-    onClose()
     setValidationError(null)
+    if (hasUnsavedApplicationFormChanges(values, initialValues)) {
+      setDiscardDialogOpen(true)
+      return
+    }
+    onClose()
+  }
+
+  function handleDiscardChanges() {
+    setDiscardDialogOpen(false)
+    onClose()
   }
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -53,7 +65,7 @@ export default function ApplicationForm({
     }
 
     onSubmit(values, () => {
-      handleClose()
+      onClose()
     })
   }
 
@@ -66,27 +78,29 @@ export default function ApplicationForm({
   }
 
   return (
-    <Modal
-      onClose={handleClose}
-      ariaLabelledBy="application-form-title"
-      size="md"
-      className="application-form"
-    >
-      <header className="application-form__header">
-        <h2 id="application-form-title" className="application-form__title">
-          {mode.type === 'edit' ? 'Edit application' : 'Add application'}
-        </h2>
-        <button
-          type="button"
-          className="application-form__close"
-          onClick={handleClose}
-          aria-label="Close"
-        >
-          ×
-        </button>
-      </header>
+    <>
+      <Modal
+        onClose={handleClose}
+        ariaLabelledBy="application-form-title"
+        dismissible={false}
+        size="md"
+        className="application-form"
+      >
+        <header className="application-form__header">
+          <h2 id="application-form-title" className="application-form__title">
+            {mode.type === 'edit' ? 'Edit application' : 'Add application'}
+          </h2>
+          <button
+            type="button"
+            className="application-form__close"
+            onClick={handleClose}
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </header>
 
-      <form className="application-form__body" onSubmit={handleSubmit}>
+        <form className="application-form__body" onSubmit={handleSubmit}>
         <label className="application-form__field">
           <span className="application-form__label">Company</span>
           <input
@@ -182,7 +196,18 @@ export default function ApplicationForm({
             )}
           </button>
         </div>
-      </form>
-    </Modal>
+        </form>
+      </Modal>
+      {discardDialogOpen ? (
+        <ConfirmDialog
+          title="Discard unsaved changes?"
+          body="Your changes will be lost if you close this form."
+          confirmLabel="Discard changes"
+          cancelLabel="Keep editing"
+          onConfirm={handleDiscardChanges}
+          onCancel={() => setDiscardDialogOpen(false)}
+        />
+      ) : null}
+    </>
   )
 }

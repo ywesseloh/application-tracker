@@ -1,6 +1,6 @@
 import './ApplicationForm.css'
-import type { ApplicationFormValues } from './formValues'
-import { EMPTY_VALUES } from './formValues'
+import type { ApplicationFormValues } from '@/features/applications/model/types'
+import { EMPTY_VALUES } from '@/features/applications/model/types'
 import { useCreateApplication } from '../../hooks/useApplicationMutations'
 import { useApplicationsCache } from '../../hooks/useApplicationsCache'
 import { applicationMutationKeys } from '../../model/mutationKeys'

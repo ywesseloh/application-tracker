@@ -1,11 +1,11 @@
 import './ApplicationForm.css'
-import type { ApplicationFormValues } from './formValues'
+import type { ApplicationFormValues } from '@/features/applications/model/types'
 import { useApplicationsQuery } from '../../hooks/useApplicationsQuery'
 import { useUpdateApplication } from '../../hooks/useApplicationMutations'
 import { useApplicationsCache } from '../../hooks/useApplicationsCache'
 import { applicationMutationKeys } from '../../model/mutationKeys'
 import type { Application } from '@/shared/api/types'
-import { EMPTY_VALUES } from './formValues'
+import { EMPTY_VALUES } from '@/features/applications/model/types'
 import ApplicationForm from './ApplicationForm'
 
 type EditApplicationFormProps = {
