@@ -6,7 +6,7 @@ The application is live at: https://job-tracker.ywesseloh.com
 
 > **Demo application:** Use test data only. Do not enter real personal, confidential, or sensitive information.
 
-<img src="docs/screenshots/board.png" alt="Application Tracker board" width="1000"  style="border: 1px solid silver; border-radius: 10px;"/>
+<kbd><img src="docs/screenshots/board.png" alt="Application Tracker board" width="1000"/></kbd>
 
 ## Features
 
