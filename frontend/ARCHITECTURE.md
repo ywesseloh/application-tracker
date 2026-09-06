@@ -1,163 +1,88 @@
-# Frontend architecture
+# Frontend Architecture
 
-React SPA for the kanban board. Feature modules own UI and domain helpers; the shared layer provides the HTTP client, auth session stores, and a reusable error banner.
+The frontend is a React SPA for authentication, the kanban board, application forms, detail views, and public legal pages. Feature modules own UI and domain helpers; shared modules provide API, auth, modal, and error primitives.
 
-There is **no client-side router** — create/edit/detail are overlays driven by local state on the board. Auth gating lives in `App.tsx`.
+## Application Structure
 
-## High-level structure
-
-```
+```text
 src/
-├── assets/                      # SVG icons imported as React components (`?react`, svgr)
-├── app/                         # bootstrap + auth gate
-│   ├── main.tsx                 # createRoot → providers → App
-│   ├── providers.tsx            # QueryClient defaults
-│   └── App.tsx                  # refresh bootstrap → AuthScreen | ApplicationBoard
-├── features/
-│   ├── applications/            # board feature
-│   └── auth/                    # AuthScreen (login / register)
-├── shared/
-│   ├── api/                     # apiClient, applicationsApi, authApi, userApi, getErrorMessage, types
-│   ├── auth/                    # tokenStore, loggedInLocallyStore, useAccessToken
-│   ├── hooks/                   # useDeleteAccount
-│   └── components/              # ActionErrorBanner, ConfirmDialog, Modal
-└── test/                        # Vitest setup, fixtures, specs
+├── app/          bootstrap, providers, App shell, code-based router
+├── features/     applications and auth modules
+├── shared/       API, auth stores, hooks, and reusable components
+├── assets/       static legal HTML and SVG assets
+└── test/         Vitest and Testing Library tests
 ```
 
-Path alias: `@/` → `src/` (`vite.config.ts`). SVGs import as components via `vite-plugin-svgr` (`import Icon from '@/assets/x.svg?react'`), so they inherit `currentColor`.
+The `@/` alias points to `src/`. SVGs use `vite-plugin-svgr` and can be imported with `?react`.
 
-## Feature module
+## Routing and App Shell
 
-```
-features/applications/
-├── components/
-│   ├── ApplicationBoard/        # orchestration + DnD + profile menu
-│   ├── ApplicationTile/         # sortable card
-│   ├── ApplicationDetail/       # detail modal (composes shared Modal)
-│   └── ApplicationForm/         # create / edit (composes shared Modal)
-├── hooks/                       # query, mutations, busy, errors
-├── model/                       # types, ordering, cache, mutation keys
-└── index.ts                     # exports ApplicationBoard
-```
+TanStack Router uses the manually defined route tree in `src/app/router.tsx`:
 
-Board local state:
+- `/` renders the authenticated application shell (`App`), which bootstraps the session and chooses the auth screen or board.
+- `/privacy` renders the static privacy-policy HTML.
+- `/terms-and-conditions` renders the static terms HTML.
 
-- `selectedId` → detail overlay
-- `formMode` (`closed` | create+status | edit+id) → form overlay
-- Profile menu open flag; delete-account flow uses shared `ConfirmDialog` (also on `Modal`)
-- DnD: `activeId`, drag snapshot, suppress-open-after-drag
+The app shell owns the global footer. Legal routes are public and do not pass through authenticated board data loading.
 
-Column order matches the backend enum: `WISHLIST` → `APPLIED` → `INTERVIEW` → `OFFER` → `REJECTED` (`STATUSES` in `boardOrdering.ts`).
+Create, edit, and detail views are not routes. They are overlays controlled by board-local state:
 
-## Data flow
+- `selectedId` opens application detail.
+- `formMode` opens create or edit forms.
+- Profile state controls logout and account deletion.
 
-```
-GET /board
-  → applicationsApi.fetchApplications
-  → React Query key ['applications']
-  → ApplicationBoard (applicationsForStatus per column)
-  → user actions (DnD / forms / detail)
-  → mutations
-  → onSettled: invalidate → refetch
+## Data Flow
+
+```text
+API client
+  -> feature API / React Query hook
+    -> ApplicationBoard
+      -> columns, tiles, forms, and detail overlays
 ```
 
-Query defaults (`providers.tsx`):
+The board query uses the `['applications']` query key. Mutations invalidate or refresh that query after completion. Query defaults and mutation scopes are configured in `app/providers.tsx`.
 
-- `staleTime` 5 minutes
-- Retry only on `NetworkError` (mutations do not retry)
-- Refetch on window focus
+## Board and Drag-and-Drop
 
-All board-related mutations share `boardWritesScope` so writes serialize and the UI can treat “board busy” as a single flag.
+`ApplicationBoard` coordinates `@dnd-kit` and the application cache:
 
-## Optimistic drag-and-drop
+1. Drag start stores a snapshot and marks the active tile.
+2. Drag over updates cross-column placement locally.
+3. Drag end compares the result with the snapshot and sends `PATCH /api/board/move/{id}` when status or position changed.
+4. A failed move restores the snapshot.
 
-DnD uses `@dnd-kit` (`DndContext`, sortable columns/tiles, `DragOverlay`).
+Column IDs are status strings; tile IDs are application ID strings. Pure ordering rules live in `features/applications/model/boardOrdering.ts`. Cache snapshot and restore behavior lives in `applicationsCache.ts`.
 
-1. **Drag start** — snapshot current state
-2. **Drag over** — live cross-column moves, update datasource locally
-3. **Drag end** — if status or position changed vs snapshot → `PATCH /board/move/:id`
-4. **Success**  — reload board; **Error** — restore snapshot;
+The board is viewport-bound. Horizontal overflow belongs to the columns row; vertical overflow belongs to each column list. This keeps the page and footer stable while long columns remain scrollable.
 
-Droppable ids: column id = status string; tile id = application id string.
+## Authentication
 
-Create / update / delete are **not** optimistic: call the API, then invalidate the board query.
+- The access JWT is held in memory.
+- `loggedInLocally` in local storage controls whether startup attempts session restoration.
+- The browser manages the HttpOnly refresh cookie through API requests.
+- `apiClient` sends credentials, adds the Bearer token, and performs one shared refresh/retry after a `401`.
+- Failed refresh clears the access token and local login flag.
+- Logout and account deletion clear the React Query cache to prevent session data leaking between users.
 
-Pure ordering helpers live in `model/boardOrdering.ts` (`moveBetweenColumns`, `reorderWithinColumn`, densified positions). Cache helpers live in `model/applicationsCache.ts` (snapshot / restore / apply / invalidate).
+`AuthScreen` handles login and registration. `App.tsx` shows a bootstrap state, then chooses `AuthScreen` or `ApplicationBoard` based on the access token.
 
-## API client
+## Shared UI and Error Handling
 
-`shared/api/apiClient.ts`:
+`Modal` provides the base overlay. `ConfirmDialog` handles destructive confirmations. `ActionErrorBanner` presents dismissible action errors.
 
-- Base URL: `import.meta.env.VITE_API_BASE_URL` ?? `http://localhost:8080`
-- Relative paths are prefixed with `/api` (e.g. `/board` → `http://localhost:8080/api/board`)
-- JSON helpers + 8s timeout; always sends `credentials: 'include'`
-- Attaches `Authorization: Bearer <jwt>` from the in-memory token store when `authRequired` (default true)
-- On **401** from secured endpoints: single-flight `POST /auth/refresh`, then retry once; refresh failure clears the token and sets `loggedInLocally` to `false`
-- `ApiError` (HTTP failure) and `NetworkError` (unreachable)
+Application forms compare current values with their initial values and ask for confirmation before discarding edits. The comparison belongs in the applications model layer so it can be tested without rendering components.
 
-`shared/api/applicationsApi.ts` wraps board and application endpoints used by the hooks.
+## Testing
 
-`shared/api/getErrorMessage.ts` maps thrown values to a display string (`Error.message`, else `String(error)`).
-
-## Auth
-
-### Session stores (`shared/auth/`)
-
-| Module | Role |
-|--------|------|
-| `tokenStore` | In-memory access JWT with `subscribe` for React; not persisted |
-| `loggedInLocallyStore` | Persisted `loggedInLocally` flag in localStorage; gates bootstrap refresh |
-| `useAccessToken` | `useSyncExternalStore` over the token store |
-
-### Auth APIs (`shared/api/`)
-
-| Module | Role |
-|--------|------|
-| `authApi` | `login` / `refresh` / `logout` (`/api/auth/*`) |
-| `userApi` | `register` / `deleteUser` (`/api/user`) |
-
-### UI and bootstrap
-
-`features/auth` — `AuthScreen` (login default, switch to register). Submit calls `login`, or `register` then `login`. Client max-length validation (20) on register only; backend also enforces password min length. Failed login/register shows `ActionErrorBanner` via `getErrorMessage`. Submit button shows a spinner while the request is in flight.
-
-[`App.tsx`](src/app/App.tsx) gates the app:
-
-1. Show bootstrap **Loading…**
-2. If `loggedInLocally` is true, call `refresh()` to restore the session from the HttpOnly cookie; otherwise skip refresh
-3. Then `AuthScreen` if no access token, else `ApplicationBoard`
-
-`loggedInLocally` lifecycle: set `true` on successful `login` (Sign in or post-register); set `false` on `logout` or when `refresh` fails (expired/revoked refresh token).
-
-`logout` clears the access token and `loggedInLocally` immediately, then posts `/api/auth/logout` in the background (best-effort). The board profile menu **Logout** (and successful **Delete Account**) also calls `queryClient.clear()` so cached applications data cannot leak into the next session. **Delete Account** confirms in a dialog, then `useDeleteAccount` runs `DELETE /user` via `deleteUser()` and tears down the session on success.
-
-Refresh cookie path `/api/auth`; access JWT in memory + Bearer header. `apiClient` sends `credentials: 'include'` and retries once after 401 via refresh.
-
-## Busy and error UX
-
-| Concern | Behavior |
-|---------|----------|
-| App bootstrap | “Loading…” until refresh attempt finishes (or is skipped) |
-| Auth submit | Spinner + “Signing in…” / “Creating account…”; submit disabled when empty/invalid/in flight |
-| Auth API errors | `ActionErrorBanner` above submit; clears on edit / mode switch / dismiss |
-| Initial board load | Spinner until first successful board fetch |
-| Load failure | Full-page alert + Retry |
-| Mutation errors | `ActionErrorBanner` (board / form / detail) with dismiss |
-| Tile syncing | Spinner, `aria-busy`, sortable disabled |
-| Board writes pending | New drags blocked; tiles disabled |
-
-Hooks: `useBoardWritesBusy`, `useApplicationBusy`, `useApplicationActionError`.
-
-## Tests
-
-Vitest + jsdom (`src/test/`):
+Tests run with Vitest and jsdom.
 
 | Area | Focus |
-|------|--------|
-| `shared/apiClient.test.ts` | URL building, JSON, credentials, Bearer, 401 refresh retry |
-| `shared/auth/*` | tokenStore, loggedInLocallyStore, authApi login/refresh/logout |
-| `model/boardOrdering.test.ts` | Filter/sort, move, reorder, densify |
-| `model/applicationsCache.test.ts` | Snapshot / restore / apply |
-| `hooks/useApplicationMutations.test.tsx` | Invalidation after mutations |
-| `shared/hooks/useDeleteAccount.test.tsx` | deleteUser success teardown / failure keeps session |
+|------|-------|
+| `shared/apiClient.test.ts` | URL building, JSON, credentials, auth headers, and refresh retry |
+| `shared/auth/*` | Token and local-login stores plus auth API behavior |
+| `model/*` | Board ordering, cache behavior, and pure form-state rules |
+| `hooks/*` | Mutation invalidation and account deletion |
 
-No full-board component E2E suite yet — coverage targets ordering, cache, auth, and API glue.
+There is no full-board end-to-end suite yet; most UI behavior is covered through pure model tests and hook tests.
+
+Operational setup belongs in [README.md](README.md). Legal content is stored in `src/assets/` and rendered through the shared legal-document component.
