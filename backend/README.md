@@ -1,92 +1,51 @@
 # Backend
 
-Spring Boot API for the [Application Tracker](../README.md). Manages users, job applications, and kanban board placement (move / reorder with densification).
-
-For layers, domain model, auth, and the board-move algorithm, see [ARCHITECTURE.md](ARCHITECTURE.md).
-
-## Stack
-
-- Java 26
-- Spring Boot 4 (Web MVC, Data JPA, Validation, Security)
-- JWT access tokens + HttpOnly refresh cookies
-- BCrypt password hashing
-- H2 (default local profile) and PostgreSQL
-- Gradle, Lombok
-- JUnit for controller and service tests
+Spring Boot API for the Application Tracker demo. It manages users, private job applications, authentication, and board ordering.
 
 ## Prerequisites
 
 - JDK 26
-- Optional: Docker for PostgreSQL (`../infra/docker/docker-compose-db.yml`)
+- Optional: Docker for PostgreSQL
 
-## Run
+## Run With H2
 
-### H2 (default)
+H2 is the default local profile and requires no database setup:
 
 ```bash
 ./gradlew bootRun
 ```
 
-Uses the `h2` profile (`spring.profiles.active=h2` in `application.properties`).  
-API: http://localhost:8080
+The API runs at http://localhost:8080.
 
-### PostgreSQL
+## Run With PostgreSQL
+
+From the repository root, start PostgreSQL:
 
 ```bash
-# from infra/docker
+cd infra/docker
 docker compose -f docker-compose-db.yml up -d
+```
 
+In another terminal, start the backend with the PostgreSQL profile:
+
+```bash
+cd backend
 ./gradlew bootRun --args='--spring.profiles.active=postgres'
 ```
 
-Credentials and URL are in `src/main/resources/application-postgres.properties` (defaults: `postgres` / `postgres` on `localhost:5432`).
+Database defaults and environment-variable overrides are documented in `src/main/resources/application-postgres.properties`.
 
-Override via environment variables if needed, for example:
+## Profiles and Configuration
 
-```bash
-export SPRING_PROFILES_ACTIVE=postgres
-export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/application-tracker
-export SPRING_DATASOURCE_USERNAME=postgres
-export SPRING_DATASOURCE_PASSWORD=postgres
-./gradlew bootRun
-```
+| Profile | Database | Configuration |
+|---------|----------|---------------|
+| `h2` | In-memory H2 | `application-h2.properties` |
+| `postgres` | PostgreSQL | `application-postgres.properties` |
+| `prod` | External production database | `application-prod.properties` |
 
-## Profiles
+Shared settings are in `application.properties`. Authentication, refresh-cookie, and CORS settings use the `security.*` and `app.cors.*` properties.
 
-| Profile | Config file | Database |
-|---------|-------------|----------|
-| `h2` | `application-h2.properties` | In-memory H2 |
-| `postgres` | `application-postgres.properties` | PostgreSQL |
-
-Shared settings live in `application.properties`. Profile files also hold JWT, refresh-cookie, and CORS settings (`security.jwt.*`, `security.refresh.*`, `app.cors.allowed-origins`).
-
-## Tests
-
-```bash
-./gradlew test
-```
-
-Coverage includes auth/user controllers, application CRUD, and board move/reorder behavior (controller + service tests).
-
-## Docker
-
-Built from the Compose file (`../infra/docker/docker-compose.yml`) or alone:
-
-```bash
-docker build -t application-tracker-backend .
-docker run --rm -p 8080:8080 \
-  -e SPRING_PROFILES_ACTIVE=postgres \
-  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/application-tracker \
-  -e SPRING_DATASOURCE_USERNAME=postgres \
-  -e SPRING_DATASOURCE_PASSWORD=postgres \
-  application-tracker-backend
-```
-
-Prefer `docker compose up --build` from the repo root so the backend joins the Compose network and can reach the `db` service.
-
-## API
-
-All endpoints are under the `/api` prefix (e.g. `/board` is served as `/api/board`).
+## API Overview
 
 ### Public
 
@@ -110,24 +69,29 @@ All endpoints are under the `/api` prefix (e.g. `/board` is served as `/api/boar
 | `PUT` | `/applications/{id}` | Update |
 | `DELETE` | `/applications/{id}` | Delete |
 
-### Auth and CORS
+## Tests
 
-- Access JWT in JSON (`{ "jwt": "…" }`) on login/refresh; send as `Authorization: Bearer …` on protected routes.
-- Refresh token is an HttpOnly cookie (`refresh_token`, path `/api/auth`). Browser clients must use `credentials: 'include'`.
-- CORS is allowlisted via `app.cors.allowed-origins` (defaults include `http://localhost:5173`) with `allowCredentials(true)`.
-
-Request bodies are validated with Bean Validation (`@Valid` on DTOs). Invalid payloads return `400`.
-
-## Package layout
-
+```bash
+./gradlew test
 ```
-src/main/java/com/ywes/application_tracker/
-├── controller/     # HTTP endpoints
-├── service/        # Business logic (applications, board, auth)
-├── repository/     # Spring Data JPA
-├── model/          # Entities and status enum
-├── dto/            # Request/response payloads
-├── common/         # Exceptions and global error handling
-├── config/         # Security, CORS, cookie properties
-└── security/       # JWT authentication filter
+
+## Docker
+
+Build and run the backend image:
+
+```bash
+docker build -t application-tracker-backend .
+docker run --rm -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=postgres \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/application-tracker \
+  -e SPRING_DATASOURCE_USERNAME=postgres \
+  -e SPRING_DATASOURCE_PASSWORD=postgres \
+  application-tracker-backend
 ```
+
+For the complete stack, use the root [Docker quick start](../README.md#quick-start-with-docker).
+
+## Further Reading
+
+- [Backend architecture](ARCHITECTURE.md)
+- [Root project README](../README.md)

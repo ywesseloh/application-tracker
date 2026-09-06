@@ -1,78 +1,54 @@
 # Application Tracker
 
-A kanban-style job application tracker. Create applications, drag them across pipeline columns, and keep board order consistent on the server.
+Application Tracker provides a kanban board for organizing job applications. Create applications, move them through a pipeline, and keep their order synchronized with the server.
 
-<img src="docs/screenshots/board.png" alt="Board Screenshot" width="1000"/>
+> **Demo application:** Use test data only. Do not enter real personal, confidential, or sensitive information.
+
+<img src="docs/screenshots/board.png" alt="Application Tracker board" width="1000"/>
 
 ## Features
 
-- User registration and sign-in (access JWT + HttpOnly refresh cookie)
-- Per-user boards; session restore on reload when locally logged in
-- Drag-and-drop board with optimistic UI updates and rollback on failure
-- Create, edit, view, and delete job applications
-- Server-side board placement with densification when cards move between columns
-- Full-stack Docker Compose setup (Postgres + API + SPA)
-- Local development with an in-memory H2 database (no Docker required)
+- Account registration and sign-in
+- Private, per-user application boards
+- Drag-and-drop status changes with optimistic updates
+- Create, edit, view, and delete applications
+- H2 for local development or PostgreSQL with Docker
 
-## Documentation
+## Quick Start With Docker
 
-| Area | README | Architecture |
-|------|--------|--------------|
-| Backend (Spring Boot API) | [backend/README.md](backend/README.md) | [backend/ARCHITECTURE.md](backend/ARCHITECTURE.md) |
-| Frontend (React SPA) | [frontend/README.md](frontend/README.md) | [frontend/ARCHITECTURE.md](frontend/ARCHITECTURE.md) |
-
-Auth details (public vs protected routes, cookies, CORS, SPA bootstrap) live in the architecture docs above.
-
-## Tech stack
-
-| Layer | Stack |
-|-------|--------|
-| Frontend | React 19, TypeScript, Vite, TanStack Query, @dnd-kit |
-| Backend | Java 26, Spring Boot 4, Spring Security, Spring Data JPA, Bean Validation |
-| Database | H2 (local default), PostgreSQL (Docker / postgres profile) |
-| Infra | Docker Compose, multi-stage Dockerfiles, nginx (SPA) |
-
-## Quick start (Docker)
-
-Requires [Docker](https://docs.docker.com/get-docker/) and Docker Compose.
+Requirements: [Docker](https://docs.docker.com/get-docker/) and Docker Compose.
 
 ```bash
 cd infra/docker
 docker compose --env-file .env.dev up --build
 ```
 
+Open [http://localhost:5173](http://localhost:5173) and create a test account.
+
 | Service | URL |
 |---------|-----|
 | Frontend | http://localhost:5173 |
 | Backend API | http://localhost:8080/api |
-| Postgres | `localhost:5432` |
+| PostgreSQL | localhost:5432 |
 
-Open the frontend, create an account (or sign in), then use the board. Stop with `Ctrl+C`, or run detached with `docker compose --env-file .env.dev up --build -d` and stop with `docker compose down` (from the `infra/docker/` directory).
+Stop the stack with `Ctrl+C`, or use `docker compose down` from `infra/docker`.
 
-Compose reads secrets and config from [`infra/docker/.env.dev`](infra/docker/.env.dev).
+## Local Development
 
-## Local development
+Requirements:
 
-### Prerequisites
+- JDK 26
+- Node.js 22+
+- Optional: Docker for PostgreSQL
 
-- **JDK 26** (backend)
-- **Node.js 22+** (frontend)
-- Optional: Docker, if you want Postgres instead of H2
-
-### Backend
-
-See [backend/README.md](backend/README.md) for profiles, Postgres setup, and tests.
+Start the backend with H2:
 
 ```bash
 cd backend
 ./gradlew bootRun
 ```
 
-API: http://localhost:8080 (H2 by default)
-
-### Frontend
-
-See [frontend/README.md](frontend/README.md) for scripts, env vars, and tests.
+Start the frontend in another terminal:
 
 ```bash
 cd frontend
@@ -80,19 +56,16 @@ npm install
 npm run dev
 ```
 
-Dev server: http://localhost:5173
+Frontend: http://localhost:5173  
+Backend: http://localhost:8080
 
-Create an account via **Create an account** on the auth screen (or **Sign in** if you already registered), then use the board.
+## Documentation
 
-## Project layout
-
-```
-application-tracker/
-├── backend/                 # Spring Boot API → backend/README.md
-├── frontend/                # React SPA → frontend/README.md
-└── infra/                   # Docker compose files and helper scripts
-```
+| Area | Setup | Architecture |
+|------|-------|--------------|
+| Backend | [backend/README.md](backend/README.md) | [backend/ARCHITECTURE.md](backend/ARCHITECTURE.md) |
+| Frontend | [frontend/README.md](frontend/README.md) | [frontend/ARCHITECTURE.md](frontend/ARCHITECTURE.md) |
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+[MIT License](LICENSE)
