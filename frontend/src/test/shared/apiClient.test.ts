@@ -149,8 +149,8 @@ describe('apiClient', () => {
     expect(error).toMatchObject({
       name: 'ApiError',
       status: 404,
-      body: 'not found',
-      message: 'Request failed with status 404',
+      type: 'GENERIC_ERROR',
+      message: 'Something went wrong. Please try again.',
     })
   })
 
@@ -233,7 +233,11 @@ describe('apiClient', () => {
     const error = await apiClient.get('/board').catch((err) => err)
 
     expect(error).toBeInstanceOf(ApiError)
-    expect(error).toMatchObject({ status: 401, body: 'bad refresh' })
+    expect(error).toMatchObject({
+      status: 401,
+      type: 'GENERIC_ERROR',
+      message: 'Something went wrong. Please try again.',
+    })
     expect(fetchMock).toHaveBeenCalledTimes(2)
 
     const { getAccessToken } = await import('@/shared/auth/tokenStore')
