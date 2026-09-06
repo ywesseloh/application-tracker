@@ -2,9 +2,11 @@
 
 Application Tracker provides a kanban board for organizing job applications. Create applications, move them through a pipeline, and keep their order synchronized with the server.
 
+The application is live at: https://job-tracker.ywesseloh.com
+
 > **Demo application:** Use test data only. Do not enter real personal, confidential, or sensitive information.
 
-<img src="docs/screenshots/board.png" alt="Application Tracker board" width="1000"/>
+<img src="docs/screenshots/board.png" alt="Application Tracker board" width="1000"  style="border: 1px solid silver; border-radius: 10px;"/>
 
 ## Features
 
