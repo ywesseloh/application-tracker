@@ -35,6 +35,7 @@ import TilePreview from './TilePreview'
 import { EditApplicationForm } from '../ApplicationForm/EditApplicationForm'
 import { CreateApplicationForm } from '../ApplicationForm/CreateApplicationForm'
 import ProfileIcon from '@/assets/profile.svg?react'
+import { useUserQuery } from '@/shared/hooks/useUserQuery'
 
 export default function ApplicationBoard() {
   const queryClient = useQueryClient()
@@ -43,6 +44,11 @@ export default function ApplicationBoard() {
   const { moveMutation } = useMoveApplication()
   const boardWritesBusy = useBoardWritesBusy()
   const { error: actionError, dismiss: dismissActionError } = useApplicationActionError()
+  const { 
+    user, 
+    isPending: isUserPending,
+    hasData: hasUserData
+  } = useUserQuery()
   const {
     deleteAccountMutation,
     isPending: isDeletingAccount,
@@ -215,6 +221,14 @@ export default function ApplicationBoard() {
                 className="application-board__profile-icon"
                 aria-hidden="true"
               />
+
+              {isUserPending ? (
+              <>
+                Loading…
+              </>
+              ) : user != undefined ? (
+                user.username
+              ): null}
             </button>
             {menuOpen ? (
               <div className="application-board__profile-menu" role="menu">

@@ -51,3 +51,10 @@ export type ErrorResponse = {
   errorType: ApiErrorType
   errorMessage: string
 }
+
+export type User = {
+  id: number
+  username: string
+  createdAt: string
+  updatedAt: string
+}
