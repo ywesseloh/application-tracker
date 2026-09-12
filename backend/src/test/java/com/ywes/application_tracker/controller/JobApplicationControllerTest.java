@@ -9,6 +9,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.ywes.application_tracker.dto.ErrorType.INVALID_REQUEST_BODY;
+import static com.ywes.application_tracker.dto.ErrorType.RESOURCE_NOT_FOUND;
 import static com.ywes.application_tracker.support.ApplicationTrackerTestSupport.APP_ALPHA;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -52,7 +54,7 @@ class JobApplicationControllerTest {
     void getApplicationByIdUnknownReturnsNotFound() throws Exception {
         mockMvc.perform(get("/api/applications/{id}", 9999))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Job application with id 9999 not found"));
+                .andExpect(jsonPath("$.errorType").value(RESOURCE_NOT_FOUND.toString()));
     }
 
     @Test
@@ -116,7 +118,7 @@ class JobApplicationControllerTest {
                                 }
                                 """))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Job application with id 9999 not found"));
+                .andExpect(jsonPath("$.errorType").value(RESOURCE_NOT_FOUND.toString()));
     }
 
     @Test
@@ -137,7 +139,7 @@ class JobApplicationControllerTest {
     void deleteApplicationUnknownIdReturnsNotFound() throws Exception {
         mockMvc.perform(delete("/api/applications/{id}", 9999))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Job application with id 9999 not found"));
+                .andExpect(jsonPath("$.errorType").value(RESOURCE_NOT_FOUND.toString()));
     }
 
     @Test
@@ -152,7 +154,7 @@ class JobApplicationControllerTest {
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value("Company is mandatory"));
+                .andExpect(jsonPath("$.errorType").value(INVALID_REQUEST_BODY.toString()));
     }
 
     @Test
@@ -167,6 +169,6 @@ class JobApplicationControllerTest {
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value("Status is mandatory"));
+                .andExpect(jsonPath("$.errorType").value(INVALID_REQUEST_BODY.toString()));
     }
 }

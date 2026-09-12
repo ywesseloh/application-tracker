@@ -9,6 +9,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.ywes.application_tracker.dto.ErrorType.*;
 import static com.ywes.application_tracker.support.ApplicationTrackerTestSupport.APP_ALPHA;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -61,9 +62,7 @@ class BoardControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"WISHLIST\",\"columnPosition\":0}"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string(
-                        "Job application with id 9999 not found"
-                ));
+                .andExpect(jsonPath("$.errorType").value(RESOURCE_NOT_FOUND.toString()));;
     }
 
     @Test
@@ -72,7 +71,7 @@ class BoardControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"APPLIED\",\"columnPosition\":99}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Maximum position is 1"));
+                .andExpect(jsonPath("$.errorType").value(ILLEGAL_COLUMN_POSITION.toString()));
     }
 
     @Test
@@ -81,7 +80,7 @@ class BoardControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":null,\"columnPosition\":0}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value("Status is mandatory"));
+                .andExpect(jsonPath("$.errorType").value(INVALID_REQUEST_BODY.toString()));
     }
 
     @Test
@@ -90,6 +89,6 @@ class BoardControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"APPLIED\",\"columnPosition\":-1}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value("Position must be zero or greater"));
+                .andExpect(jsonPath("$.errorType").value(INVALID_REQUEST_BODY.toString()));
     }
 }

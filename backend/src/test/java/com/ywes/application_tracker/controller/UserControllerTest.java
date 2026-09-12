@@ -16,11 +16,16 @@ import com.ywes.application_tracker.repository.JobApplicationRepository;
 import com.ywes.application_tracker.repository.RefreshTokenRepository;
 import com.ywes.application_tracker.repository.UserRepository;
 
+import static com.ywes.application_tracker.dto.ErrorType.INVALID_REQUEST_BODY;
+import static com.ywes.application_tracker.dto.ErrorType.USERNAME_ALREADY_EXISTS;
+import static com.ywes.application_tracker.support.ApplicationTrackerTestSupport.APP_ALPHA;
+import static com.ywes.application_tracker.support.ApplicationTrackerTestSupport.USER_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -47,7 +52,7 @@ class UserControllerTest {
                         .content("""
                                 {
                                   "username": "newuser",
-                                  "password": "secret"
+                                  "password": "password"
                                 }
                                 """))
                 .andExpect(status().isOk());
@@ -57,7 +62,7 @@ class UserControllerTest {
                         .content("""
                                 {
                                   "username": "newuser",
-                                  "password": "secret"
+                                  "password": "password"
                                 }
                                 """))
                 .andExpect(status().isOk())
@@ -75,11 +80,11 @@ class UserControllerTest {
                         .content("""
                                 {
                                   "username": null,
-                                  "password": "secret"
+                                  "password": "password"
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value("Username is mandatory"));
+                .andExpect(jsonPath("$.errorType").value(INVALID_REQUEST_BODY.toString()));
     }
 
     @Test
@@ -94,7 +99,7 @@ class UserControllerTest {
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value("Password is mandatory"));
+                .andExpect(jsonPath("$.errorType").value(INVALID_REQUEST_BODY.toString()));
     }
 
     @Test
@@ -105,11 +110,26 @@ class UserControllerTest {
                         .content("""
                                 {
                                   "username": "abcdefghijklmnopqrstu",
-                                  "password": "secret"
+                                  "password": "password"
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value("Username can have a maximum of 20 characters"));
+                .andExpect(jsonPath("$.errorType").value(INVALID_REQUEST_BODY.toString()));
+    }
+
+    @Test
+    @Sql("/sql/cleanup.sql")
+    void registerUndersizedPasswordReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "newuser",
+                                  "password": "abcdefg"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorType").value(INVALID_REQUEST_BODY.toString()));
     }
 
     @Test
@@ -124,7 +144,7 @@ class UserControllerTest {
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value("Password can have a maximum of 20 characters"));
+                .andExpect(jsonPath("$.errorType").value(INVALID_REQUEST_BODY.toString()));
     }
 
     @Test
@@ -135,11 +155,26 @@ class UserControllerTest {
                         .content("""
                                 {
                                   "username": "mock-user",
-                                  "password": "secret"
+                                  "password": "password"
                                 }
                                 """))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$").value("Username already exists: mock-user"));
+                .andExpect(jsonPath("$.errorType").value(USERNAME_ALREADY_EXISTS.toString()));
+    }
+
+    @Test
+    @Sql({"/sql/cleanup.sql", "/sql/user.sql"})
+    void getUserWithValidJwtReturnsUser() throws Exception {
+        String jwt = loginAsMockUser();
+
+        mockMvc.perform(get("/api/user")
+                        .header("Authorization", "Bearer " + jwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(USER_ID))
+                .andExpect(jsonPath("$.username").value("mock-user"))
+                .andExpect(jsonPath("$.createdAt").exists())
+                .andExpect(jsonPath("$.updatedAt").exists())
+                .andExpect(jsonPath("$.password").doesNotExist());
     }
 
     @Test

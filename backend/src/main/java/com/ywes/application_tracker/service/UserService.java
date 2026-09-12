@@ -1,5 +1,6 @@
 package com.ywes.application_tracker.service;
 
+import com.ywes.application_tracker.dto.UserDTO;
 import com.ywes.application_tracker.exceptions.DuplicateUsernameException;
 import com.ywes.application_tracker.exceptions.ResourceNotFoundException;
 import com.ywes.application_tracker.dto.UserMutation;
@@ -31,6 +32,12 @@ public class UserService implements UserDetailsService {
     public User loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username).orElseThrow(() ->
                 new UsernameNotFoundException("User with username " + username + " not found")
+        );
+    }
+
+    public UserDTO getUserDTOByUserId(Integer userId) {
+        return userRepository.findUserDTOByUserId(userId).orElseThrow(() ->
+                new ResourceNotFoundException("User with id " + userId + " not found")
         );
     }
 

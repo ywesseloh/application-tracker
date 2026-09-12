@@ -1,5 +1,6 @@
 package com.ywes.application_tracker.controller;
 
+import com.ywes.application_tracker.dto.UserDTO;
 import com.ywes.application_tracker.dto.UserMutation;
 import com.ywes.application_tracker.utils.CurrentUserId;
 import com.ywes.application_tracker.service.UserService;
@@ -13,6 +14,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @GetMapping("/user")
+    public UserDTO getCurrentUser(@CurrentUserId Integer userId) { return userService.getUserDTOByUserId(userId); }
 
     @PostMapping("/user")
     public void registerUser(@Valid @RequestBody UserMutation userMutation) {

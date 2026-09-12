@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import static com.ywes.application_tracker.dto.ErrorType.INVALID_REQUEST_BODY;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.hasSize;
@@ -61,7 +62,7 @@ public class AuthControllerTest {
                         .content("""
                                 {
                                   "username": "mock-user",
-                                  "password": "wrong"
+                                  "password": "wrongpassword"
                                 }
                                 """))
                 .andExpect(status().isUnauthorized());
@@ -93,7 +94,7 @@ public class AuthControllerTest {
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value("Username is mandatory"));
+                .andExpect(jsonPath("$.errorType").value(INVALID_REQUEST_BODY.toString()));
     }
 
     @Test
