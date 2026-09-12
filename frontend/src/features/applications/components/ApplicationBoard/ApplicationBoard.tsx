@@ -46,8 +46,7 @@ export default function ApplicationBoard() {
   const { error: actionError, dismiss: dismissActionError } = useApplicationActionError()
   const { 
     user, 
-    isPending: isUserPending,
-    hasData: hasUserData
+    isPending: isUserPending
   } = useUserQuery()
   const {
     deleteAccountMutation,
