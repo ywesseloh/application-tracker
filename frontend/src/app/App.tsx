@@ -16,7 +16,8 @@ export default function App() {
 
     void (async () => {
       try {
-        if (isLoggedInLocally()) {
+        if (!accessToken && isLoggedInLocally()) {
+          // Try to recover session
           await refresh()
         }
       } catch {
