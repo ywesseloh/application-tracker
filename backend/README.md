@@ -60,6 +60,7 @@ Shared settings are in `application.properties`. Authentication, refresh-cookie,
 
 | Method | Path | Description |
 |--------|------|-------------|
+| `GET` | `/user` | Get current user |
 | `DELETE` | `/user` | Delete current user |
 | `GET` | `/board` | Board with applications by status |
 | `PATCH` | `/board/move/{id}` | Move / reorder a card |
