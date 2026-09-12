@@ -9,21 +9,25 @@ import './App.css'
 
 export default function App() {
   const accessToken = useAccessToken()
-  const [bootstrapping, setBootstrapping] = useState(true)
+  const needsSessionRefresh = !accessToken && isLoggedInLocally()
+  const loggedOut = !accessToken && !isLoggedInLocally()
+
+  const [sessionRefreshing, setSessionRefreshing] = useState(false)
 
   useEffect(() => {
     let cancelled = false
 
     void (async () => {
       try {
-        if (!accessToken && isLoggedInLocally()) {
+        if (needsSessionRefresh && !sessionRefreshing) {
           // Try to recover session
+          setSessionRefreshing(true)
           await refresh()
         }
       } catch {
         // refresh() clears token + loggedInLocally on failure
       } finally {
-        if (!cancelled) setBootstrapping(false)
+        if (!cancelled) setSessionRefreshing(false)
       }
     })()
 
@@ -33,15 +37,15 @@ export default function App() {
   }, [])
 
   let content
-  if (bootstrapping) {
+  if (sessionRefreshing) {
     content = (
       <div className="app-bootstrap" role="status" aria-live="polite">
         Loading…
       </div>
     )
-  } else if (!accessToken) {
+  } else if (loggedOut) {
     content = <AuthScreen />
-  } else {
+  } else if (accessToken) {
     content = <ApplicationBoard />
   }
 
