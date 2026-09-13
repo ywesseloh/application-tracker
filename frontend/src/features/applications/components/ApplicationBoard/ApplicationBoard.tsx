@@ -216,21 +216,29 @@ export default function ApplicationBoard() {
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((open) => !open)}
             >
-              <ProfileIcon
-                className="application-board__profile-icon"
-                aria-hidden="true"
-              />
+            <ProfileIcon
+              className="application-board__profile-icon"
+              aria-hidden="true"
+            />
 
-              {isUserPending ? (
-              <>
-                Loading…
-              </>
-              ) : user != undefined ? (
-                user.username
-              ): null}
             </button>
             {menuOpen ? (
               <div className="application-board__profile-menu" role="menu">
+                <div className="application-board__profile-menu-header" role="menu">
+                  <ProfileIcon
+                    className="application-board__profile-menu-header-icon"
+                    aria-hidden="true"
+                  />
+                  <p className="application-board__profile-menu-header-text">
+                  {isUserPending ? (
+                    <>
+                      Loading…
+                    </>
+                    ) : user != undefined ? (
+                      user.username
+                    ): null}
+                  </p>
+                </div>
                 <button
                   type="button"
                   role="menuitem"

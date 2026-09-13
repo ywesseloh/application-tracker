@@ -58,7 +58,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem clamp(1rem, 2.5vw, 1.75rem);
+  padding: 5px 10px; /*0.85rem clamp(1rem, 2.5vw, 1.75rem);*/
   border-bottom: 1px solid color-mix(in srgb, var(--board-ink) 14%, transparent);
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(10px);
@@ -91,8 +91,9 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 5px 10px 5px 10px;
-  font: inherit;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
   border: 1px solid color-mix(in srgb, var(--board-muted) 25%, transparent);
   border-radius: 999px;
   background: var(--tile-bg);
@@ -120,12 +121,8 @@ body {
 
 .application-board__profile-icon {
   display: block;
-  width: 1.75rem;
-  height: 1.75rem;
-  margin-right: 7px;
-  padding: 2px;
-  border: 1px solid;
-  border-radius: 999px;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .application-board__profile-menu {
@@ -139,6 +136,38 @@ body {
   border-radius: 0.7rem;
   background: #ffffff;
   box-shadow: var(--shadow-lift);
+}
+
+.application-board__profile-menu-header {
+  display: flex;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  margin: 0;
+  background: transparent;
+  color: var(--board-ink);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  transition: background-color 140ms var(--ease);
+  border-bottom: 1px solid color-mix(in srgb, var(--board-ink) 25%, transparent);
+  align-items: center;
+}
+
+.application-board__profile-menu-header-icon {
+  display: inline-flex;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 5px;
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 2px;
+}
+
+.application-board__profile-menu-header-text {
+  display: inline-flex;
+  margin: 0;
 }
 
 .application-board__profile-menu-item {
