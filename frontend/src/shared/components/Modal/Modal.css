@@ -26,9 +26,9 @@
   border: none;
   border-radius: 1rem;
   background: #ffffff;
-  color: var(--board-ink, #1a1f1c);
+  color: var(--primary, #1a1f1c);
   box-shadow: 0 8px 16px rgba(26, 31, 28, 0.08), 0 24px 48px rgba(26, 31, 28, 0.14);
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: var(--font);
   animation: modal-panel-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 

@@ -27,8 +27,8 @@ body {
   padding: 1rem clamp(1rem, 2.5vw, 1.75rem);
   border-top: 1px solid rgba(26, 31, 28, 0.1);
   background: rgba(255, 255, 255, 0.72);
-  color: #5f6b64;
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  color: var(--secondary, #5f6b64);
+  font-family: var(--font);
   font-size: 0.75rem;
 }
 
@@ -45,25 +45,41 @@ body {
 }
 
 .app-footer a:hover {
-  color: #2a6b5a;
+  color: var(--accent);
 }
 
 .app-footer a:focus-visible {
-  outline: 2px solid #2a6b5a;
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
 .app-bootstrap {
   min-height: 100vh;
   display: flex;
+  flex: 1;
   align-items: center;
   justify-content: center;
   margin: 0;
   background:
     radial-gradient(ellipse 70% 45% at 8% -5%, #dfe8e3 0%, transparent 55%),
     radial-gradient(ellipse 55% 40% at 100% 0%, #e4e8ef 0%, transparent 50%),
-    #f0f2f0;
-  color: #5f6b64;
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    var(--background);
+  color: var(--secondary);
+  font-family: var(--font);
   font-size: 0.95rem;
+}
+
+.app-loader {
+  width: 2rem;
+  height: 2rem;
+  border: 2.5px solid #c5d0ca;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: application-board-spin 0.75s linear infinite;
+}
+
+@keyframes application-board-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

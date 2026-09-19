@@ -1,0 +1,9 @@
+:root {
+  --primary: #1a1f1c;
+  --secondary: #5f6b64;
+  --accent: #2a6b5a;
+  --accent-soft: rgba(42, 107, 90, 0.12);
+  --background: #f0f2f0;
+
+  --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+}

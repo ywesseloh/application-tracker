@@ -40,7 +40,7 @@ export default function App() {
   if (sessionRefreshing) {
     content = (
       <div className="app-bootstrap" role="status" aria-live="polite">
-        Loading…
+        <span className="application-board__loader" aria-hidden="true" />
       </div>
     )
   } else if (loggedOut) {

@@ -27,7 +27,7 @@
   border: none;
   border-radius: 0.5rem;
   background: rgba(26, 31, 28, 0.05);
-  color: var(--board-ink, #1a1f1c);
+  color: var(--primary, #1a1f1c);
   font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
@@ -63,7 +63,7 @@
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: var(--board-muted, #5f6b64);
+  color: var(--secondary, #5f6b64);
 }
 
 .application-form__input,
@@ -73,7 +73,7 @@
   border: 1px solid #d8e0db;
   border-radius: 0.55rem;
   background: #f7f9f8;
-  color: var(--board-ink, #1a1f1c);
+  color: var(--primary, #1a1f1c);
   font: inherit;
   font-size: 0.95rem;
   transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
@@ -136,7 +136,7 @@
 .application-form__button--secondary {
   border: none;
   background: rgba(26, 31, 28, 0.06);
-  color: var(--board-ink, #1a1f1c);
+  color: var(--primary, #1a1f1c);
 }
 
 .application-form__button--secondary:hover {

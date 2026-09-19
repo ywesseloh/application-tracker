@@ -7,7 +7,7 @@
     radial-gradient(ellipse 55% 40% at 100% 0%, #e4e8ef 0%, transparent 50%),
     #f0f2f0;
   color: #1a1f1c;
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: var(--font);
 }
 
 .legal-document__content {

@@ -9,12 +9,6 @@ body {
 }
 
 .auth-screen {
-  --auth-bg: #f0f2f0;
-  --auth-ink: #1a1f1c;
-  --auth-muted: #5f6b64;
-  --accent: #2a6b5a;
-  --accent-soft: rgba(42, 107, 90, 0.12);
-  --font: 'Plus Jakarta Sans', system-ui, sans-serif;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   flex: 1;
@@ -26,8 +20,8 @@ body {
   background:
     radial-gradient(ellipse 70% 45% at 8% -5%, #dfe8e3 0%, transparent 55%),
     radial-gradient(ellipse 55% 40% at 100% 0%, #e4e8ef 0%, transparent 50%),
-    var(--auth-bg);
-  color: var(--auth-ink);
+    var(--background);
+  color: var(--primary);
   font-family: var(--font);
 }
 
@@ -68,7 +62,7 @@ body {
 
 .auth-screen__supporting {
   margin: 0.55rem 0 0;
-  color: var(--auth-muted);
+  color: var(--secondary);
   font-size: 0.95rem;
   line-height: 1.4;
 }
@@ -96,7 +90,7 @@ body {
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: var(--auth-muted);
+  color: var(--secondary);
 }
 
 .auth-screen__input {
@@ -105,7 +99,7 @@ body {
   border: 1px solid #d8e0db;
   border-radius: 0.55rem;
   background: #f7f9f8;
-  color: var(--auth-ink);
+  color: var(--primary);
   font: inherit;
   font-size: 0.95rem;
   transition:
@@ -155,7 +149,7 @@ body {
   border: none;
   border-radius: 0.4rem;
   background: transparent;
-  color: var(--auth-muted);
+  color: var(--secondary);
   font: inherit;
   font-size: 0.8rem;
   font-weight: 600;
@@ -164,7 +158,7 @@ body {
 }
 
 .auth-screen__password-toggle:hover {
-  color: var(--auth-ink);
+  color: var(--primary);
   background: rgba(26, 31, 28, 0.06);
 }
 
@@ -224,7 +218,7 @@ body {
 .auth-screen__switch {
   margin: 1.25rem 0 0;
   text-align: center;
-  color: var(--auth-muted);
+  color: var(--secondary);
   font-size: 0.85rem;
   line-height: 1.4;
 }

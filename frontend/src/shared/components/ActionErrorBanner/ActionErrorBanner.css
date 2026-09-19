@@ -8,7 +8,7 @@
   border-radius: 0.65rem;
   background: #f6e8e5;
   color: #8b3a2f;
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: var(--font);
 }
 
 .action-error-banner__text {

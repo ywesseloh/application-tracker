@@ -12,7 +12,7 @@
 
 .confirm-dialog__body {
   margin: 0;
-  color: var(--board-muted, #5f6b64);
+  color: var(--secondary, #5f6b64);
   font-size: 0.95rem;
   line-height: 1.45;
 }
@@ -26,10 +26,10 @@
 
 .confirm-dialog__cancel {
   padding: 0.55rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--board-muted, #5f6b64) 25%, transparent);
+  border: 1px solid color-mix(in srgb, var(--secondary, #5f6b64) 25%, transparent);
   border-radius: 0.55rem;
   background: #ffffff;
-  color: var(--board-muted, #5f6b64);
+  color: var(--secondary, #5f6b64);
   font: inherit;
   font-size: 0.9rem;
   font-weight: 600;

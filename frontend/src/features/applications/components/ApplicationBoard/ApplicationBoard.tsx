@@ -267,7 +267,7 @@ export default function ApplicationBoard() {
 
       {showLoading ? (
         <div className="application-board__viewport-state" role="status" aria-live="polite">
-          <span className="application-board__loader" aria-hidden="true" />
+          <span className="app-loader" aria-hidden="true" />
           <p className="application-board__status">Loading applications…</p>
         </div>
       ) : null}
