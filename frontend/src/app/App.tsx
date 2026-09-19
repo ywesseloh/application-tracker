@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ApplicationBoard } from '@/features/applications'
 import { AuthScreen } from '@/features/auth'
@@ -12,32 +12,28 @@ export default function App() {
   const needsSessionRefresh = !accessToken && isLoggedInLocally()
   const loggedOut = !accessToken && !isLoggedInLocally()
 
-  const [sessionRefreshing, setSessionRefreshing] = useState(false)
+  const refreshStarted = useRef(false);
+  const [sessionLoading, setSessionLoading] = useState(false)
 
   useEffect(() => {
-    let cancelled = false
+    if(!needsSessionRefresh || refreshStarted.current) { return }
+    refreshStarted.current = true
 
     void (async () => {
       try {
-        if (needsSessionRefresh && !sessionRefreshing) {
-          // Try to recover session
-          setSessionRefreshing(true)
-          await refresh()
-        }
+        // Try to recover session
+        setSessionLoading(true)
+        await refresh()
       } catch {
         // refresh() clears token + loggedInLocally on failure
       } finally {
-        if (!cancelled) setSessionRefreshing(false)
+        setSessionLoading(false)
       }
     })()
-
-    return () => {
-      cancelled = true
-    }
   }, [])
 
   let content
-  if (sessionRefreshing) {
+  if (sessionLoading) {
     content = (
       <div className="app-bootstrap" role="status" aria-live="polite">
         <span className="application-board__loader" aria-hidden="true" />
